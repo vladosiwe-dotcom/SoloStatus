@@ -1,0 +1,60 @@
+package com.vladosiwe.solostatus.mastery;
+
+import com.vladosiwe.solostatus.combat.WeaponType;
+import com.vladosiwe.solostatus.config.SoloConfig;
+import com.vladosiwe.solostatus.data.PlayerData;
+import com.vladosiwe.solostatus.network.Notices;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+
+/**
+ * Мастерство оружия и школ магии. Растёт только от реальных боевых действий (см. CombatEvents):
+ * попадания по противникам с ограничением на одну цель, убийства с учётом опасности и анти-фарма,
+ * блоки щитом, магический урон. Уровни 0..50; вехи 10/25/40/50 открывают навыки и бонусы.
+ */
+public final class MasterySystem {
+    private MasterySystem() {}
+
+    public static int level(PlayerData d, WeaponType type) {
+        return MasteryMath.level(d.masteryXp(type.key));
+    }
+
+    public static void add(ServerPlayer player, PlayerData d, String key, double amount, Component name) {
+        if (amount <= 0) return;
+        double before = d.masteryXp(key);
+        int oldLevel = MasteryMath.level(before);
+        if (oldLevel >= MasteryMath.MAX_LEVEL) return;
+        double after = before + amount * SoloConfig.MASTERY_MULTIPLIER.get();
+        d.mastery.put(key, after);
+        int newLevel = MasteryMath.level(after);
+        d.unlockCheckPending = true;
+        d.softDirty = true;
+        if (newLevel > oldLevel) {
+            d.markDirty();
+            boolean milestone = newLevel == 10 || newLevel == 25 || newLevel == 40 || newLevel == 50;
+            if (milestone || newLevel % 5 == 0) {
+                Notices.send(player, milestone ? Notices.ACHIEVEMENT : Notices.INFO,
+                        Component.translatable("solostatus.notice.mastery_up", name, newLevel),
+                        Component.translatable(milestone ? "solostatus.notice.mastery_milestone." + newLevel : "solostatus.notice.mastery_up.desc"));
+            }
+        }
+    }
+
+    public static void addWeapon(ServerPlayer player, PlayerData d, WeaponType type, double amount) {
+        if (type == null || !type.hasMastery()) return;
+        add(player, d, type.key, amount, type.displayName());
+    }
+
+    /** Магическое мастерство по школе (school — путь id школы Iron's Spells или "arcane" для навыков системы). */
+    public static void addMagic(ServerPlayer player, PlayerData d, String school, double amount) {
+        add(player, d, "magic:" + school, amount, schoolName(school));
+    }
+
+    public static Component schoolName(String school) {
+        return Component.translatableWithFallback("solostatus.school." + school, capitalize(school));
+    }
+
+    private static String capitalize(String s) {
+        return s.isEmpty() ? s : Character.toUpperCase(s.charAt(0)) + s.substring(1).replace('_', ' ');
+    }
+}
