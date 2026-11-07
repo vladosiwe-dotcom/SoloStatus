@@ -15,7 +15,15 @@ public final class Notices {
     private Notices() {}
 
     public static void send(ServerPlayer player, int kind, Component title, Component body) {
-        PacketDistributor.sendToPlayer(player, new Payloads.Notice(kind, title, body));
+        send(player, kind, title, body, net.minecraft.world.item.ItemStack.EMPTY);
+    }
+
+    public static void send(ServerPlayer player, int kind, Component title, Component body, net.minecraft.world.item.ItemStack icon) {
+        PacketDistributor.sendToPlayer(player, new Payloads.Notice(kind, title, body, icon));
+    }
+
+    public static void send(ServerPlayer player, int kind, Component title, Component body, net.minecraft.world.level.ItemLike icon) {
+        send(player, kind, title, body, new net.minecraft.world.item.ItemStack(icon));
     }
 
     public static void warn(ServerPlayer player, String key, Object... args) {

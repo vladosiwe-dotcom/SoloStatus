@@ -822,6 +822,170 @@ public final class SkillEffects {
         return true;
     }
 
+    // ---------------- Пробуждения второго круга (мастерство 25) ----------------
+
+    public static boolean bladeFlash(SkillContext c) {
+        ServerPlayer p = c.player();
+        List<LivingEntity> line = enemiesInLine(p, 6, 1.0);
+        Vec3 start = p.position().add(0, 1, 0);
+        dash(p, horizontalLook(p), c.scale(2.0, 0.1), 0.05);
+        iframes(c, 8);
+        double dmg = melee(p) * c.scale(1.5, 0.2);
+        for (LivingEntity t : line) hitPhysical(p, t, dmg);
+        line(c.level(), ParticleTypes.SWEEP_ATTACK, start, start.add(horizontalLook(p).scale(6)), 1.0);
+        line(c.level(), SYSTEM_DUST, start, start.add(horizontalLook(p).scale(6)), 0.3);
+        sound(c.level(), p.position(), SoundEvents.PLAYER_ATTACK_SWEEP, 1.2f, 1.6f);
+        return true;
+    }
+
+    public static boolean rendingCleave(SkillContext c) {
+        ServerPlayer p = c.player();
+        List<LivingEntity> targets = enemiesInCone(p, 4, 180);
+        if (targets.isEmpty()) return false;
+        swing(p);
+        double dmg = melee(p) * c.scale(1.5, 0.2);
+        for (LivingEntity t : targets) {
+            hitPhysical(p, t, dmg);
+            mark(t, "sunder", p, 120);
+        }
+        particles(c.level(), ParticleTypes.SWEEP_ATTACK, p.getEyePosition().add(horizontalLook(p).scale(2)), 4, 1.0, 0);
+        sound(c.level(), p.position(), SoundEvents.ANVIL_LAND, 0.5f, 1.5f);
+        return true;
+    }
+
+    public static boolean spearWhirl(SkillContext c) {
+        ServerPlayer p = c.player();
+        swing(p);
+        double dmg = melee(p) * c.scale(1.1, 0.15);
+        for (LivingEntity t : enemiesAround(p, p.position(), 4.5)) {
+            hitPhysical(p, t, dmg);
+            knockback(t, p.position(), 1.0);
+        }
+        ring(c.level(), ParticleTypes.SWEEP_ATTACK, p.position().add(0, 1, 0), 3.5, 12);
+        sound(c.level(), p.position(), SoundEvents.PLAYER_ATTACK_SWEEP, 1.2f, 0.9f);
+        return true;
+    }
+
+    public static boolean shockwave(SkillContext c) {
+        ServerPlayer p = c.player();
+        Vec3 at = p.position();
+        double dmg = melee(p) * c.scale(1.0, 0.15);
+        Set<LivingEntity> hit = new HashSet<>();
+        swing(p);
+        Scheduler.repeat(4, 3, i -> {
+            if (!alive(p)) return;
+            double r = 2 + 2 * i;
+            for (LivingEntity t : enemiesAround(p, at, r)) {
+                if (!hit.add(t)) continue;
+                hitPhysical(p, t, dmg);
+                launch(t, 0.35);
+            }
+            ring(p.serverLevel(), ParticleTypes.CLOUD, at.add(0, 0.1, 0), r, 24 + 8 * i);
+            sound(p.serverLevel(), at, SoundEvents.MACE_SMASH_GROUND, 0.8f, 0.8f + i * 0.2f);
+        });
+        return true;
+    }
+
+    public static boolean frostArrow(SkillContext c) {
+        ServerPlayer p = c.player();
+        var arrow = arrow(p, 0, 0, 3.2f, 5.0 * c.scale(1.0, 0.1), false);
+        arrow.getPersistentData().putInt("solostatus_freeze", c.rank());
+        particles(c.level(), ParticleTypes.SNOWFLAKE, p.getEyePosition().add(p.getLookAngle()), 10, 0.1, 0.02);
+        sound(c.level(), p.position(), SoundEvents.ARROW_SHOOT, 1f, 1.5f);
+        return true;
+    }
+
+    public static boolean explosiveBolt(SkillContext c) {
+        ServerPlayer p = c.player();
+        var arrow = arrow(p, 0, 0, 3.5f, 4.0, false);
+        arrow.getPersistentData().putDouble("solostatus_explode", 5.0 * c.scale(1.0, 0.15));
+        sound(c.level(), p.position(), SoundEvents.CROSSBOW_SHOOT, 1f, 0.6f);
+        return true;
+    }
+
+    public static boolean shieldCharge(SkillContext c) {
+        ServerPlayer p = c.player();
+        dash(p, horizontalLook(p), c.scale(1.8, 0.1), 0.05);
+        p.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 40, 1, false, false));
+        double dmg = melee(p) * c.scale(1.0, 0.15);
+        Set<LivingEntity> hit = new HashSet<>();
+        Scheduler.repeat(2, 5, i -> {
+            if (!alive(p)) return;
+            for (LivingEntity t : enemiesAround(p, p.position(), 2)) {
+                if (!hit.add(t)) continue;
+                hitPhysical(p, t, dmg);
+                knockback(t, p.position(), 1.6);
+                stun(p, t, 20);
+            }
+        });
+        sound(c.level(), p.position(), SoundEvents.SHIELD_BLOCK, 1f, 0.5f);
+        return true;
+    }
+
+    public static boolean arcaneBlast(SkillContext c) {
+        ServerPlayer p = c.player();
+        double dmg = spell(c) * c.scale(1.2, 0.2);
+        for (LivingEntity t : enemiesAround(p, p.position(), 4)) {
+            hitMagic(p, t, dmg);
+            knockback(t, p.position(), 1.2);
+        }
+        ring(c.level(), SYSTEM_DUST, p.position().add(0, 1, 0), 4, 40);
+        particles(c.level(), ParticleTypes.ENCHANT, p.position().add(0, 1, 0), 60, 2, 0.5);
+        sound(c.level(), p.position(), SoundEvents.EVOKER_CAST_SPELL, 1f, 0.8f);
+        return true;
+    }
+
+    public static boolean fistBarrage(SkillContext c) {
+        ServerPlayer p = c.player();
+        LivingEntity t = closestInCone(p, 3.0, 70);
+        if (t == null) return false;
+        double dmg = melee(p) * c.scale(0.4, 0.05);
+        Scheduler.repeat(2, 6, i -> {
+            if (!alive(p) || !t.isAlive() || t.distanceToSqr(p) > 16) return;
+            swing(p);
+            hitPhysical(p, t, dmg);
+            particles(p.serverLevel(), ParticleTypes.CRIT, t.getBoundingBox().getCenter(), 5, 0.2, 0.2);
+            sound(p.serverLevel(), t.position(), SoundEvents.PLAYER_ATTACK_WEAK, 0.7f, 1.2f + i * 0.08f);
+        });
+        return true;
+    }
+
+    public static boolean manaBlade(SkillContext c) {
+        state(c.data(), c.level(), "mana_blade", 160);
+        c.data().manaBladeCharges = 4 + c.rank();
+        particles(c.level(), SYSTEM_DUST, c.player().position().add(0, 1.2, 0), 30, 0.4, 0.02);
+        sound(c.level(), c.player().position(), SoundEvents.ENCHANTMENT_TABLE_USE, 1f, 1.4f);
+        return true;
+    }
+
+    /** Скрытый навык: призыв теневых волков-союзников на 30 секунд. */
+    public static boolean shadowLegion(SkillContext c) {
+        ServerPlayer p = c.player();
+        int count = 2 + c.rank() / 2;
+        for (int i = 0; i < count; i++) {
+            net.minecraft.world.entity.animal.Wolf wolf = net.minecraft.world.entity.EntityType.WOLF.create(c.level());
+            if (wolf == null) continue;
+            double a = Math.PI * 2 * i / count;
+            wolf.moveTo(p.getX() + Math.cos(a) * 1.5, p.getY(), p.getZ() + Math.sin(a) * 1.5, p.getYRot(), 0);
+            wolf.tame(p);
+            wolf.setCustomName(net.minecraft.network.chat.Component.translatable("solostatus.summon.shadow"));
+            wolf.getPersistentData().putBoolean(com.vladosiwe.solostatus.combat.CombatEvents.SUMMON_TAG, true);
+            wolf.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 600, c.rank() >= 3 ? 1 : 0, false, false));
+            wolf.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 600, 1, false, false));
+            wolf.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 600, 1, false, false));
+            c.level().addFreshEntity(wolf);
+            particles(c.level(), SHADOW_DUST, wolf.position().add(0, 0.5, 0), 25, 0.4, 0.02);
+            Scheduler.later(600, () -> {
+                if (wolf.isAlive()) {
+                    particles((ServerLevel) wolf.level(), SHADOW_DUST, wolf.position().add(0, 0.5, 0), 20, 0.3, 0.02);
+                    wolf.discard();
+                }
+            });
+        }
+        sound(c.level(), p.position(), SoundEvents.WITHER_SPAWN, 0.4f, 1.6f);
+        return true;
+    }
+
     public static boolean rulerGrip(SkillContext c) {
         ServerPlayer p = c.player();
         LivingEntity t = raycast(p, 20, false);

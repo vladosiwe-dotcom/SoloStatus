@@ -35,7 +35,8 @@ public final class MasterySystem {
             if (milestone || newLevel % 5 == 0) {
                 Notices.send(player, milestone ? Notices.ACHIEVEMENT : Notices.INFO,
                         Component.translatable("solostatus.notice.mastery_up", name, newLevel),
-                        Component.translatable(milestone ? "solostatus.notice.mastery_milestone." + newLevel : "solostatus.notice.mastery_up.desc"));
+                        Component.translatable(milestone ? "solostatus.notice.mastery_milestone." + newLevel : "solostatus.notice.mastery_up.desc"),
+                        key.startsWith("magic:") ? net.minecraft.world.item.Items.ENCHANTED_BOOK : WeaponType.byKey(key).icon);
             }
         }
     }

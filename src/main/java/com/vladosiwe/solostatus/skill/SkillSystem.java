@@ -135,7 +135,7 @@ public final class SkillSystem {
     }
 
     public static float energyCost(PlayerData d, SkillDef def) {
-        return (float) (def.energyCost * (1 - d.skillRank("arcane_flow") * 0.06));
+        return (float) (def.energyCost * (1 - d.skillRank("arcane_flow") * 0.06) * (d.achievements.contains("skill_master") ? 0.95 : 1.0));
     }
 
     public static int cooldownFor(PlayerData d, SkillDef def, int rank) {

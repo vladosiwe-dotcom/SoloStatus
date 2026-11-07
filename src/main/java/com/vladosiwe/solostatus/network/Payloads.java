@@ -40,12 +40,14 @@ public final class Payloads {
     }
 
     /** Системное уведомление (повышение уровня, пробуждение навыка, достижение...). */
-    public record Notice(int kind, Component title, Component body) implements CustomPacketPayload {
+    /** icon — картинка уведомления (иконка достижения, навыка и т.п.), может быть пустой. */
+    public record Notice(int kind, Component title, Component body, net.minecraft.world.item.ItemStack icon) implements CustomPacketPayload {
         public static final Type<Notice> TYPE = Payloads.typeOf("notice");
         public static final StreamCodec<RegistryFriendlyByteBuf, Notice> CODEC = StreamCodec.composite(
                 ByteBufCodecs.VAR_INT, Notice::kind,
                 ComponentSerialization.STREAM_CODEC, Notice::title,
                 ComponentSerialization.STREAM_CODEC, Notice::body,
+                net.minecraft.world.item.ItemStack.OPTIONAL_STREAM_CODEC, Notice::icon,
                 Notice::new);
         @Override public Type<Notice> type() { return TYPE; }
     }

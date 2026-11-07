@@ -94,6 +94,20 @@ public final class ServerEvents {
                 d.counters.put("sprint_m", meters);
                 d.unlockCheckPending = true;
             }
+            // Чутьё охотника: подсветка враждебных существ рядом
+            int sense = d.skillRank("hunter_sense");
+            if (sense > 0) {
+                double r = 10 + 3 * sense;
+                for (net.minecraft.world.entity.Mob m : p.serverLevel().getEntitiesOfClass(net.minecraft.world.entity.Mob.class,
+                        p.getBoundingBox().inflate(r), m -> m instanceof net.minecraft.world.entity.monster.Enemy)) {
+                    m.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.GLOWING, 110, 0, false, false));
+                }
+            }
+            // Восстановление вне боя
+            int regen = d.skillRank("regeneration");
+            if (regen > 0 && p.serverLevel().getGameTime() - d.lastCombatTick > 100 && p.getHealth() < p.getMaxHealth()) {
+                p.heal(0.5f * regen);
+            }
             // Аура бодрости Поддержки
             int vigor = d.skillRank("aura_of_vigor");
             if (vigor > 0) {

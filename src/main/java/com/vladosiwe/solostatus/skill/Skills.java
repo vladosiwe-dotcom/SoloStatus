@@ -167,7 +167,43 @@ public final class Skills {
         reg(b("afterimage", AWAKENING, PASSIVE, Items.PHANTOM_MEMBRANE).level(12).requires(Req.counter("dodges", 40)).requires(Req.stat(Stat.AGI, 25)).build());
         reg(b("weak_point", AWAKENING, PASSIVE, Items.ARROW).level(12).requires(Req.counter("crits", 200)).requires(Req.stat(Stat.PER, 20)).build());
 
+        // ---- Второй круг пробуждений: мастерство 25 + навык первого круга ----
+        reg(b("blade_flash", AWAKENING, MOVEMENT, Items.GOLDEN_SWORD).level(20).requires(Req.mastery(WeaponType.SWORD, 25)).parent("cross_slash", 2)
+                .cooldown(10, 0.6).energy(18).effect(SkillEffects::bladeFlash).build());
+        reg(b("titan_grip", AWAKENING, PASSIVE, Items.IRON_BLOCK).level(20).requires(Req.mastery(WeaponType.GREATSWORD, 25)).parent("earthshatter", 2).build());
+        reg(b("deep_wounds", AWAKENING, PASSIVE, Items.REDSTONE).level(20).requires(Req.mastery(WeaponType.DAGGER, 25)).parent("vital_strike", 2).build());
+        reg(b("rending_cleave", AWAKENING, ATTACK, Items.NETHERITE_AXE).level(20).requires(Req.mastery(WeaponType.AXE, 25)).parent("sunder", 2)
+                .cooldown(12, 0.8).energy(22).effect(SkillEffects::rendingCleave).build());
+        reg(b("spear_whirl", AWAKENING, ATTACK, Items.BREEZE_ROD).level(20).requires(Req.mastery(WeaponType.SPEAR, 25)).parent("piercing_thrust", 2)
+                .cooldown(11, 0.7).energy(20).effect(SkillEffects::spearWhirl).build());
+        reg(b("shockwave", AWAKENING, ATTACK, Items.HEAVY_CORE).level(20).requires(Req.mastery(WeaponType.MACE, 25)).parent("ground_pound", 2)
+                .cooldown(14, 0.8).energy(25).effect(SkillEffects::shockwave).build());
+        reg(b("frost_arrow", AWAKENING, ATTACK, Items.SNOWBALL).level(20).requires(Req.mastery(WeaponType.BOW, 25)).parent("eagle_eye", 2)
+                .cooldown(9, 0.5).energy(15).effect(SkillEffects::frostArrow).build());
+        reg(b("explosive_bolt", AWAKENING, ATTACK, Items.FIREWORK_ROCKET).level(20).requires(Req.mastery(WeaponType.CROSSBOW, 25)).parent("heavy_bolts", 2)
+                .cooldown(10, 0.6).energy(18).effect(SkillEffects::explosiveBolt).build());
+        reg(b("shield_charge", AWAKENING, DEFENSE, Items.IRON_DOOR).level(20).requires(Req.mastery(WeaponType.SHIELD, 25)).parent("perfect_guard", 2)
+                .cooldown(12, 0.8).energy(18).effect(SkillEffects::shieldCharge).build());
+        reg(b("arcane_blast", AWAKENING, MAGIC, Items.AMETHYST_CLUSTER).level(20).requires(Req.mastery(WeaponType.STAFF, 25)).parent("mana_surge", 2)
+                .cooldown(10, 0.6).energy(25).effect(SkillEffects::arcaneBlast).build());
+        reg(b("fist_barrage", AWAKENING, ATTACK, Items.LEATHER).level(20).requires(Req.mastery(WeaponType.FIST, 25)).parent("iron_fist", 2)
+                .cooldown(8, 0.5).energy(14).effect(SkillEffects::fistBarrage).build());
+
+        // ---- Стиль боя ----
+        reg(b("battle_trance", AWAKENING, PASSIVE, Items.GOLDEN_PICKAXE).level(15).requires(Req.counter("combos", 50)).build());
+        reg(b("giant_slayer", AWAKENING, PASSIVE, Items.PIGLIN_HEAD).level(25).requires(Req.counter("strong_kills", 100)).build());
+        reg(b("hunter_sense", AWAKENING, PASSIVE, Items.ENDER_EYE).level(15).requires(Req.stat(Stat.PER, 30)).requires(Req.counter("night_kills", 50)).build());
+        reg(b("regeneration", AWAKENING, PASSIVE, Items.GOLDEN_APPLE).level(12).requires(Req.stat(Stat.VIT, 25)).requires(Req.counter("kills", 300)).build());
+        reg(b("school_affinity", AWAKENING, MAGIC, Items.ENCHANTING_TABLE).level(15).requires(Req.bestMagicMastery(15)).requires(Req.stat(Stat.INT, 20)).build());
+        reg(b("mana_blade", AWAKENING, MAGIC, Items.LAPIS_BLOCK).level(18).requires(Req.stat(Stat.INT, 25)).requires(Req.counter("magic_hits", 300))
+                .requires(Req.counter("melee_kills", 300)).cooldown(20, 1.2).energy(25).effect(SkillEffects::manaBlade).build());
+
         // ============================== HIDDEN ==============================
+        reg(b("rampage", HIDDEN, PASSIVE, Items.FIRE_CHARGE).level(15).requires(Req.counter("rampages", 5)).build());
+        reg(b("dominance", HIDDEN, PASSIVE, Items.WITHER_SKELETON_SKULL).level(30).requires(Req.rankAtLeast(com.vladosiwe.solostatus.rank.HunterRank.B))
+                .requires(Req.counter("strong_kills", 200)).build());
+        reg(b("shadow_legion", HIDDEN, MAGIC, Items.BONE).ranks(3).level(40).rankStep(15).requires(Req.counter("kills", 2000)).requires(Req.bosses(1))
+                .cooldown(120, 15).energy(60).effect(SkillEffects::shadowLegion).build());
         reg(b("tenacity", HIDDEN, PASSIVE, Items.CHAINMAIL_CHESTPLATE).level(10).requires(Req.counter("low_hp_kills", 10)).build());
         reg(b("second_wind", HIDDEN, PASSIVE, Items.TOTEM_OF_UNDYING).ranks(3).level(20).rankStep(15).requires(Req.achievement("undying")).build());
         reg(b("ruler_grip", HIDDEN, MAGIC, Items.DRAGON_BREATH).ranks(3).level(50).rankStep(15).requires(Req.bosses(2)).requires(Req.stat(Stat.INT, 30))

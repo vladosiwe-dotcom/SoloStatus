@@ -67,11 +67,13 @@ public final class IronsSpellsCompat {
         int att = d.skillRank("elemental_attunement");
         int flow = d.skillRank("arcane_flow");
         int grace = d.skillRank("divine_grace");
+        int affinity = d.skillRank("school_affinity");
         for (String school : SCHOOLS) {
             double v = 0;
             if (att > 0 && (school.equals("fire") || school.equals("ice") || school.equals("lightning"))) v += 0.03 * att;
             if (flow > 0 && (school.equals("ender") || school.equals("evocation") || school.equals("eldritch"))) v += 0.02 * flow;
             if (grace > 0 && (school.equals("holy") || school.equals("nature"))) v += 0.04 * grace;
+            if (affinity > 0 && com.vladosiwe.solostatus.combat.CombatEvents.bestMagicIs(d, school)) v += 0.03 * affinity;
             set(p, school + "_spell_power", v, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         }
     }

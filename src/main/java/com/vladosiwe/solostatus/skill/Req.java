@@ -83,6 +83,42 @@ public final class Req {
         };
     }
 
+    public static Requirement rankAtLeast(com.vladosiwe.solostatus.rank.HunterRank rank) {
+        return new Requirement() {
+            public double progress(PlayerData d) { return d.rank.ordinal() >= rank.ordinal() ? 1 : 0; }
+            public Component describe(PlayerData d) { return Component.translatable("solostatus.req.rank", rank.displayName()); }
+        };
+    }
+
+    /** Лучшее мастерство любой школы магии (ключи magic:*). */
+    public static Requirement bestMagicMastery(int lvl) {
+        return new Requirement() {
+            private int best(PlayerData d) {
+                int b = 0;
+                for (var e : d.mastery.entrySet()) if (e.getKey().startsWith("magic:")) b = Math.max(b, MasteryMath.level(e.getValue()));
+                return b;
+            }
+            public double progress(PlayerData d) { return ratio(best(d), lvl); }
+            public Component describe(PlayerData d) { return Component.translatable("solostatus.req.best_magic", lvl, best(d)); }
+        };
+    }
+
+    /** Сколько навыков пробуждено боевым опытом (пробуждения + скрытые). */
+    public static Requirement awakenedCount(int n) {
+        return new Requirement() {
+            private int count(PlayerData d) {
+                int c = 0;
+                for (String id : d.skills.keySet()) {
+                    SkillDef def = Skills.get(id);
+                    if (def != null && (def.source == SkillSource.AWAKENING || def.source == SkillSource.HIDDEN)) c++;
+                }
+                return c;
+            }
+            public double progress(PlayerData d) { return ratio(count(d), n); }
+            public Component describe(PlayerData d) { return Component.translatable("solostatus.req.awakened", n, count(d)); }
+        };
+    }
+
     public static Requirement advanced() {
         return new Requirement() {
             public double progress(PlayerData d) { return d.advanced ? 1 : 0; }

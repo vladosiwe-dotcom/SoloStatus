@@ -39,7 +39,7 @@ public final class ClassSystem {
         player.serverLevel().sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1, player.getZ(), 60, 0.4, 2, 0.4, 0.15);
         SkillFx.sound(player.serverLevel(), player.position(), SoundEvents.BEACON_ACTIVATE, 1f, 1f);
         SkillFx.sound(player.serverLevel(), player.position(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 0.9f);
-        Notices.send(player, Notices.CLASS, Component.translatable("solostatus.notice.class_chosen"), hc.displayName());
+        Notices.send(player, Notices.CLASS, Component.translatable("solostatus.notice.class_chosen"), hc.displayName(), hc.icon());
     }
 
     public static void chooseSpec(ServerPlayer player, Specialization spec) {
@@ -54,7 +54,7 @@ public final class ClassSystem {
         d.markDirty();
         player.serverLevel().sendParticles(SkillFx.SYSTEM_DUST, player.getX(), player.getY() + 1, player.getZ(), 100, 0.8, 1.2, 0.8, 0.05);
         SkillFx.sound(player.serverLevel(), player.position(), SoundEvents.BEACON_POWER_SELECT, 1f, 1f);
-        Notices.send(player, Notices.CLASS, Component.translatable("solostatus.notice.spec_chosen"), spec.displayName());
+        Notices.send(player, Notices.CLASS, Component.translatable("solostatus.notice.spec_chosen"), spec.displayName(), spec.parent.icon());
     }
 
     /** Условия Испытания смены пути для класса (кроме уровня и специализации). */
@@ -80,7 +80,8 @@ public final class ClassSystem {
         d.achievements.add("class_trial");
         d.unseenAchievements.add("class_trial");
         d.markDirty();
-        Notices.send(player, Notices.CLASS, Component.translatable("solostatus.notice.advanced"), d.specialization.advancedName());
+        Notices.send(player, Notices.CLASS, Component.translatable("solostatus.notice.advanced"), d.specialization.advancedName(),
+                net.minecraft.world.item.Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE);
         SkillDef ult = Skills.ultimate(d.hunterClass);
         if (ult != null) SkillUnlockSystem.awaken(player, d, ult);
     }

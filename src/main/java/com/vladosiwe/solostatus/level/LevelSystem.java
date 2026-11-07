@@ -79,7 +79,8 @@ public final class LevelSystem {
             d.skillPoints++;
             Notices.send(player, Notices.LEVEL_UP,
                     Component.translatable("solostatus.notice.limit_break"),
-                    Component.translatable("solostatus.notice.limit_break.desc", d.overflowAwakenings, MAX_OVERFLOW_AWAKENINGS));
+                    Component.translatable("solostatus.notice.limit_break.desc", d.overflowAwakenings, MAX_OVERFLOW_AWAKENINGS),
+                    net.minecraft.world.item.Items.NETHER_STAR);
         }
         if (d.overflowAwakenings >= MAX_OVERFLOW_AWAKENINGS) d.overflowXp = 0;
     }
@@ -100,7 +101,8 @@ public final class LevelSystem {
 
         Notices.send(player, Notices.LEVEL_UP,
                 Component.translatable("solostatus.notice.level_up", d.level),
-                Component.translatable("solostatus.notice.level_up.desc", gained * SoloConfig.STAT_POINTS_PER_LEVEL.get()));
+                Component.translatable("solostatus.notice.level_up.desc", gained * SoloConfig.STAT_POINTS_PER_LEVEL.get()),
+                net.minecraft.world.item.Items.EXPERIENCE_BOTTLE);
     }
 
     /** Административная установка уровня (команда). Очки пересчитываются по формулам. */

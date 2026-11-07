@@ -81,7 +81,8 @@ public final class HunterRankSystem {
             player.serverLevel().sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1, player.getZ(), 60, 0.5, 1, 0.5, 0.4);
             player.serverLevel().sendParticles(SkillFx.SYSTEM_DUST, player.getX(), player.getY() + 1, player.getZ(), 80, 1, 1.5, 1, 0.02);
             SkillFx.sound(player.serverLevel(), player.position(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1f, 0.8f);
-            Notices.send(player, Notices.RANK_UP, Component.translatable("solostatus.notice.rank_up"), rank.displayName());
+            Notices.send(player, Notices.RANK_UP, Component.translatable("solostatus.notice.rank_up"), rank.displayName(),
+                    net.minecraft.world.item.Items.NETHER_STAR);
         } else if (rank.ordinal() < d.rank.ordinal()) {
             // Ранг не понижается (например, после сброса) — достигнутое признание сохраняется.
         }

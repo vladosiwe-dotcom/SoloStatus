@@ -47,6 +47,7 @@ public final class AttributeSystem {
         if (d.achievements.contains("marathon")) speed += 0.03;
 
         double armor = d.skillRank("iron_skin");
+        if (d.achievements.contains("iron_wall")) armor += 1;
         if (hc == HunterClass.DEFENDER) armor += 2;
 
         double knockback = d.skillRank("iron_skin") * 0.02 + d.skillRank("thorns_body") * 0.05;
@@ -54,7 +55,8 @@ public final class AttributeSystem {
 
         set(player, Attributes.MAX_HEALTH, HEALTH, health, AttributeModifier.Operation.ADD_VALUE);
         set(player, Attributes.MOVEMENT_SPEED, SPEED, speed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-        set(player, Attributes.ATTACK_SPEED, ATK_SPEED, StatFormulas.attackSpeed(d), AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        set(player, Attributes.ATTACK_SPEED, ATK_SPEED, StatFormulas.attackSpeed(d) + (d.achievements.contains("frenzy") ? 0.03 : 0),
+                AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         set(player, Attributes.LUCK, LUCK, StatFormulas.luckAttribute(d), AttributeModifier.Operation.ADD_VALUE);
         set(player, Attributes.ARMOR, ARMOR, armor, AttributeModifier.Operation.ADD_VALUE);
         set(player, Attributes.KNOCKBACK_RESISTANCE, KNOCKBACK, Math.min(0.5, knockback), AttributeModifier.Operation.ADD_VALUE);

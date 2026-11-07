@@ -136,37 +136,61 @@ public final class SoloHud {
             float p = n.progress(now);
             float a = p < 0.08f ? p / 0.08f : p > 0.85f ? (1 - p) / 0.15f : 1f;
             a = Mth.clamp(a, 0f, 1f);
-            boolean big = n.kind() == 2 || n.kind() == 4 || n.kind() == 5 || n.kind() == 7;
+            boolean big = n.kind() == 2 || n.kind() == 3 || n.kind() == 4 || n.kind() == 5 || n.kind() == 7;
             int titleColor = switch (n.kind()) {
-                case 1 -> Holo.GOLD;
+                case 1, 3 -> Holo.GOLD;
                 case 2, 7 -> Holo.ACCENT;
                 case 4 -> Holo.PURPLE;
                 case 5 -> 0xFFFF5050;
                 case 6 -> Holo.RED;
                 default -> Holo.TEXT;
             };
-            Component header = Component.translatable(n.kind() == 6 ? "solostatus.hud.alert" : "solostatus.hud.system");
-            int w = Math.max(Math.max(font.width(n.title()), font.width(n.body())) + 24, big ? 220 : 160);
+            Component header = Component.translatable(switch (n.kind()) {
+                case 6 -> "solostatus.hud.alert";
+                case 3 -> "solostatus.hud.achievement";
+                case 4 -> "solostatus.hud.hidden_achievement";
+                default -> "solostatus.hud.system";
+            });
+            boolean hasIcon = !n.icon().isEmpty();
+            int iconSize = big ? 32 : 16;
+            int iconPad = hasIcon ? iconSize + 14 : 0;
+            int textW = Math.max(Math.max(font.width(n.title()) * (big ? 5 : 4) / 4, font.width(n.body())), font.width(header));
+            int w = Math.max(textW + 24 + iconPad, big ? 240 : 160);
             w = Math.min(w, sw - 20);
             int h = big ? 50 : 40;
             int x = sw / 2 - w / 2;
+            int cxText = x + iconPad + (w - iconPad) / 2; // центр текстовой части
             float slide = p < 0.08f ? (1 - p / 0.08f) * 10 : 0;
             g.pose().pushPose();
             g.pose().translate(0, -slide, 300);
             Holo.panel(g, x, y, w, h, a);
             if (a > 0.1f) {
                 int ta = Math.max(5, (int) (a * 255)) << 24;
-                g.drawCenteredString(font, header, sw / 2, y + 4, (Holo.DIM & 0xFFFFFF) | ta);
+                // Картинка: иконка в светящейся рамке, с лёгкой пульсацией
+                if (hasIcon) {
+                    int ix = x + 8;
+                    int iy = y + (h - iconSize) / 2;
+                    int glow = (int) (40 + 40 * Math.sin(now / 250.0));
+                    g.fill(ix - 3, iy - 3, ix + iconSize + 3, iy + iconSize + 3, (glow << 24) | (titleColor & 0xFFFFFF));
+                    g.renderOutline(ix - 3, iy - 3, iconSize + 6, iconSize + 6, (titleColor & 0xFFFFFF) | ta);
+                    g.pose().pushPose();
+                    g.pose().translate(ix, iy, 0);
+                    float s = iconSize / 16f;
+                    g.pose().scale(s, s, 1);
+                    g.renderItem(n.icon(), 0, 0);
+                    g.pose().popPose();
+                }
+                g.drawCenteredString(font, header, cxText, y + 4, (Holo.DIM & 0xFFFFFF) | ta);
                 if (big) {
                     g.pose().pushPose();
-                    g.pose().translate(sw / 2f, y + 16, 0);
+                    g.pose().translate(cxText, y + 16, 50);
                     g.pose().scale(1.25f, 1.25f, 1);
                     g.drawCenteredString(font, n.title(), 0, 0, (titleColor & 0xFFFFFF) | ta);
                     g.pose().popPose();
-                    g.drawCenteredString(font, n.body(), sw / 2, y + 34, (Holo.TEXT & 0xFFFFFF) | ta);
+                    g.drawCenteredString(font, n.body(), cxText, y + 34, (Holo.TEXT & 0xFFFFFF) | ta);
                 } else {
-                    g.drawCenteredString(font, n.title(), sw / 2, y + 15, (titleColor & 0xFFFFFF) | ta);
-                    g.drawCenteredString(font, n.body(), sw / 2, y + 27, (Holo.TEXT & 0xFFFFFF) | ta);
+                    g.drawCenteredString(font, n.title(), cxText, y + 15, (titleColor & 0xFFFFFF) | ta);
+                    g.drawCenteredString(font, n.body(), cxText, y + 27, (Holo.TEXT & 0xFFFFFF) | ta);
                 }
             }
             g.pose().popPose();

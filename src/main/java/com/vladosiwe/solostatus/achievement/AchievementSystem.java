@@ -48,7 +48,7 @@ public final class AchievementSystem {
         SkillFx.sound(level, player.position(), def.hidden() ? SoundEvents.UI_TOAST_CHALLENGE_COMPLETE : SoundEvents.PLAYER_LEVELUP, 0.8f, 1.2f);
 
         Component body = def.perk() ? Component.translatable("solostatus.notice.achievement.perk", def.description(), def.perkText()) : def.description();
-        Notices.send(player, def.hidden() ? Notices.HIDDEN_ACHIEVEMENT : Notices.ACHIEVEMENT, def.name(), body);
+        Notices.send(player, def.hidden() ? Notices.HIDDEN_ACHIEVEMENT : Notices.ACHIEVEMENT, def.name(), body, def.icon());
         if (def.xp() > 0) LevelSystem.grantXp(player, def.xp());
     }
 }

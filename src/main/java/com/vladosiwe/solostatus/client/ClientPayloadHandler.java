@@ -23,7 +23,7 @@ public final class ClientPayloadHandler {
     }
 
     public static void notice(Payloads.Notice msg) {
-        ClientState.addNotice(msg.kind(), msg.title(), msg.body());
+        ClientState.addNotice(msg.kind(), msg.title(), msg.body(), msg.icon());
         if (msg.kind() == 6) {
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS, 0.6f));
         }

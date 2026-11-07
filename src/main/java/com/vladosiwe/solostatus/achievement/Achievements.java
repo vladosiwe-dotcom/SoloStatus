@@ -61,6 +61,13 @@ public final class Achievements {
         reg("rank_c", false, Items.COPPER_INGOT, 2000, 0, 0, false, rank(HunterRank.C));
         reg("rank_a", false, Items.GOLD_INGOT, 6000, 0, 0, false, rank(HunterRank.A));
         reg("rank_s", false, Items.DIAMOND, 12000, 0, 1, false, rank(HunterRank.S));
+        reg("combo_1000", false, Items.BLAZE_ROD, 4000, 0, 0, true, Req.counter("combos", 1000));
+        reg("skill_master", false, Items.EXPERIENCE_BOTTLE, 4000, 0, 0, true, Req.counter("skills_used", 1000));
+        reg("iron_wall", false, Items.SHIELD, 4000, 0, 0, true, Req.counter("blocks", 1000));
+        reg("sharp_eye", false, Items.SPYGLASS, 4000, 0, 0, true, Req.counter("long_shots", 500));
+        reg("magic_scholar", false, Items.BOOKSHELF, 4000, 0, 0, true, Req.counter("magic_hits", 3000));
+        reg("collector", false, Items.CHEST, 3000, 0, 0, true, Req.distinctKills(40));
+        reg("awakened_10", false, Items.END_CRYSTAL, 5000, 1, 0, false, Req.awakenedCount(10));
         reg("class_trial", false, Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 0, 0, 0, false, Req.advanced());
 
         // ------------------------------ Скрытые ------------------------------
@@ -73,6 +80,8 @@ public final class Achievements {
         reg("marathon", true, Items.LEATHER_BOOTS, 2000, 0, 0, true, Req.counter("sprint_m", 50000));
         reg("dragon_slayer", true, Items.DRAGON_EGG, 5000, 0, 0, true, boss("minecraft:ender_dragon"));
         reg("witherbane", true, Items.WITHER_SKELETON_SKULL, 5000, 0, 0, true, boss("minecraft:wither"));
+        reg("giant_killer", true, Items.IRON_GOLEM_SPAWN_EGG, 4000, 0, 0, true, Req.counter("giant_kills", 25));
+        reg("frenzy", true, Items.FIRE_CHARGE, 3000, 0, 0, true, Req.counter("rampages", 25));
         reg("deep_dark", true, Items.SCULK_CATALYST, 5000, 0, 0, true, boss("minecraft:warden"));
     }
 

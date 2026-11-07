@@ -50,7 +50,16 @@ import java.util.List;
  */
 @EventBusSubscriber(modid = SoloStatus.MODID)
 public final class CombatEvents {
+    /** Метка призванных навыком существ (Легион теней). */
+    public static final String SUMMON_TAG = "solostatus_summon";
+
     private CombatEvents() {}
+
+    /** Призванные существа не переживают перезагрузку мира — нельзя «сохранить» временных союзников. */
+    @SubscribeEvent
+    public static void onJoinLevel(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {
+        if (event.loadedFromDisk() && event.getEntity().getPersistentData().getBoolean(SUMMON_TAG)) event.setCanceled(true);
+    }
 
     // =====================================================================
     // Метка мобов из спавнеров (анти-фарм)
@@ -79,8 +88,26 @@ public final class CombatEvents {
         if (source.getEntity() instanceof ServerPlayer attacker && attacker != target) {
             handleOffense(event, attacker, target, source);
         }
-        // Отбрасывающий выстрел
+        // Отбрасывающий выстрел, ледяная стрела, разрывной болт
         Entity direct = source.getDirectEntity();
+        if (direct != null && direct.getPersistentData().contains("solostatus_freeze") && source.getEntity() instanceof ServerPlayer shooter) {
+            int rank = direct.getPersistentData().getInt("solostatus_freeze");
+            direct.getPersistentData().remove("solostatus_freeze");
+            target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60 + 10 * rank, 2), shooter);
+            target.setTicksFrozen(Math.max(target.getTicksFrozen(), 200));
+            SkillFx.particles((ServerLevel) target.level(), ParticleTypes.SNOWFLAKE, target.getBoundingBox().getCenter(), 25, 0.4, 0.05);
+        }
+        if (direct != null && direct.getPersistentData().contains("solostatus_explode") && source.getEntity() instanceof ServerPlayer shooter) {
+            double dmg = direct.getPersistentData().getDouble("solostatus_explode");
+            direct.getPersistentData().remove("solostatus_explode");
+            Vec3 at = target.position();
+            Scheduler.later(1, () -> {
+                if (!shooter.isAlive()) return;
+                for (LivingEntity e : SkillFx.enemiesAround(shooter, at, 2.5)) SkillFx.hitPhysical(shooter, e, dmg);
+                SkillFx.particles(shooter.serverLevel(), ParticleTypes.EXPLOSION, at.add(0, 0.5, 0), 2, 0.3, 0);
+                SkillFx.sound(shooter.serverLevel(), at, SoundEvents.DRAGON_FIREBALL_EXPLODE, 0.7f, 1.3f);
+            });
+        }
         if (direct != null && direct.getPersistentData().contains("solostatus_knock")) {
             double k = direct.getPersistentData().getDouble("solostatus_knock");
             Vec3 from = target.position().subtract(direct.getDeltaMovement().normalize());
@@ -137,6 +164,9 @@ public final class CombatEvents {
         if (d.stateActive("berserk", now)) mult *= 1.15;
         if (p.getHealth() < p.getMaxHealth() * 0.3f) mult *= 1 - 0.05 * d.skillRank("tenacity");
         mult *= 1 - guardianAura(p);
+        if (attackerEntity instanceof LivingEntity weak && weak.getMaxHealth() < p.getMaxHealth() * 0.5f) {
+            mult *= 1 - 0.10 * d.skillRank("dominance"); // Властность: слабые враги бьют слабее
+        }
         event.setAmount((float) Math.max(0, amount * mult));
 
         // Шипы Колосса
@@ -279,6 +309,12 @@ public final class CombatEvents {
         if (SkillFx.marked(target, "sunder", p)) add += 0.15 + 0.03 * (d.skillRank("sunder") - 1);
         if (SkillFx.marked(target, "hex", null)) add += 0.10 + 0.03 * Math.max(0, d.skillRank("hex") - 1);
 
+        // --- Охотник на гигантов и награды достижений ---
+        if (target.getMaxHealth() > p.getMaxHealth() * 2) add += 0.05 * d.skillRank("giant_slayer");
+        if (d.achievements.contains("giant_killer") && Threat.of(target) >= Threat.STRONG) add += 0.05;
+        if (projectile && d.achievements.contains("sharp_eye")) critChance += 0.03;
+        if (magic && ironSchool == null) add += 0.03 * d.skillRank("school_affinity") * (bestMagicIs(d, "arcane") ? 1 : 0);
+
         // --- Награды скрытых достижений ---
         if (d.achievements.contains("bone_lord") && target.getType().is(EntityTypeTags.SKELETONS)) add += 0.08;
         if (d.achievements.contains("night_hunter") && level.isNight()) add += 0.05;
@@ -298,7 +334,7 @@ public final class CombatEvents {
             d.lastComboTick = now;
             d.comboWeapon = type.key;
             if (masteryLevel >= 25 && d.comboCount % 4 == 0) {
-                add += 0.25;
+                add += 0.25 + (d.achievements.contains("combo_1000") ? 0.10 : 0);
                 SkillFx.particles(level, ParticleTypes.ENCHANTED_HIT, target.getBoundingBox().getCenter(), 20, 0.4, 0.2);
                 SkillFx.sound(level, target.position(), SoundEvents.PLAYER_ATTACK_STRONG, 0.8f, 1.5f);
                 d.addCounter("combos", 1);
@@ -316,6 +352,25 @@ public final class CombatEvents {
             if (Threat.fairness(target, p) > 0.2) d.addCounter("crits", 1);
         }
         event.setAmount(amount);
+
+        // --- Пассивки оружия второго круга ---
+        if (melee && !skill && type == WeaponType.GREATSWORD && p.getRandom().nextDouble() < 0.05 * d.skillRank("titan_grip")) {
+            SkillFx.stun(p, target, 20);
+            SkillFx.particles(level, ParticleTypes.CRIT, target.getBoundingBox().getCenter(), 10, 0.3, 0.2);
+        }
+        if (melee && !skill && type == WeaponType.DAGGER && p.getRandom().nextDouble() < 0.08 * d.skillRank("deep_wounds")) {
+            target.addEffect(new MobEffectInstance(MobEffects.WITHER, 60, 0), p);
+            SkillFx.particles(level, SkillFx.BLOOD_DUST, target.getBoundingBox().getCenter(), 8, 0.2, 0.05);
+        }
+        // --- Клинок маны: дополнительный магический урон ---
+        if (melee && !skill && d.manaBladeCharges > 0 && d.stateActive("mana_blade", now)) {
+            d.manaBladeCharges--;
+            double extra = StatFormulas.baseSpellDamage(d) * (0.3 + 0.08 * (d.skillRank("mana_blade") - 1));
+            Scheduler.later(1, () -> {
+                if (target.isAlive()) SkillFx.hitMagic(p, target, extra);
+            });
+            SkillFx.particles(level, SkillFx.SYSTEM_DUST, target.getBoundingBox().getCenter(), 10, 0.3, 0.02);
+        }
 
         // --- Вампиризм Берсерка ---
         if (d.stateActive("berserk", now)) p.heal(amount * 0.10f);
@@ -344,6 +399,19 @@ public final class CombatEvents {
         }
         target.getPersistentData().putBoolean(Threat.ENGAGED_TAG, target.getPersistentData().getBoolean(Threat.ENGAGED_TAG)
                 || (target instanceof net.minecraft.world.entity.Mob m && m.getTarget() == p));
+    }
+
+    /** Совпадает ли школа с лучшим магическим мастерством игрока. */
+    public static boolean bestMagicIs(PlayerData d, String school) {
+        String best = null;
+        double bestXp = -1;
+        for (var e : d.mastery.entrySet()) {
+            if (e.getKey().startsWith("magic:") && e.getValue() > bestXp) {
+                bestXp = e.getValue();
+                best = e.getKey().substring(6);
+            }
+        }
+        return school.equals(best);
     }
 
     private static boolean isBehind(Player attacker, LivingEntity target) {
@@ -528,6 +596,23 @@ public final class CombatEvents {
         } else {
             MasterySystem.addWeapon(p, d, WeaponClassifier.classify(p.getMainHandItem()), gain);
         }
+
+        // --- Неистовство: 3 победы за 10 секунд ---
+        d.killTimes.addLast(now);
+        while (!d.killTimes.isEmpty() && now - d.killTimes.peekFirst() > 200) d.killTimes.pollFirst();
+        if (d.killTimes.size() >= 3 && !d.stateActive("rampage_cd", now)) {
+            SkillFx.state(d, level, "rampage_cd", 200);
+            d.addCounter("rampages", 1);
+            int rampage = d.skillRank("rampage");
+            if (rampage > 0) {
+                p.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 100 + 20 * rampage, rampage >= 4 ? 1 : 0), p);
+                p.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 100 + 20 * rampage, 0), p);
+                SkillFx.particles(level, SkillFx.BLOOD_DUST, p.position().add(0, 1, 0), 30, 0.5, 0.05);
+            }
+        }
+        if (threat >= 8 && !boss) d.addCounter("giant_kills", 1);
+        int trance = d.skillRank("battle_trance");
+        if (trance > 0) p.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 60 + 20 * trance, trance >= 4 ? 1 : 0, false, false), p);
 
         // --- Пассивки на убийство ---
         int commander = d.skillRank("commander");

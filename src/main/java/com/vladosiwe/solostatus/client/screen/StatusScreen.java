@@ -342,7 +342,7 @@ public class StatusScreen extends Screen {
             g.fill(px, cy, px + pw - 2, cy + 13, sel ? 0xC02A6FA8 : 0x80102030);
             g.renderOutline(px, cy, pw - 2, 13, sel ? 0xFFFFFFFF : 0x803FB4FF);
             g.drawCenteredString(font, Component.translatable("solostatus.skills.page." + page.name().toLowerCase()), px + (pw - 2) / 2, cy + 3, sel ? Holo.TEXT : Holo.DIM);
-            hotspots.add(new Hotspot(px, cy, pw - 2, 13, () -> { skillPage = page; tabTime = System.currentTimeMillis(); }));
+            hotspots.add(new Hotspot(px, cy, pw - 2, 13, () -> { skillPage = page; scroll = 0; tabTime = System.currentTimeMillis(); }));
         }
         int ty = cy + 18;
         int th = ch - 18 - 26;
@@ -368,7 +368,17 @@ public class StatusScreen extends Screen {
         int ox = cx + 12, oy = ty + 18;
         if (skillPage == SkillPage.AWAKENED) {
             int perRow = Math.max(1, (treeW - 16) / 30);
-            for (int i = 0; i < list.size(); i++) pos.put(list.get(i).id, new int[]{ox + (i % perRow) * 30, oy + (i / perRow) * 30});
+            int rows = (list.size() + perRow - 1) / perRow;
+            int visibleRows = Math.max(1, (th - 22) / 30);
+            scroll = Mth.clamp(scroll, 0, Math.max(0, rows - visibleRows));
+            for (int i = 0; i < list.size(); i++) {
+                int row = i / perRow - scroll;
+                if (row < 0 || row >= visibleRows) continue;
+                pos.put(list.get(i).id, new int[]{ox + (i % perRow) * 30, oy + row * 30});
+            }
+            if (rows > visibleRows) {
+                g.drawString(font, (scroll > 0 ? "▲ " : "") + (scroll < rows - visibleRows ? "▼" : ""), cx + treeW - 16, ty + 4, Holo.DIM, false);
+            }
         } else {
             for (SkillDef def : list) pos.put(def.id, new int[]{ox + def.treeColumn * 48, oy + def.treeRow * 36});
         }
@@ -386,11 +396,13 @@ public class StatusScreen extends Screen {
         // Узлы
         for (SkillDef def : list) {
             int[] p = pos.get(def.id);
-            if (p[1] + 22 > ty + th) continue;
+            if (p == null || p[1] + 22 > ty + th) continue;
             renderNode(g, d, def, p[0], p[1], mx, my);
         }
         if (selectedSkill == null || !pos.containsKey(selectedSkill)) {
-            selectedSkill = list.isEmpty() ? null : list.get(0).id;
+            if (selectedSkill == null || list.stream().noneMatch(x -> x.id.equals(selectedSkill))) {
+                selectedSkill = list.isEmpty() ? null : list.get(0).id;
+            }
         }
 
         // Слоты

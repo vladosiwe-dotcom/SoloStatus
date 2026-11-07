@@ -77,7 +77,8 @@ public final class StatFormulas {
     }
 
     public static double maxEnergy(PlayerData d) {
-        return 100 + d.level * 0.5 + eff(d, Stat.INT) * 1.5 + d.skillRank("arcane_mind") * 15;
+        return 100 + d.level * 0.5 + eff(d, Stat.INT) * 1.5 + d.skillRank("arcane_mind") * 15
+                + (d.achievements.contains("magic_scholar") ? 20 : 0);
     }
 
     /** Восстановление энергии в секунду. */
@@ -88,7 +89,8 @@ public final class StatFormulas {
     }
 
     public static double extraDropChance(PlayerData d) {
-        return Math.min(CAP_DROP, eff(d, Stat.LUCK) * safe(SoloConfig.LUCK_DROP_PER_POINT, 0.002));
+        return Math.min(CAP_DROP, eff(d, Stat.LUCK) * safe(SoloConfig.LUCK_DROP_PER_POINT, 0.002))
+                + (d.achievements.contains("collector") ? 0.02 : 0);
     }
 
     public static double luckAttribute(PlayerData d) {

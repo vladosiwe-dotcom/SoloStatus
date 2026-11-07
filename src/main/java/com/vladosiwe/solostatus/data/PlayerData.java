@@ -89,6 +89,10 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
     public transient long shieldRaisedTick = -1000;
     public transient long lastDamagedTick = -1000;
     public transient long lastCombatTick = -1000;
+    /** Время последних убийств (для «Неистовства»). */
+    public transient final java.util.ArrayDeque<Long> killTimes = new java.util.ArrayDeque<>();
+    /** Заряды «Клинка маны». */
+    public transient int manaBladeCharges = 0;
     public transient long lastComboTick = -1000;
     public transient int comboCount = 0;
     public transient String comboWeapon = "";

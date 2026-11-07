@@ -25,15 +25,15 @@ public final class ClientState {
 
     private ClientState() {}
 
-    public record Notice(int kind, Component title, Component body, long start, long duration) {
+    public record Notice(int kind, Component title, Component body, net.minecraft.world.item.ItemStack icon, long start, long duration) {
         public float progress(long now) {
             return (now - start) / (float) duration;
         }
     }
 
-    public static void addNotice(int kind, Component title, Component body) {
-        long duration = kind == 2 || kind == 4 || kind == 5 || kind == 7 ? 5500 : 3500;
-        QUEUE.add(new Notice(kind, title, body, 0, duration));
+    public static void addNotice(int kind, Component title, Component body, net.minecraft.world.item.ItemStack icon) {
+        long duration = kind == 2 || kind == 3 || kind == 4 || kind == 5 || kind == 7 ? 5500 : 3500;
+        QUEUE.add(new Notice(kind, title, body, icon, 0, duration));
     }
 
     /** Переносит уведомления из очереди на экран (не более 3 одновременно). */
@@ -41,7 +41,7 @@ public final class ClientState {
         NOTICES.removeIf(n -> n.progress(now) >= 1f);
         while (NOTICES.size() < 3 && !QUEUE.isEmpty()) {
             Notice n = QUEUE.poll();
-            NOTICES.add(new Notice(n.kind(), n.title(), n.body(), now, n.duration()));
+            NOTICES.add(new Notice(n.kind(), n.title(), n.body(), n.icon(), now, n.duration()));
         }
     }
 
