@@ -46,6 +46,10 @@ public final class SoloConfig {
     public static final ModConfigSpec.BooleanValue CHAT_PHRASE_ENABLED;
     public static final ModConfigSpec.ConfigValue<String> CHAT_PHRASE;
     public static final ModConfigSpec.BooleanValue SHOW_HUD;
+    public static final ModConfigSpec.EnumValue<com.vladosiwe.solostatus.voice.VoiceMode> VOICE_MODE;
+    public static final ModConfigSpec.ConfigValue<String> VOICE_LANGUAGE;
+    public static final ModConfigSpec.ConfigValue<String> VOICE_MODEL_PATH;
+    public static final ModConfigSpec.BooleanValue VOICE_INDICATOR;
 
     static {
         ModConfigSpec.Builder b = new ModConfigSpec.Builder();
@@ -91,6 +95,14 @@ public final class SoloConfig {
         CHAT_PHRASE_ENABLED = c.comment("Открывать окно статуса фразой в чате (текстовый вариант голосовой команды)").define("chatPhraseEnabled", true);
         CHAT_PHRASE = c.define("chatPhrase", "Система, покажи статус");
         SHOW_HUD = c.define("showHud", true);
+        c.push("voice");
+        VOICE_MODE = c.comment("Голосовые команды (Vosk, распознавание локально на вашем ПК, звук никуда не отправляется).",
+                "OFF — выключено, PUSH_TO_TALK — только пока зажата клавиша голоса, ALWAYS — постоянно слушать командные фразы.")
+                .defineEnum("mode", com.vladosiwe.solostatus.voice.VoiceMode.ALWAYS);
+        VOICE_LANGUAGE = c.comment("Язык распознавания: auto (по языку игры), ru или en").define("language", "auto");
+        VOICE_MODEL_PATH = c.comment("Путь к своей модели Vosk. Пусто — config/solostatus/vosk/<модель>").define("modelPath", "");
+        VOICE_INDICATOR = c.comment("Показывать индикатор микрофона на экране").define("indicator", true);
+        c.pop();
         CLIENT_SPEC = c.build();
     }
 

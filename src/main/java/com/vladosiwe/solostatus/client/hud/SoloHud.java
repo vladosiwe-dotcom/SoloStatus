@@ -47,7 +47,36 @@ public final class SoloHud {
                 renderBar(g, mc, font, d, sw, sh);
             }
         }
+        renderVoice(g, font, sw);
         renderNotices(g, font, sw);
+    }
+
+    /** Индикатор микрофона: игрок всегда видит, когда распознавание слушает. */
+    private static void renderVoice(GuiGraphics g, Font font, int sw) {
+        boolean indicator;
+        try {
+            indicator = SoloConfig.VOICE_INDICATOR.get();
+        } catch (Exception e) {
+            indicator = true;
+        }
+        var state = com.vladosiwe.solostatus.client.voice.VoiceClient.state();
+        if (!indicator || state == com.vladosiwe.solostatus.client.voice.VoskEngine.State.STOPPED
+                || state == com.vladosiwe.solostatus.client.voice.VoskEngine.State.ERROR) return;
+        boolean capturing = com.vladosiwe.solostatus.client.voice.VoiceClient.capturing();
+        boolean loading = state == com.vladosiwe.solostatus.client.voice.VoskEngine.State.LOADING;
+        Component label = Component.translatable(loading ? "solostatus.hud.voice.loading" : capturing ? "solostatus.hud.voice.active" : "solostatus.hud.voice");
+        int w = font.width(label) + 8;
+        int x = sw - w - 4;
+        int y = 4;
+        g.fill(x, y, x + w, y + 12, 0xA0061424);
+        int color = loading ? Holo.DIM : capturing ? ((System.currentTimeMillis() / 600) % 2 == 0 ? Holo.ACCENT : 0xFF3FB4FF) : Holo.DIM;
+        g.renderOutline(x, y, w, 12, color);
+        g.drawString(font, label, x + 4, y + 2, color, false);
+        String heard = com.vladosiwe.solostatus.client.voice.VoiceClient.lastHeard();
+        if (!heard.isEmpty()) {
+            Component h = Component.translatable("solostatus.voice.heard", heard);
+            g.drawString(font, h, sw - font.width(h) - 6, y + 16, Holo.TEXT, true);
+        }
     }
 
     private static void renderBar(GuiGraphics g, Minecraft mc, Font font, PlayerData d, int sw, int sh) {

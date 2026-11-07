@@ -18,6 +18,7 @@ public final class ClientSetup {
     public static void keys(RegisterKeyMappingsEvent event) {
         event.register(Keys.OPEN_STATUS);
         event.register(Keys.INSPECT);
+        event.register(Keys.VOICE);
         for (KeyMapping k : Keys.SKILLS) event.register(k);
     }
 

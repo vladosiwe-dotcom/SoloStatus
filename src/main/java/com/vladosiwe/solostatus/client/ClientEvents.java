@@ -2,6 +2,7 @@ package com.vladosiwe.solostatus.client;
 
 import com.vladosiwe.solostatus.SoloStatus;
 import com.vladosiwe.solostatus.client.screen.StatusScreen;
+import com.vladosiwe.solostatus.client.voice.VoiceClient;
 import com.vladosiwe.solostatus.combat.WeaponClassifier;
 import com.vladosiwe.solostatus.combat.WeaponType;
 import com.vladosiwe.solostatus.config.SoloConfig;
@@ -19,6 +20,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientChatEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
@@ -34,6 +36,7 @@ public final class ClientEvents {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
         ClientState.pumpNotices(System.currentTimeMillis());
+        VoiceClient.tick(mc);
 
         if (ClientState.openStatusNextTick && mc.screen == null) {
             ClientState.openStatusNextTick = false;
@@ -76,8 +79,19 @@ public final class ClientEvents {
     }
 
     @SubscribeEvent
+    public static void onLogin(ClientPlayerNetworkEvent.LoggingIn event) {
+        VoiceClient.start();
+    }
+
+    @SubscribeEvent
     public static void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientState.reset();
+        VoiceClient.onLogout();
+    }
+
+    @SubscribeEvent
+    public static void onClientCommands(RegisterClientCommandsEvent event) {
+        VoiceClient.registerCommands(event.getDispatcher());
     }
 
     @SubscribeEvent

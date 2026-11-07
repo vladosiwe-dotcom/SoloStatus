@@ -13,6 +13,9 @@ public final class Keys {
             InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, CATEGORY);
     public static final KeyMapping INSPECT = new KeyMapping("key.solostatus.inspect", KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_I, CATEGORY);
+    /** Голос: удерживать и говорить (режим PUSH_TO_TALK). */
+    public static final KeyMapping VOICE = new KeyMapping("key.solostatus.voice", KeyConflictContext.UNIVERSAL,
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, CATEGORY);
     public static final KeyMapping[] SKILLS = {
             new KeyMapping("key.solostatus.skill1", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, CATEGORY),
             new KeyMapping("key.solostatus.skill2", KeyConflictContext.IN_GAME, InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_X, CATEGORY),

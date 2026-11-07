@@ -43,11 +43,28 @@ neoForge {
 
 repositories {
     mavenLocal()
+    mavenCentral()
 }
 
 dependencies {
     // Ядро мода не имеет жёстких зависимостей от Epic Fight и Iron's Spells:
     // интеграции изолированы в пакете compat и включаются только если мод установлен.
+
+    // Vosk — офлайн-распознавание речи для голосовых команд (только клиент).
+    // Встраивается внутрь jar мода (Jar-in-Jar), отдельно ставить ничего не нужно.
+    // JNA не встраиваем: она уже входит в Minecraft.
+    jarJar(implementation('com.alphacephei:vosk')) {
+        version {
+            strictly '[0.3.45,0.4)'
+            prefer '0.3.45'
+        }
+        transitive = false
+    }
+}
+
+// Для запуска runClient из среды разработки библиотека должна быть и на runtime classpath игры.
+if (configurations.findByName('additionalRuntimeClasspath') != null) {
+    dependencies.add('additionalRuntimeClasspath', 'com.alphacephei:vosk:0.3.45') { transitive = false }
 }
 
 var generateModMetadata = tasks.register('generateModMetadata', ProcessResources) {
