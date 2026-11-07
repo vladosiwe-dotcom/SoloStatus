@@ -52,6 +52,16 @@ public final class Payloads {
         @Override public Type<Notice> type() { return TYPE; }
     }
 
+    /** Получен опыт системы (для всплывающей подписи у полоски уровня). */
+    public record XpGain(int amount, int reason) implements CustomPacketPayload {
+        public static final Type<XpGain> TYPE = Payloads.typeOf("xp_gain");
+        public static final StreamCodec<ByteBuf, XpGain> CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT, XpGain::amount,
+                ByteBufCodecs.VAR_INT, XpGain::reason,
+                XpGain::new);
+        @Override public Type<XpGain> type() { return TYPE; }
+    }
+
     /** Результат осмотра другого игрока: только разрешённые поля. */
     public record InspectResult(int entityId, CompoundTag tag) implements CustomPacketPayload {
         public static final Type<InspectResult> TYPE = Payloads.typeOf("inspect_result");

@@ -28,7 +28,7 @@ public final class LevelSystem {
     private LevelSystem() {}
 
     public static long xpToNext(int level) {
-        return Math.round(40 * Math.pow(level, 1.45) + 60);
+        return Math.round(30 * Math.pow(level, 1.35) + 70);
     }
 
     public static long overflowNeed(int awakenings) {
@@ -42,10 +42,20 @@ public final class LevelSystem {
     }
 
     public static void grantXp(ServerPlayer player, double rawAmount) {
+        grantXp(player, rawAmount, XpReason.KILL);
+    }
+
+    /**
+     * Опыт системы. Полностью отделён от ванильного опыта (зелёная полоска), который остаётся
+     * для зачарования и ремонта. Игрок видит прирост во всплывающей подписи у своей полоски уровня.
+     */
+    public static void grantXp(ServerPlayer player, double rawAmount, XpReason reason) {
         if (rawAmount <= 0) return;
         PlayerData d = Hunter.get(player);
         if (!d.hasClass()) return; // система ещё не пробуждена
         long amount = Math.max(1, Math.round(rawAmount * SoloConfig.XP_MULTIPLIER.get()));
+        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+                new com.vladosiwe.solostatus.network.Payloads.XpGain((int) Math.min(Integer.MAX_VALUE, amount), reason.ordinal()));
 
         if (d.level >= PlayerData.MAX_LEVEL) {
             addOverflow(player, d, amount);

@@ -401,6 +401,27 @@ public final class CombatEvents {
                 || (target instanceof net.minecraft.world.entity.Mob m && m.getTarget() == p));
     }
 
+    /** Опыт за босса (первая победа над этим видом; повторные — 25%). */
+    private static double bossXp(String type, LivingEntity dead) {
+        return switch (type) {
+            case "minecraft:ender_dragon" -> 15000;
+            case "minecraft:wither" -> 10000;
+            case "minecraft:warden" -> 8000;
+            case "minecraft:elder_guardian" -> 3000;
+            default -> 2000 + Math.min(20000, dead.getMaxHealth() * 10);
+        };
+    }
+
+    private static net.minecraft.world.item.Item bossIcon(String type) {
+        return switch (type) {
+            case "minecraft:ender_dragon" -> net.minecraft.world.item.Items.DRAGON_HEAD;
+            case "minecraft:wither" -> net.minecraft.world.item.Items.NETHER_STAR;
+            case "minecraft:warden" -> net.minecraft.world.item.Items.SCULK_CATALYST;
+            case "minecraft:elder_guardian" -> net.minecraft.world.item.Items.PRISMARINE_SHARD;
+            default -> net.minecraft.world.item.Items.WITHER_SKELETON_SKULL;
+        };
+    }
+
     /** Совпадает ли школа с лучшим магическим мастерством игрока. */
     public static boolean bestMagicIs(PlayerData d, String school) {
         String best = null;
@@ -554,9 +575,23 @@ public final class CombatEvents {
         boolean boss = Threat.isBoss(dead);
         boolean counts = fairness > 0.2;
 
-        // --- Опыт ---
-        double xp = 10 * Math.pow(threat, 1.1) * (boss ? 5 : 1) * fairness;
-        LevelSystem.grantXp(p, xp);
+        // --- Опыт системы ---
+        // Разница «уровня» врага и охотника: слабые для вашего уровня враги дают меньше (до 30%),
+        // сильные — больше (до 150%). Ожидаемая опасность растёт с уровнем: 1 + уровень × 0.06.
+        double expected = 1 + d.level * 0.06;
+        double gap = Math.max(0.3, Math.min(1.5, threat / (expected * 0.6)));
+        if (boss) {
+            boolean first = !d.bossesKilled.contains(type);
+            double bossXp = bossXp(type, dead) * (first ? 1.0 : 0.25);
+            LevelSystem.grantXp(p, bossXp * Math.max(0.5, fairness), com.vladosiwe.solostatus.level.XpReason.BOSS);
+            com.vladosiwe.solostatus.network.Notices.send(p, com.vladosiwe.solostatus.network.Notices.ACHIEVEMENT,
+                    net.minecraft.network.chat.Component.translatable(first ? "solostatus.notice.boss_first" : "solostatus.notice.boss", dead.getDisplayName()),
+                    net.minecraft.network.chat.Component.translatable("solostatus.notice.boss.desc",
+                            Math.round(bossXp * Math.max(0.5, fairness) * com.vladosiwe.solostatus.config.SoloConfig.XP_MULTIPLIER.get())),
+                    bossIcon(type));
+        } else {
+            LevelSystem.grantXp(p, 10 * Math.pow(threat, 1.1) * gap * fairness, com.vladosiwe.solostatus.level.XpReason.KILL);
+        }
 
         if (fairness <= 0) return;
 
@@ -565,6 +600,10 @@ public final class CombatEvents {
         if (!counts) return;
 
         d.addCounter("kills", 1);
+        // Новый вид противника — бонус за исследование (разнообразие боёв)
+        if (!d.killsByType.containsKey(type) && !boss) {
+            LevelSystem.grantXp(p, 50 + 25 * Math.min(10, threat), com.vladosiwe.solostatus.level.XpReason.DISCOVERY);
+        }
         d.killsByType.merge(type, 1, Integer::sum);
         Entity direct = source.getDirectEntity();
         boolean projectile = direct instanceof Projectile;

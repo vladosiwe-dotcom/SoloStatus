@@ -32,6 +32,10 @@ public final class MasterySystem {
         if (newLevel > oldLevel) {
             d.markDirty();
             boolean milestone = newLevel == 10 || newLevel == 25 || newLevel == 40 || newLevel == 50;
+            if (milestone) {
+                int bonus = switch (newLevel) { case 10 -> 300; case 25 -> 1500; case 40 -> 4000; default -> 8000; };
+                com.vladosiwe.solostatus.level.LevelSystem.grantXp(player, bonus, com.vladosiwe.solostatus.level.XpReason.MASTERY);
+            }
             if (milestone || newLevel % 5 == 0) {
                 Notices.send(player, milestone ? Notices.ACHIEVEMENT : Notices.INFO,
                         Component.translatable("solostatus.notice.mastery_up", name, newLevel),

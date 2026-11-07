@@ -650,5 +650,17 @@
   "solostatus.req.awakened": "Пробуждённых навыков: %s (сейчас %s)",
   "solostatus.hud.achievement": "[ ДОСТИЖЕНИЕ ]",
   "solostatus.hud.hidden_achievement": "[ СКРЫТОЕ ДОСТИЖЕНИЕ ]",
-  "solostatus.summon.shadow": "Тень"
+  "solostatus.summon.shadow": "Тень",
+  "solostatus.xp.kill": "бой",
+  "solostatus.xp.boss": "босс",
+  "solostatus.xp.discovery": "новый вид",
+  "solostatus.xp.achievement": "достижение",
+  "solostatus.xp.mastery": "мастерство",
+  "solostatus.xp.trial": "смена пути",
+  "solostatus.xp.rank": "ранг",
+  "solostatus.xp.command": "команда",
+  "solostatus.xp.gain": "+%s опыта · %s",
+  "solostatus.notice.boss_first": "Босс повержен впервые: %s",
+  "solostatus.notice.boss": "Босс повержен: %s",
+  "solostatus.notice.boss.desc": "+%s опыта системы"
 }

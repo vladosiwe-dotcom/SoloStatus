@@ -19,6 +19,34 @@ public final class ClientState {
     public static final List<Notice> NOTICES = new ArrayList<>();
     private static final Deque<Notice> QUEUE = new ArrayDeque<>();
 
+    /** Всплывающие подписи «+N опыта» (одинаковые источники за 1.2 с объединяются). */
+    public static final List<XpPopup> XP_POPUPS = new ArrayList<>();
+
+    public static final class XpPopup {
+        public final int reason;
+        public long amount;
+        public long start;
+
+        XpPopup(int reason, long amount, long start) {
+            this.reason = reason;
+            this.amount = amount;
+            this.start = start;
+        }
+    }
+
+    public static void addXpPopup(int reason, int amount) {
+        long now = System.currentTimeMillis();
+        for (XpPopup p : XP_POPUPS) {
+            if (p.reason == reason && now - p.start < 1200) {
+                p.amount += amount;
+                p.start = now;
+                return;
+            }
+        }
+        XP_POPUPS.add(new XpPopup(reason, amount, now));
+        while (XP_POPUPS.size() > 4) XP_POPUPS.remove(0);
+    }
+
     @Nullable public static CompoundTag inspectData;
     public static int inspectEntityId = -1;
     public static boolean openStatusNextTick = false;
@@ -50,6 +78,7 @@ public final class ClientState {
         synced = false;
         NOTICES.clear();
         QUEUE.clear();
+        XP_POPUPS.clear();
         inspectData = null;
         inspectEntityId = -1;
     }

@@ -77,6 +77,7 @@ public final class ClassSystem {
         if (!trialAvailable(d) || d.hunterClass == null) return;
         for (Requirement r : trialRequirements(d.hunterClass)) if (!r.met(d)) return;
         d.advanced = true;
+        com.vladosiwe.solostatus.level.LevelSystem.grantXp(player, 8000, com.vladosiwe.solostatus.level.XpReason.TRIAL);
         d.achievements.add("class_trial");
         d.unseenAchievements.add("class_trial");
         d.markDirty();

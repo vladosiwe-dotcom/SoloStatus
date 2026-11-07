@@ -29,6 +29,10 @@ public final class ClientPayloadHandler {
         }
     }
 
+    public static void xpGain(Payloads.XpGain msg) {
+        ClientState.addXpPopup(msg.reason(), msg.amount());
+    }
+
     public static void inspect(Payloads.InspectResult msg) {
         ClientState.inspectData = msg.tag();
         ClientState.inspectEntityId = msg.entityId();

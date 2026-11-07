@@ -37,7 +37,7 @@ public final class SoloCommands {
                 .requires(s -> s.hasPermission(2))
                 .then(Commands.literal("xp").then(Commands.argument("targets", EntityArgument.players())
                         .then(Commands.argument("amount", IntegerArgumentType.integer(1))
-                                .executes(c -> each(c, p -> LevelSystem.grantXp(p, IntegerArgumentType.getInteger(c, "amount")))))))
+                                .executes(c -> each(c, p -> LevelSystem.grantXp(p, IntegerArgumentType.getInteger(c, "amount"), com.vladosiwe.solostatus.level.XpReason.COMMAND))))))
                 .then(Commands.literal("level").then(Commands.argument("targets", EntityArgument.players())
                         .then(Commands.argument("level", IntegerArgumentType.integer(1, PlayerData.MAX_LEVEL))
                                 .executes(c -> each(c, p -> LevelSystem.setLevel(p, IntegerArgumentType.getInteger(c, "level")))))))

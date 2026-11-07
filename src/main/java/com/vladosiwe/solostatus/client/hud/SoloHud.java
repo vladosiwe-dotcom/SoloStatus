@@ -80,7 +80,7 @@ public final class SoloHud {
     }
 
     private static void renderBar(GuiGraphics g, Minecraft mc, Font font, PlayerData d, int sw, int sh) {
-        int baseX = sw / 2 + 98;
+        int baseX = sw / 2 + 91 + 28; // правее индикатора атаки / второй руки
         int y = sh - 22;
         long gameTime = mc.level != null ? mc.level.getGameTime() : 0;
         for (int i = 0; i < PlayerData.SKILL_SLOTS; i++) {
@@ -117,15 +117,56 @@ public final class SoloHud {
         if (baseX + bw <= sw) {
             Holo.bar(g, baseX, y - 13, bw, 3, d.energy / Math.max(1, max), 0xFF3FB4FF);
         }
-        // уровень и ранг слева от хотбара
-        String lvl = "Lv." + d.level;
-        int lx = sw / 2 - 98 - font.width(lvl) - 18;
-        if (lx > 2) {
-            g.drawString(font, lvl, lx, y + 6, Holo.ACCENT, true);
-            int rx = lx + font.width(lvl) + 3;
-            g.fill(rx, y + 4, rx + 12, y + 16, 0xC0061424);
-            g.renderOutline(rx, y + 4, 12, 12, d.rank.color);
-            g.drawCenteredString(font, d.rank.letter, rx + 6, y + 6, d.rank.color);
+        // Блок охотника слева от хотбара: уровень, ранг и СВОЯ полоска опыта системы.
+        // Ванильная зелёная полоска остаётся для зачарования и не связана с уровнем охотника.
+        int bw2 = 72;
+        int bx = sw / 2 - 91 - 29 - bw2 - 4; // левее слота второй руки
+        int by = sh - 24;
+        if (bx > 2) {
+            g.fill(bx, by, bx + bw2, by + 22, 0xB0061424);
+            g.renderOutline(bx, by, bw2, 22, 0x803FB4FF);
+            g.drawString(font, "Lv." + d.level, bx + 4, by + 3, Holo.ACCENT, true);
+            int rx = bx + bw2 - 15;
+            g.fill(rx, by + 2, rx + 12, by + 13, 0xC0061424);
+            g.renderOutline(rx, by + 2, 12, 11, d.rank.color);
+            g.drawCenteredString(font, d.rank.letter, rx + 6, by + 4, d.rank.color);
+            double frac;
+            int color;
+            if (d.level < PlayerData.MAX_LEVEL) {
+                frac = d.xp / (double) com.vladosiwe.solostatus.level.LevelSystem.xpToNext(d.level);
+                color = 0xFFFFD36B;
+            } else {
+                frac = d.overflowXp / (double) com.vladosiwe.solostatus.level.LevelSystem.overflowNeed(d.overflowAwakenings);
+                color = 0xFFFF9B3F;
+            }
+            // Подсветка полоски сразу после получения опыта
+            boolean fresh = !ClientState.XP_POPUPS.isEmpty()
+                    && System.currentTimeMillis() - ClientState.XP_POPUPS.get(ClientState.XP_POPUPS.size() - 1).start < 600;
+            Holo.bar(g, bx + 4, by + 15, bw2 - 8, 3, frac, fresh ? 0xFFFFFFFF : color);
+            renderXpPopups(g, font, bx + bw2, by - 2);
+        }
+    }
+
+    /** Всплывающие «+N опыта» над блоком охотника; поднимаются и тают за 2 секунды. */
+    private static void renderXpPopups(GuiGraphics g, Font font, int right, int bottom) {
+        long now = System.currentTimeMillis();
+        ClientState.XP_POPUPS.removeIf(p -> now - p.start > 2000);
+        int i = 0;
+        for (int k = ClientState.XP_POPUPS.size() - 1; k >= 0; k--) {
+            ClientState.XpPopup p = ClientState.XP_POPUPS.get(k);
+            float t = (now - p.start) / 2000f;
+            int alpha = Mth.clamp((int) ((t < 0.75f ? 1f : (1 - t) / 0.25f) * 255), 8, 255);
+            int rise = (int) (t * 8);
+            var reason = com.vladosiwe.solostatus.level.XpReason.byIndex(p.reason);
+            Component text = Component.translatable("solostatus.xp.gain", p.amount, Component.translatable(reason.key()));
+            int color = switch (reason) {
+                case BOSS, TRIAL, RANK -> 0xFF5050;
+                case ACHIEVEMENT, MASTERY -> 0xC08CFF;
+                case DISCOVERY -> 0x7DFF9B;
+                default -> 0xFFD36B;
+            };
+            g.drawString(font, text, right - font.width(text), bottom - 9 - i * 10 - rise, (alpha << 24) | color, true);
+            i++;
         }
     }
 

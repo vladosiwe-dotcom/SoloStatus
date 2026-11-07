@@ -650,5 +650,17 @@
   "solostatus.req.awakened": "Awakened skills: %s (now %s)",
   "solostatus.hud.achievement": "[ ACHIEVEMENT ]",
   "solostatus.hud.hidden_achievement": "[ HIDDEN ACHIEVEMENT ]",
-  "solostatus.summon.shadow": "Shadow"
+  "solostatus.summon.shadow": "Shadow",
+  "solostatus.xp.kill": "combat",
+  "solostatus.xp.boss": "boss",
+  "solostatus.xp.discovery": "new species",
+  "solostatus.xp.achievement": "achievement",
+  "solostatus.xp.mastery": "mastery",
+  "solostatus.xp.trial": "path change",
+  "solostatus.xp.rank": "rank",
+  "solostatus.xp.command": "command",
+  "solostatus.xp.gain": "+%s XP · %s",
+  "solostatus.notice.boss_first": "Boss defeated for the first time: %s",
+  "solostatus.notice.boss": "Boss defeated: %s",
+  "solostatus.notice.boss.desc": "+%s System XP"
 }

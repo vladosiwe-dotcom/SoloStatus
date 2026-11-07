@@ -49,6 +49,6 @@ public final class AchievementSystem {
 
         Component body = def.perk() ? Component.translatable("solostatus.notice.achievement.perk", def.description(), def.perkText()) : def.description();
         Notices.send(player, def.hidden() ? Notices.HIDDEN_ACHIEVEMENT : Notices.ACHIEVEMENT, def.name(), body, def.icon());
-        if (def.xp() > 0) LevelSystem.grantXp(player, def.xp());
+        if (def.xp() > 0) LevelSystem.grantXp(player, def.xp(), com.vladosiwe.solostatus.level.XpReason.ACHIEVEMENT);
     }
 }

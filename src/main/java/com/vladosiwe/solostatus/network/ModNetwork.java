@@ -28,6 +28,8 @@ public final class ModNetwork {
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.energy(p)));
         r.playToClient(Payloads.Notice.TYPE, Payloads.Notice.CODEC,
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.notice(p)));
+        r.playToClient(Payloads.XpGain.TYPE, Payloads.XpGain.CODEC,
+                (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.xpGain(p)));
         r.playToClient(Payloads.InspectResult.TYPE, Payloads.InspectResult.CODEC,
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.inspect(p)));
 
