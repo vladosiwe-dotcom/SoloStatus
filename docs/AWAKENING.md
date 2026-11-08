@@ -73,6 +73,8 @@ python3 tools/blockbench/awakening.py
   В логе: `Awakening: drawn with GeckoLib (slim model, skin minecraft:textures/entity/player/slim/efe.png)`, то есть модель
   получила стандартный скин игрока и slim-руки. С установленным Epic Fight сцена рисуется поверх его рендера.
 
+![Кадры сцены с настоящего клиента: 1.4, 3.0, 3.4, 4.4, 5.2, 6.3, 6.8, 7.6 с](images/awakening-e2e.jpg)
+
 ## Ограничения
 
 - На модели сцены нет брони и предметов в руках: это короткая сцена «пробуждения», а не бой.
