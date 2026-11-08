@@ -72,7 +72,7 @@ public final class AwakeningScene {
     @SubscribeEvent
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer p) || Hunter.get(p).introPlayed || !SoloConfig.AWAKENING_INTRO.get()) return;
-        Scheduler.later(40, () -> { // let the client finish loading the world first
+        Scheduler.later(60, () -> { // let the client finish loading the world (and the launcher's arrival effect) first
             if (!p.hasDisconnected() && p.isAlive() && !Hunter.get(p).introPlayed) start(p);
         });
     }

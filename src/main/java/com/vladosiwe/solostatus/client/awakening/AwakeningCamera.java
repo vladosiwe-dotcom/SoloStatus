@@ -20,7 +20,8 @@ public final class AwakeningCamera {
             new Shot(2.6, -0.80, 0.05, 1.05, -1.0, 0, 0.25),   // slowly closer while the eyes open
             new Shot(3.5, -0.20, 0.35, 1.25, -0.75, 0, 0.45),  // the head lifts: pull back toward the feet
             new Shot(5.5, 1.70, 1.10, 1.20, 0, 0, 1.05),       // sitting: from the front-side
-            new Shot(7.0, -1.40, 0.55, 1.85, 1.5, 0, 1.45),    // standing: over the shoulder
+            new Shot(6.6, 0.20, 2.20, 1.60, 0, 0, 1.30),       // rising: from the side, at a distance (orbit, never brushing past)
+            new Shot(7.4, -1.60, 0.70, 1.90, 1.5, 0, 1.50),    // standing: over the shoulder
     };
 
     private AwakeningCamera() {}
@@ -55,7 +56,8 @@ public final class AwakeningCamera {
             cam = cam.lerp(eye, m);
             yaw = yaw + Mth.wrapDegrees(viewYaw - yaw) * (float) m;
             pitch = Mth.lerp((float) m, pitch, viewPitch);
-            return new Pose(cam, yaw, pitch, m < 0.85);
+            // stop drawing the body before the camera reaches the head, so it never looks out from inside the skull
+            return new Pose(cam, yaw, pitch, cam.distanceTo(eye) > 0.6);
         }
         return new Pose(cam, yaw, pitch, true);
     }

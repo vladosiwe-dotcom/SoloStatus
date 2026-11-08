@@ -76,7 +76,7 @@ public final class AwakeningClient {
 
     /** Automated client test (Rift end-to-end run): frames of the scene saved as screenshots. Off unless SOLO_E2E_SHOTS=1. */
     private static final boolean SHOTS = "1".equals(System.getenv("SOLO_E2E_SHOTS"));
-    private static final double[] SHOT_TIMES = {0.4, 1.9, 2.4, 3.3, 4.6, 6.4, 7.9};
+    private static final double[] SHOT_TIMES = {0.6, 1.4, 1.9, 2.4, 3.0, 3.4, 4.4, 5.2, 6.2, 6.8, 7.6};
     private static int shotsTaken;
 
     @SubscribeEvent
