@@ -50,6 +50,18 @@ public final class WeaponClassifier {
         return WeaponType.NONE;
     }
 
+    /**
+     * A weapon you fight with (Epic Fight battle mode): swords, daggers, spears, maces, greatswords, bows, crossbows,
+     * staves and battle axes. Tools (a plain axe too), blocks, shields and an empty hand are not.
+     */
+    public static boolean isCombatWeapon(ItemStack stack) {
+        return switch (classify(stack)) {
+            case SWORD, GREATSWORD, DAGGER, SPEAR, MACE, BOW, CROSSBOW, STAFF -> true;
+            case AXE -> !(stack.getItem() instanceof AxeItem) || has(BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath(), "battle", "double", "war");
+            default -> false;
+        };
+    }
+
     /** Предмет, который может иметь качество (любое оружие, кроме пустой руки). */
     public static boolean isQualityWeapon(ItemStack stack) {
         WeaponType t = classify(stack);

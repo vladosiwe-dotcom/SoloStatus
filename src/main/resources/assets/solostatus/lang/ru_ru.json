@@ -771,5 +771,6 @@
   "solostatus.affix.luck": "удачи",
   "solostatus.notice.awakened": "Пробуждение",
   "solostatus.notice.awakened.desc": "Система выбрала вас. Откройте окно Системы и выберите класс.",
-  "solostatus.notice.awakened.desc_class": "Система снова с вами."
+  "solostatus.notice.awakened.desc_class": "Система снова с вами.",
+  "solostatus.configuration.epicFightFirstPersonBody": "Epic Fight: своё тело от первого лица"
 }

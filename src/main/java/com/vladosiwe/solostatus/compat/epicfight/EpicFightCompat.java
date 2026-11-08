@@ -60,6 +60,9 @@ public final class EpicFightCompat {
     private static MethodHandle getPatch;
     private static MethodHandle playClientSide;
     private static MethodHandle getEntityPatch;
+    /** PlayerPatch.toEpicFightMode(boolean sync), toVanillaMode(boolean sync), isEpicFightMode() — checked against 21.17.3.1. */
+    private static MethodHandle toEpicFightMode, toVanillaMode, isEpicFightMode;
+    private static String modeError = "init() not called";
     private static MethodHandle getOriginal;
     private static Class<?> animationsClass;
     private static final Map<String, Object> ANIM_CACHE = new HashMap<>();
@@ -86,6 +89,17 @@ public final class EpicFightCompat {
             SoloStatus.LOGGER.warn("Epic Fight: анимации навыков недоступны ({}). Навыки будут использовать ванильный взмах.", animationsError);
         }
         try {
+            Class<?> playerPatch = Class.forName("yesman.epicfight.world.capabilities.entitypatch.player.PlayerPatch", false, EpicFightCompat.class.getClassLoader());
+            toEpicFightMode = L.findVirtual(playerPatch, "toEpicFightMode", MethodType.methodType(void.class, boolean.class));
+            toVanillaMode = L.findVirtual(playerPatch, "toVanillaMode", MethodType.methodType(void.class, boolean.class));
+            isEpicFightMode = L.findVirtual(playerPatch, "isEpicFightMode", MethodType.methodType(boolean.class));
+            modeError = null;
+            SoloStatus.LOGGER.info("Epic Fight: боевой режим включается только с оружием в руке");
+        } catch (Throwable t) {
+            modeError = t.toString();
+            SoloStatus.LOGGER.warn("Epic Fight: автопереключение режима недоступно ({})", modeError);
+        }
+        try {
             hookDodge();
             hookTakeDamage();
             eventsHooked = true;
@@ -94,6 +108,36 @@ public final class EpicFightCompat {
         } catch (Throwable t) {
             eventsError = t.toString();
             SoloStatus.LOGGER.warn("Epic Fight: события уклонения/парирования недоступны ({})", t.toString());
+        }
+    }
+
+    public static boolean modeSwitchReady() { return modeError == null; }
+    public static String modeError() { return modeError; }
+
+    /**
+     * Battle mode only with a weapon in hand: tools, blocks, food and an empty hand put the player in Epic Fight's
+     * vanilla (mining) mode, a weapon switches to battle mode. Applied when the held item changes, so the player can
+     * still toggle by hand while holding the same item.
+     */
+    public static void matchModeToHeldItem(ServerPlayer player, boolean weapon) {
+        if (modeError != null || getPatch == null) return;
+        try {
+            Optional<?> patch = (Optional<?>) getPatch.invoke((Entity) player);
+            if (patch.isEmpty()) return;
+            boolean battle = (boolean) isEpicFightMode.invoke(patch.get());
+            if (weapon && !battle) toEpicFightMode.invoke(patch.get(), true);
+            else if (!weapon && battle) toVanillaMode.invoke(patch.get(), true);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /** Test helper: whether Epic Fight's battle mode is on for this player (null if it has no patch). */
+    public static Boolean battleMode(ServerPlayer player) {
+        try {
+            Optional<?> patch = (Optional<?>) getPatch.invoke((Entity) player);
+            return patch.isEmpty() ? null : (Boolean) (boolean) isEpicFightMode.invoke(patch.get());
+        } catch (Throwable t) {
+            return null;
         }
     }
 
