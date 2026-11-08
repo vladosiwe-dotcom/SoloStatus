@@ -74,12 +74,26 @@ public final class AwakeningClient {
         return mc.player != null && time(mc.player, 0) >= 0;
     }
 
+    /** Automated client test (Rift end-to-end run): frames of the scene saved as screenshots. Off unless SOLO_E2E_SHOTS=1. */
+    private static final boolean SHOTS = "1".equals(System.getenv("SOLO_E2E_SHOTS"));
+    private static final double[] SHOT_TIMES = {0.4, 1.9, 2.4, 3.3, 4.6, 6.4, 7.9};
+    private static int shotsTaken;
+
     @SubscribeEvent
     public static void onTick(ClientTickEvent.Post event) {
         var mc = Minecraft.getInstance();
         if (mc.level == null) {
             SCENES.clear();
             return;
+        }
+        if (SHOTS && mc.player != null && shotsTaken < SHOT_TIMES.length) {
+            double t = time(mc.player, 0);
+            if (t >= SHOT_TIMES[shotsTaken]) {
+                String name = "awakening-" + shotsTaken + "-" + String.format(java.util.Locale.ROOT, "%.1f", t) + "s.png";
+                shotsTaken++;
+                net.minecraft.client.Screenshot.grab(mc.gameDirectory, name, mc.getMainRenderTarget(),
+                        m -> SoloStatus.LOGGER.info("Awakening: screenshot {}", name));
+            }
         }
         SCENES.entrySet().removeIf(en -> {
             boolean over = mc.level.getGameTime() - en.getValue().start > AwakeningScene.DURATION + 5;
