@@ -18,7 +18,12 @@ jobs:
       - name: Build the mod
         run: ./gradlew build --no-daemon --stacktrace
       - name: Start a dedicated server with the mod (smoke test)
-        run: timeout 600 ./gradlew runGameTestServer --no-daemon --stacktrace
+        # The game test server can exit with code 0 even when it fails to start, so the log decides.
+        run: |
+          set -o pipefail
+          timeout 600 ./gradlew runGameTestServer --no-daemon --stacktrace 2>&1 | tee gametest.log
+          if grep -q "Failed to start the minecraft server" gametest.log; then echo "::error::server failed to start"; exit 1; fi
+          grep -Eq "All [0-9]+ required tests passed" gametest.log || { echo "::error::required game tests did not pass"; exit 1; }
       - name: Upload the mod jar
         if: success()
         uses: actions/upload-artifact@v4
