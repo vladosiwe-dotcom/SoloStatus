@@ -25,7 +25,9 @@ def box(origin, size, uv, inflate=0.0):
 def eyelid(x, u):
     """A 2x1 px lid in front of an eye (eye row of a standard skin: face row 4). Its texture is the row above
     the eye (forehead/brow) of the same skin, so it takes the player's skin colour."""
-    return {"origin": [x, 27, -4.1], "size": [2, 1, 0.1], "uv": {"north": {"uv": [u, 11], "uv_size": [2, 1]}}}
+    # 1.3 px tall (0.3 px below the eye row) and almost on the face: seen from above while lying, a lid of exactly
+    # 1 px let a sliver of the eye white show under it (seen in the client end-to-end frames).
+    return {"origin": [x, 26.7, -4.03], "size": [2, 1.3, 0.03], "uv": {"north": {"uv": [u, 11], "uv_size": [2, 1]}}}
 
 def bones(slim):
     aw = 3 if slim else 4
@@ -36,8 +38,8 @@ def bones(slim):
         {"name": "head", "parent": "root", "pivot": [0, 24, 0],
          "cubes": [box([-4, 24, -4], [8, 8, 8], [0, 0]), box([-4, 24, -4], [8, 8, 8], [32, 0], 0.5)]},
         # face image column 1-2 is on the model's +X side seen from the front, columns 5-6 on -X
-        {"name": "lid_a", "parent": "head", "pivot": [2, 28, -4.1], "cubes": [eyelid(1, 9)]},
-        {"name": "lid_b", "parent": "head", "pivot": [-2, 28, -4.1], "cubes": [eyelid(-3, 13)]},
+        {"name": "lid_a", "parent": "head", "pivot": [2, 28, -4.03], "cubes": [eyelid(1, 9)]},
+        {"name": "lid_b", "parent": "head", "pivot": [-2, 28, -4.03], "cubes": [eyelid(-3, 13)]},
         {"name": "right_arm", "parent": "root", "pivot": [-5, 22, 0],
          "cubes": [box([-4 - aw, 12, -2], [aw, 12, 4], [40, 16]), box([-4 - aw, 12, -2], [aw, 12, 4], [40, 32], 0.25)]},
         {"name": "left_arm", "parent": "root", "pivot": [5, 22, 0],
