@@ -172,6 +172,24 @@ public final class Payloads {
         @Override public Type<SetTitle> type() { return TYPE; }
     }
 
+    /** The System's jewellery slots and the total bonuses of what is worn (for the window and the formulas). */
+    public record AccessorySync(java.util.List<net.minecraft.world.item.ItemStack> slots, net.minecraft.nbt.CompoundTag gear) implements CustomPacketPayload {
+        public static final Type<AccessorySync> TYPE = Payloads.typeOf("accessory_sync");
+        public static final StreamCodec<RegistryFriendlyByteBuf, AccessorySync> CODEC = StreamCodec.composite(
+                net.minecraft.world.item.ItemStack.OPTIONAL_STREAM_CODEC.apply(ByteBufCodecs.list()), AccessorySync::slots,
+                ByteBufCodecs.COMPOUND_TAG, AccessorySync::gear,
+                AccessorySync::new);
+        @Override public Type<AccessorySync> type() { return TYPE; }
+    }
+
+    /** Take a ring/amulet out of a System slot. */
+    public record UnequipAccessory(int slot) implements CustomPacketPayload {
+        public static final Type<UnequipAccessory> TYPE = Payloads.typeOf("unequip_accessory");
+        public static final StreamCodec<ByteBuf, UnequipAccessory> CODEC =
+                StreamCodec.composite(ByteBufCodecs.VAR_INT, UnequipAccessory::slot, UnequipAccessory::new);
+        @Override public Type<UnequipAccessory> type() { return TYPE; }
+    }
+
     public record SetPrivacy(boolean hidden) implements CustomPacketPayload {
         public static final Type<SetPrivacy> TYPE = Payloads.typeOf("set_privacy");
         public static final StreamCodec<ByteBuf, SetPrivacy> CODEC =

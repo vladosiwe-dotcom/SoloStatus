@@ -279,6 +279,7 @@ public final class CombatEvents {
         boolean forceCrit = false;
         double dist = p.distanceTo(target);
 
+        if (melee || projectile) add += d.gear(com.vladosiwe.solostatus.accessory.Affix.DAMAGE); // украшения
         if (melee) {
             add += StatFormulas.physicalDamage(d);
             add += d.skillRank("warrior_spirit") * 0.04;
@@ -389,8 +390,10 @@ public final class CombatEvents {
             SkillFx.particles(level, SkillFx.SYSTEM_DUST, target.getBoundingBox().getCenter(), 10, 0.3, 0.02);
         }
 
-        // --- Вампиризм Берсерка ---
+        // --- Вампиризм Берсерка и украшений ---
         if (d.stateActive("berserk", now)) p.heal(amount * 0.10f);
+        double lifesteal = d.gear(com.vladosiwe.solostatus.accessory.Affix.LIFESTEAL);
+        if (lifesteal > 0 && Threat.fairness(target, p) > 0) p.heal((float) (amount * lifesteal));
         // --- Резонанс Чародея: шанс ослабить ---
         int resonance = d.skillRank("resonance");
         if (resonance > 0 && p.getRandom().nextDouble() < 0.03 * resonance) {
@@ -720,7 +723,15 @@ public final class CombatEvents {
 
         // Боссы: гарантированное оружие Epic/Legendary и шанс Сферы перерождения
         if (Threat.isBoss(dead)) {
-            if (dead.getPersistentData().getBoolean(FIRST_BOSS_TAG) || p.getRandom().nextDouble() < REPEAT_BOSS_WEAPON_CHANCE) {
+            // украшение: Rare–Legendary, после первой победы над этим видом — реже
+            boolean firstWin = dead.getPersistentData().getBoolean(FIRST_BOSS_TAG);
+            if (p.getRandom().nextDouble() < (firstWin ? 0.6 : 0.2)) {
+                ItemStack jewel = com.vladosiwe.solostatus.accessory.AccessorySystem.create(null,
+                        com.vladosiwe.solostatus.accessory.AccessorySystem.Source.BOSS, p.getRandom(), luck);
+                event.getDrops().add(new ItemEntity(dead.level(), dead.getX(), dead.getY(), dead.getZ(), jewel));
+                com.vladosiwe.solostatus.accessory.AccessorySystem.announce(p, jewel);
+            }
+            if (firstWin || p.getRandom().nextDouble() < REPEAT_BOSS_WEAPON_CHANCE) {
                 ItemStack weapon = QualitySystem.bossWeapon(p.getRandom(), luck);
                 event.getDrops().add(new ItemEntity(dead.level(), dead.getX(), dead.getY(), dead.getZ(), weapon));
             }

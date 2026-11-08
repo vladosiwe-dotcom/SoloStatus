@@ -15,5 +15,9 @@ public final class ModAttachments {
     public static final DeferredHolder<AttachmentType<?>, AttachmentType<PlayerData>> PLAYER_DATA =
             ATTACHMENTS.register("player_data", () -> AttachmentType.serializable(() -> new PlayerData()).copyOnDeath().build());
 
+    /** The System's own jewellery slots: two rings and an amulet. Kept on death, like the profile. */
+    public static final DeferredHolder<AttachmentType<?>, AttachmentType<net.neoforged.neoforge.items.ItemStackHandler>> ACCESSORIES =
+            ATTACHMENTS.register("accessories", () -> AttachmentType.serializable(() -> new net.neoforged.neoforge.items.ItemStackHandler(3)).copyOnDeath().build());
+
     private ModAttachments() {}
 }

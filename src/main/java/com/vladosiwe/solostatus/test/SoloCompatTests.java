@@ -226,4 +226,81 @@ public final class SoloCompatTests {
         SoloStatus.LOGGER.info("RPG Series weapons as the System sees them: {}", seen);
         h.succeed();
     }
+
+    private static ItemStack jewel(com.vladosiwe.solostatus.accessory.AccessoryKind kind, String affix, float value) {
+        ItemStack st = new ItemStack(kind == com.vladosiwe.solostatus.accessory.AccessoryKind.RING
+                ? com.vladosiwe.solostatus.registry.ModItems.RING.get() : com.vladosiwe.solostatus.registry.ModItems.AMULET.get());
+        com.vladosiwe.solostatus.accessory.AccessorySystem.apply(st, new com.vladosiwe.solostatus.accessory.AccessoryData(
+                com.vladosiwe.solostatus.quality.QualityRarity.RARE.ordinal(), List.of(new com.vladosiwe.solostatus.accessory.AccessoryData.Roll(affix, value))));
+        return st;
+    }
+
+    /** Jewellery in the System slots: bonuses apply, two rings at most, totals are capped, taking off removes them. */
+    @GameTest(template = "empty")
+    public static void jewelleryInSystemSlots(GameTestHelper h) {
+        var RING = com.vladosiwe.solostatus.accessory.AccessoryKind.RING;
+        ServerPlayer p = hunter(h, HunterClass.WARRIOR);
+        PlayerData d = Hunter.get(p);
+        p.setItemInHand(InteractionHand.MAIN_HAND, jewel(RING, "max_health", 5));
+        com.vladosiwe.solostatus.accessory.AccessorySystem.equipFromHand(p, InteractionHand.MAIN_HAND);
+        h.assertTrue(p.getMainHandItem().isEmpty(), "the ring stayed in hand");
+        h.assertTrue(d.gear(com.vladosiwe.solostatus.accessory.Affix.MAX_HEALTH) == 5, "health bonus not counted: " + d.gear);
+        AttributeInstance hp = p.getAttribute(Attributes.MAX_HEALTH);
+        h.assertTrue(hp != null && hp.getModifier(SoloStatus.id("acc_health")) != null, "health modifier not applied");
+
+        p.setItemInHand(InteractionHand.MAIN_HAND, jewel(RING, "crit_chance", 0.05f));
+        com.vladosiwe.solostatus.accessory.AccessorySystem.equipFromHand(p, InteractionHand.MAIN_HAND);
+        p.setItemInHand(InteractionHand.MAIN_HAND, jewel(RING, "crit_chance", 0.05f));
+        com.vladosiwe.solostatus.accessory.AccessorySystem.equipFromHand(p, InteractionHand.MAIN_HAND); // swaps out the first ring
+        h.assertTrue(p.getMainHandItem().getItem() == com.vladosiwe.solostatus.registry.ModItems.RING.get(), "the swapped ring did not come back");
+        h.assertTrue(d.gear(com.vladosiwe.solostatus.accessory.Affix.MAX_HEALTH) == 0, "a third ring was counted: " + d.gear);
+        double crit = d.gear(com.vladosiwe.solostatus.accessory.Affix.CRIT_CHANCE);
+        h.assertTrue(Math.abs(crit - com.vladosiwe.solostatus.accessory.Affix.CRIT_CHANCE.cap) < 1e-6, "crit total not capped at 8%: " + crit);
+
+        com.vladosiwe.solostatus.accessory.AccessorySystem.unequip(p, 0);
+        com.vladosiwe.solostatus.accessory.AccessorySystem.unequip(p, 1);
+        h.assertTrue(d.gear.isEmpty(), "bonuses stayed after taking the rings off: " + d.gear);
+        h.succeed();
+    }
+
+    /** Chests of any structure sometimes hold jewellery, already rolled. */
+    @GameTest(template = "empty")
+    public static void chestsHoldJewellery(GameTestHelper h) {
+        var server = h.getLevel().getServer();
+        var table = server.reloadableRegistries().getLootTable(net.minecraft.world.level.storage.loot.BuiltInLootTables.SIMPLE_DUNGEON);
+        int found = 0, rolled = 0;
+        for (int i = 0; i < 400; i++) {
+            var params = new net.minecraft.world.level.storage.loot.LootParams.Builder(h.getLevel())
+                    .withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN, h.absoluteVec(new net.minecraft.world.phys.Vec3(1, 1, 1)))
+                    .create(net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.CHEST);
+            for (ItemStack st : table.getRandomItems(params)) {
+                if (st.getItem() instanceof com.vladosiwe.solostatus.accessory.AccessoryItem) {
+                    found++;
+                    if (st.get(com.vladosiwe.solostatus.registry.ModComponents.ACCESSORY.get()) != null) rolled++;
+                }
+            }
+        }
+        h.assertTrue(found > 5 && found < 120, "jewellery in 400 dungeon chests: " + found + " (expected about 48)");
+        h.assertTrue(rolled == found, "unrolled jewellery in a chest");
+        h.succeed();
+    }
+
+    /** With Curios installed, an amulet in its necklace slot counts like one in the System slot. */
+    @GameTest(template = "empty")
+    public static void curiosJewelleryCounts(GameTestHelper h) {
+        if (!ModList.get().isLoaded("curios")) {
+            if (required()) h.fail("Curios is not loaded");
+            h.succeed();
+            return;
+        }
+        h.assertTrue(com.vladosiwe.solostatus.accessory.CuriosAccess.ready(), "Curios API not reachable: " + com.vladosiwe.solostatus.accessory.CuriosAccess.error());
+        ServerPlayer p = hunter(h, HunterClass.WARRIOR);
+        PlayerData d = Hunter.get(p);
+        boolean put = com.vladosiwe.solostatus.accessory.CuriosAccess.put(p, "necklace", 0, jewel(com.vladosiwe.solostatus.accessory.AccessoryKind.AMULET, "xp_gain", 0.05f));
+        h.assertTrue(put, "could not put an amulet into the Curios necklace slot");
+        com.vladosiwe.solostatus.accessory.AccessorySystem.refresh(p);
+        h.assertTrue(d.gear(com.vladosiwe.solostatus.accessory.Affix.XP_GAIN) > 0.04, "Curios amulet not counted: " + d.gear
+                + " (curios stacks: " + com.vladosiwe.solostatus.accessory.CuriosAccess.equipped(p) + ")");
+        h.succeed();
+    }
 }

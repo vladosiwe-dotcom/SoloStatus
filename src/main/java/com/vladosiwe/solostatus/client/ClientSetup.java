@@ -22,6 +22,16 @@ public final class ClientSetup {
         for (KeyMapping k : Keys.SKILLS) event.register(k);
     }
 
+    /** The gem of a ring/amulet (layer 1) takes the colour of its rarity. */
+    @SubscribeEvent
+    public static void itemColors(net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Item event) {
+        event.register((stack, tint) -> {
+            if (tint != 1) return -1;
+            var data = stack.get(com.vladosiwe.solostatus.registry.ModComponents.ACCESSORY.get());
+            return data == null ? 0xFFB0B8C0 : data.tier().color;
+        }, com.vladosiwe.solostatus.registry.ModItems.RING.get(), com.vladosiwe.solostatus.registry.ModItems.AMULET.get());
+    }
+
     @SubscribeEvent
     public static void layers(RegisterGuiLayersEvent event) {
         event.registerAboveAll(SoloStatus.id("hud"), SoloHud::render);

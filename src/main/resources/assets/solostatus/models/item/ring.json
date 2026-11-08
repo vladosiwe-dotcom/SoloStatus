@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "solostatus:item/ring",
+    "layer1": "solostatus:item/ring_gem"
+  }
+}

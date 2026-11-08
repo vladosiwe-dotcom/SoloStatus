@@ -53,7 +53,8 @@ public final class LevelSystem {
         if (rawAmount <= 0) return;
         PlayerData d = Hunter.get(player);
         if (!d.hasClass()) return; // система ещё не пробуждена
-        double titleBonus = d.titleIs("hunter_5000") ? 1.05 : 1.0; // титул «Истребитель тысяч»
+        double titleBonus = (d.titleIs("hunter_5000") ? 1.05 : 1.0) // титул «Истребитель тысяч»
+                * (1 + d.gear(com.vladosiwe.solostatus.accessory.Affix.XP_GAIN)); // украшения
         long amount = Math.max(1, Math.round(rawAmount * titleBonus * SoloConfig.XP_MULTIPLIER.get()));
         com.vladosiwe.solostatus.network.ModNetwork.toPlayer(player,
                 new com.vladosiwe.solostatus.network.Payloads.XpGain((int) Math.min(Integer.MAX_VALUE, amount), reason.ordinal()));

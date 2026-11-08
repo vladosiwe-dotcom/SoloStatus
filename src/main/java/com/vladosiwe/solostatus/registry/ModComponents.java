@@ -18,5 +18,12 @@ public final class ModComponents {
                     .networkSynchronized(WeaponQuality.STREAM_CODEC)
                     .build());
 
+    /** Rarity and rolled bonuses of a ring or amulet. */
+    public static final DeferredHolder<DataComponentType<?>, DataComponentType<com.vladosiwe.solostatus.accessory.AccessoryData>> ACCESSORY =
+            COMPONENTS.register("accessory", () -> DataComponentType.<com.vladosiwe.solostatus.accessory.AccessoryData>builder()
+                    .persistent(com.vladosiwe.solostatus.accessory.AccessoryData.CODEC)
+                    .networkSynchronized(com.vladosiwe.solostatus.accessory.AccessoryData.STREAM_CODEC)
+                    .build());
+
     private ModComponents() {}
 }

@@ -60,6 +60,7 @@ public final class AttributeSystem {
         set(player, Attributes.SAFE_FALL_DISTANCE, SAFE_FALL, StatFormulas.safeFall(d), AttributeModifier.Operation.ADD_VALUE);
 
         CompatManager.applyMagicAttributes(player, d);
+        com.vladosiwe.solostatus.accessory.AccessorySystem.applyAttributes(player, d);
 
         if (player.getHealth() > player.getMaxHealth()) player.setHealth(player.getMaxHealth());
         float maxEnergy = (float) StatFormulas.maxEnergy(d);

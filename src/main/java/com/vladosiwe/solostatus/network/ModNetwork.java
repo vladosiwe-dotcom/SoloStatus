@@ -45,9 +45,12 @@ public final class ModNetwork {
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.xpGain(p)));
         r.playToClient(Payloads.Presence.TYPE, Payloads.Presence.CODEC,
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.presence(p)));
+        r.playToClient(Payloads.AccessorySync.TYPE, Payloads.AccessorySync.CODEC,
+                (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.accessories(p)));
         r.playToClient(Payloads.InspectResult.TYPE, Payloads.InspectResult.CODEC,
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.inspect(p)));
 
+        r.playToServer(Payloads.UnequipAccessory.TYPE, Payloads.UnequipAccessory.CODEC, ServerPayloadHandler::unequipAccessory);
         r.playToServer(Payloads.AllocateStat.TYPE, Payloads.AllocateStat.CODEC, ServerPayloadHandler::allocateStat);
         r.playToServer(Payloads.ChooseClass.TYPE, Payloads.ChooseClass.CODEC, ServerPayloadHandler::chooseClass);
         r.playToServer(Payloads.ChooseSpec.TYPE, Payloads.ChooseSpec.CODEC, ServerPayloadHandler::chooseSpec);

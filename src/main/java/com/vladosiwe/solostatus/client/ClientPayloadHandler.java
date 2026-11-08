@@ -13,8 +13,18 @@ public final class ClientPayloadHandler {
     public static void sync(Payloads.SyncData msg) {
         PlayerData d = new PlayerData();
         d.read(msg.tag());
+        d.gear.putAll(ClientState.data.gear); // jewellery bonuses come in their own packet
         ClientState.data = d;
         ClientState.synced = true;
+    }
+
+    public static void accessories(Payloads.AccessorySync msg) {
+        ClientState.accessories = new java.util.ArrayList<>(msg.slots());
+        ClientState.data.gear.clear();
+        for (String k : msg.gear().getAllKeys()) {
+            var a = com.vladosiwe.solostatus.accessory.Affix.byKey(k);
+            if (a != null) ClientState.data.gear.put(a, msg.gear().getDouble(k));
+        }
     }
 
     public static void energy(Payloads.EnergySync msg) {

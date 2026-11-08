@@ -39,6 +39,7 @@ public final class ServerEvents {
             if (!p.isDeadOrDying() && d.savedHealth > p.getHealth()) p.setHealth(Math.min(d.savedHealth, p.getMaxHealth()));
             d.markDirty();
             Notices.forceSync(p);
+            com.vladosiwe.solostatus.accessory.AccessorySystem.refresh(p);
         }
     }
 
@@ -54,6 +55,7 @@ public final class ServerEvents {
             AttributeSystem.apply(p);
             p.setHealth(p.getMaxHealth());
             d.timedStates.clear();
+            com.vladosiwe.solostatus.accessory.AccessorySystem.refresh(p);
             d.energy = (float) StatFormulas.maxEnergy(d);
             Notices.forceSync(p);
         }
@@ -74,6 +76,7 @@ public final class ServerEvents {
         int tick = p.tickCount;
 
         if (tick % 20 == 0) d.savedHealth = p.getHealth(); // also covers autosaves and crashes
+        if (tick % 20 == 10) com.vladosiwe.solostatus.accessory.AccessorySystem.tick(p, d); // jewellery (Curios slots can change any time)
         if (tick % 20 == 0 && d.softDirty) {
             d.softDirty = false;
             d.dirty = true;

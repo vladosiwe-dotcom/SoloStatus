@@ -14,6 +14,8 @@ public final class ModLootModifiers {
 
     public static final DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<QualityLootModifier>> QUALITY =
             SERIALIZERS.register("weapon_quality", () -> QualityLootModifier.CODEC);
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<com.vladosiwe.solostatus.accessory.AccessoryLootModifier>> ACCESSORIES =
+            SERIALIZERS.register("accessories", () -> com.vladosiwe.solostatus.accessory.AccessoryLootModifier.CODEC);
 
     private ModLootModifiers() {}
 }

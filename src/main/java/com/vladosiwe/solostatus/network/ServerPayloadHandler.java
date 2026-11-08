@@ -91,6 +91,10 @@ public final class ServerPayloadHandler {
         run(ctx, p -> com.vladosiwe.solostatus.achievement.TitleSystem.equip(p, msg.id()));
     }
 
+    public static void unequipAccessory(Payloads.UnequipAccessory msg, IPayloadContext ctx) {
+        run(ctx, p -> com.vladosiwe.solostatus.accessory.AccessorySystem.unequip(p, msg.slot()));
+    }
+
     public static void setPrivacy(Payloads.SetPrivacy msg, IPayloadContext ctx) {
         run(ctx, p -> {
             PlayerData d = Hunter.get(p);

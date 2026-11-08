@@ -42,7 +42,8 @@ public final class StatFormulas {
     }
 
     public static double dodgeChance(PlayerData d) {
-        return Math.min(CAP_DODGE, eff(d, Stat.AGI) * safe(SoloConfig.AGI_DODGE_PER_POINT, 0.0015)) + (d.titleIs("untouchable") ? 0.05 : 0);
+        return Math.min(CAP_DODGE, eff(d, Stat.AGI) * safe(SoloConfig.AGI_DODGE_PER_POINT, 0.0015)) + (d.titleIs("untouchable") ? 0.05 : 0)
+                + d.gear(com.vladosiwe.solostatus.accessory.Affix.DODGE);
     }
 
     public static double safeFall(PlayerData d) {
@@ -54,11 +55,11 @@ public final class StatFormulas {
     }
 
     public static double critChance(PlayerData d) {
-        return Math.min(CAP_CRIT, eff(d, Stat.PER) * safe(SoloConfig.PER_CRIT_PER_POINT, 0.002));
+        return Math.min(CAP_CRIT, eff(d, Stat.PER) * safe(SoloConfig.PER_CRIT_PER_POINT, 0.002)) + d.gear(com.vladosiwe.solostatus.accessory.Affix.CRIT_CHANCE);
     }
 
     public static double critDamage(PlayerData d) {
-        return 0.5 + Math.min(0.3, eff(d, Stat.PER) * 0.003);
+        return 0.5 + Math.min(0.3, eff(d, Stat.PER) * 0.003) + d.gear(com.vladosiwe.solostatus.accessory.Affix.CRIT_DAMAGE);
     }
 
     public static double bonusHealth(PlayerData d) {
@@ -70,11 +71,11 @@ public final class StatFormulas {
     }
 
     public static double debuffResist(PlayerData d) {
-        return Math.min(CAP_DEBUFF, eff(d, Stat.VIT) * 0.002) + d.skillRank("iron_will") * 0.04;
+        return Math.min(CAP_DEBUFF, eff(d, Stat.VIT) * 0.002) + d.skillRank("iron_will") * 0.04 + d.gear(com.vladosiwe.solostatus.accessory.Affix.DEBUFF_RESIST);
     }
 
     public static double magicPower(PlayerData d) {
-        return Math.min(CAP_MAGIC, eff(d, Stat.INT) * safe(SoloConfig.INT_MAGIC_PER_POINT, 0.005));
+        return Math.min(CAP_MAGIC, eff(d, Stat.INT) * safe(SoloConfig.INT_MAGIC_PER_POINT, 0.005)) + d.gear(com.vladosiwe.solostatus.accessory.Affix.SPELL_POWER);
     }
 
     /** Mage and Support spend mana; everyone else spends stamina. Before a class is chosen: mana. */
@@ -87,13 +88,14 @@ public final class StatFormulas {
      * stamina comes from the hunter's level (80 at level 1, 200 at level 100) and a little VIT.
      */
     public static double maxEnergy(PlayerData d) {
-        if (usesMana(d)) return 60 + d.level * 0.4 + eff(d, Stat.INT) * 1.0 + d.skillRank("arcane_mind") * 10;
-        return 80 + d.level * 1.2 + eff(d, Stat.VIT) * 0.3;
+        double gear = d.gear(com.vladosiwe.solostatus.accessory.Affix.MAX_ENERGY);
+        if (usesMana(d)) return 60 + d.level * 0.4 + eff(d, Stat.INT) * 1.0 + d.skillRank("arcane_mind") * 10 + gear;
+        return 80 + d.level * 1.2 + eff(d, Stat.VIT) * 0.3 + gear;
     }
 
     /** Recovery per second. */
     public static double energyRegen(PlayerData d) {
-        double breathing = 1 + d.skillRank("breathing_technique") * 0.08;
+        double breathing = 1 + d.skillRank("breathing_technique") * 0.08 + d.gear(com.vladosiwe.solostatus.accessory.Affix.ENERGY_REGEN);
         if (usesMana(d)) return (0.6 + Math.min(2.0, eff(d, Stat.INT) * 0.02)) * (1 + d.skillRank("arcane_mind") * 0.10) * breathing;
         return (1.5 + d.level * 0.02) * breathing;
     }

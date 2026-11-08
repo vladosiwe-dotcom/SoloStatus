@@ -104,6 +104,10 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
     public transient long animatedTick = -1;
     /** Skill being cast right now (its animation is played on the first real swing or after a successful cast). */
     public transient String castingSkill = null;
+    /** Bonuses of the jewellery worn right now (recomputed by AccessorySystem, synced to the client). */
+    public transient final java.util.EnumMap<com.vladosiwe.solostatus.accessory.Affix, Double> gear =
+            new java.util.EnumMap<>(com.vladosiwe.solostatus.accessory.Affix.class);
+    public transient int gearFingerprint = 0;
     public transient long lastComboTick = -1000;
     public transient int comboCount = 0;
     public transient String comboWeapon = "";
@@ -142,6 +146,10 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
         counters.merge(key, amount, Long::sum);
         unlockCheckPending = true;
         softDirty = true;
+    }
+
+    public double gear(com.vladosiwe.solostatus.accessory.Affix a) {
+        return gear.getOrDefault(a, 0.0);
     }
 
     public double masteryXp(String key) {

@@ -26,7 +26,7 @@ public final class MasterySystem {
         double before = d.masteryXp(key);
         int oldLevel = MasteryMath.level(before);
         if (oldLevel >= MasteryMath.MAX_LEVEL) return;
-        double after = before + amount * SoloConfig.MASTERY_MULTIPLIER.get();
+        double after = before + amount * SoloConfig.MASTERY_MULTIPLIER.get() * (1 + d.gear(com.vladosiwe.solostatus.accessory.Affix.MASTERY_GAIN));
         d.mastery.put(key, after);
         int newLevel = MasteryMath.level(after);
         d.unlockCheckPending = true;

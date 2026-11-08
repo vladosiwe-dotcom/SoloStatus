@@ -390,6 +390,10 @@ public class SystemScreen extends Screen {
         textRight(g, font, title(String.valueOf(d.freeStatPoints)), cx0 + cw, y - 2, d.freeStatPoints > 0 ? GOLD : DIM, pa);
         y += 16;
 
+        // украшения: два кольца и амулет в слотах Системы; итог бонусов — в подсказке у подписи
+        renderJewellery(g, mx, my, d, y, row(11));
+        y += 24;
+
         // системные подсказки
         if (canPickSpec()) {
             Component spec = trBold("solostatus.ui.spec_available");
@@ -411,6 +415,40 @@ public class SystemScreen extends Screen {
         Component priv = tr(d.privateProfile ? "solostatus.ui.private_on" : "solostatus.ui.private_off");
         footerLink(g, mx, my, priv, cx0 + cw - font.width(priv), by, fa,
                 () -> PacketDistributor.sendToServer(new Payloads.SetPrivacy(!d.privateProfile)));
+    }
+
+    private void renderJewellery(GuiGraphics g, int mx, int my, PlayerData d, int y, float alpha) {
+        Component lbl = tr("solostatus.ui.jewellery");
+        text(g, font, lbl, cx0, y + 5, DIM, alpha);
+        List<Component> sum = new ArrayList<>();
+        sum.add(trBold("solostatus.ui.jewellery"));
+        if (d.gear.isEmpty()) sum.add(tr("solostatus.ui.jewellery_none"));
+        d.gear.forEach((a, v) -> sum.add(Component.literal(a.format(v) + " ").append(a.displayName())));
+        sum.add(tr("solostatus.ui.jewellery_hint"));
+        hover(mx, my, cx0, y, font.width(lbl) + 4, 18, sum);
+        for (int i = 0; i < 3; i++) {
+            int sx = cx0 + cw - (3 - i) * 21 + 1;
+            ItemStack st = i < ClientState.accessories.size() ? ClientState.accessories.get(i) : ItemStack.EMPTY;
+            boolean hov = inside(mx, my, sx, y, 18, 18);
+            g.fill(sx, y, sx + 18, y + 18, a(hov ? 0x6055C8FF : 0x90061424, alpha));
+            g.renderOutline(sx, y, 18, 18, a(st.isEmpty() ? 0x4455C8FF : EDGE, alpha));
+            if (st.isEmpty()) {
+                g.fill(sx + 7, y + 7, sx + 11, y + 11, a(LOCK, alpha)); // empty slot mark
+                hover(mx, my, sx, y, 18, 18, List.of(tr(i < 2 ? "solostatus.ui.jewellery_ring" : "solostatus.ui.jewellery_amulet"), tr("solostatus.ui.jewellery_hint")));
+            } else {
+                if (alpha > 0.5f) g.renderItem(st, sx + 1, y + 1);
+                if (hov && minecraft != null) {
+                    List<Component> tip = new ArrayList<>(Screen.getTooltipFromItem(minecraft, st));
+                    tip.add(tr("solostatus.ui.jewellery_take_off"));
+                    tooltip = tip;
+                }
+                int slot = i;
+                hots.add(new Hot(sx, y, 18, 18, () -> {
+                    PacketDistributor.sendToServer(new Payloads.UnequipAccessory(slot));
+                    play(ModSounds.CLICK.get(), 0.9f);
+                }, null));
+            }
+        }
     }
 
     private void label(GuiGraphics g, String key, int x, int y, float alpha) {

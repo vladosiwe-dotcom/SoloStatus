@@ -1,6 +1,7 @@
 {
   "replace": false,
   "entries": [
-    "solostatus:weapon_quality"
+    "solostatus:weapon_quality",
+    "solostatus:accessories"
   ]
 }

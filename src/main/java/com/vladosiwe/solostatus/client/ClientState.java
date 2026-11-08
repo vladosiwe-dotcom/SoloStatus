@@ -13,6 +13,8 @@ import java.util.List;
 /** Клиентский кэш данных, полученных от сервера. Клиент никогда не изменяет их сам. */
 public final class ClientState {
     public static PlayerData data = new PlayerData();
+    /** The System's jewellery slots (two rings, an amulet). */
+    public static List<net.minecraft.world.item.ItemStack> accessories = new ArrayList<>();
     public static boolean synced = false;
 
     /** Активные уведомления на экране. */
@@ -75,6 +77,7 @@ public final class ClientState {
 
     public static void reset() {
         data = new PlayerData();
+        accessories = new ArrayList<>();
         synced = false;
         NOTICES.clear();
         QUEUE.clear();
