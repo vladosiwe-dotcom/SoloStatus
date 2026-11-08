@@ -3,6 +3,8 @@ package com.vladosiwe.solostatus.test;
 import com.vladosiwe.solostatus.SoloStatus;
 import com.vladosiwe.solostatus.achievement.AchievementDef;
 import com.vladosiwe.solostatus.achievement.Achievements;
+import com.vladosiwe.solostatus.clazz.ClassSystem;
+import com.vladosiwe.solostatus.clazz.HunterClass;
 import com.vladosiwe.solostatus.data.Hunter;
 import com.vladosiwe.solostatus.data.PlayerData;
 import com.vladosiwe.solostatus.level.LevelSystem;
@@ -51,14 +53,18 @@ public final class SoloGameTests {
     }
 
     /**
-     * Живой игрок на сервере получает опыт и растёт в уровне. У тестового игрока нет клиента с модом,
+     * Живой игрок на сервере выбирает класс (получает стартовые навыки), получает опыт и растёт в уровне. У тестового игрока нет клиента с модом,
      * поэтому заодно проверяется, что сервер не падает при отправке пакетов такому игроку
      * (так же ведут себя FakePlayer других модов).
      */
     @GameTest(template = "empty")
     public static void playerLevelsUp(GameTestHelper h) {
         ServerPlayer p = h.makeMockServerPlayerInLevel();
+        // опыт идёт только после пробуждения Системы — выбора класса
+        ClassSystem.chooseClass(p, HunterClass.WARRIOR);
         PlayerData d = Hunter.get(p);
+        h.assertTrue(d.hasClass(), "класс не выбран");
+        h.assertTrue(!d.skills.isEmpty(), "класс не выдал стартовые навыки");
         int before = d.level;
         LevelSystem.grantXp(p, LevelSystem.xpToNext(before) * 3.0, XpReason.COMMAND);
         h.assertTrue(Hunter.get(p).level > before, "уровень не вырос: " + before + " → " + Hunter.get(p).level);
