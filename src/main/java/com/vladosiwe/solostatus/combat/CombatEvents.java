@@ -504,15 +504,22 @@ public final class CombatEvents {
     // Смерть: спасительные навыки и убийства
     // =====================================================================
 
+    /** Saving skills run early, so other mods see the player alive. */
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onDeath(LivingDeathEvent event) {
         LivingEntity dead = event.getEntity();
         if (dead.level().isClientSide()) return;
+        if (dead instanceof ServerPlayer p && trySave(p)) event.setCanceled(true);
+    }
 
-        if (dead instanceof ServerPlayer p && trySave(p)) {
-            event.setCanceled(true);
-            return;
-        }
+    /**
+     * The kill is rewarded last: if any mod cancels the death (a revive, a totem-like item, a boss phase),
+     * this handler does not run, so a target that did not die gives no XP or mastery.
+     */
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void onKillConfirmed(LivingDeathEvent event) {
+        LivingEntity dead = event.getEntity();
+        if (dead.level().isClientSide()) return;
         if (event.getSource().getEntity() instanceof ServerPlayer killer && killer != dead) {
             onKill(killer, dead, event.getSource());
         }
@@ -557,7 +564,7 @@ public final class CombatEvents {
         // сильные — больше (до 150%). Ожидаемая опасность растёт с уровнем: 1 + уровень × 0.06.
         double expected = 1 + d.level * 0.06;
         double gap = Math.max(0.3, Math.min(1.5, threat / (expected * 0.6)));
-        if (boss) {
+        if (boss && fairness > 0) { // a boss without AI (statue, command dummy) gives nothing
             boolean first = !d.bossesKilled.contains(type);
             double bossXp = bossXp(type, dead) * (first ? 1.0 : 0.25);
             LevelSystem.grantXp(p, bossXp * Math.max(0.5, fairness), com.vladosiwe.solostatus.level.XpReason.BOSS);
@@ -566,7 +573,7 @@ public final class CombatEvents {
                     net.minecraft.network.chat.Component.translatable("solostatus.notice.boss.desc",
                             Math.round(bossXp * Math.max(0.5, fairness) * com.vladosiwe.solostatus.config.SoloConfig.XP_MULTIPLIER.get())),
                     bossIcon(type));
-        } else {
+        } else if (!boss) {
             LevelSystem.grantXp(p, 10 * Math.pow(threat, 1.1) * gap * fairness, com.vladosiwe.solostatus.level.XpReason.KILL);
         }
 
@@ -584,10 +591,13 @@ public final class CombatEvents {
         d.killsByType.merge(type, 1, Integer::sum);
         Entity direct = source.getDirectEntity();
         boolean projectile = direct instanceof Projectile;
-        boolean magic = CompatManager.ironsSchool(source) != null || source.is(DamageTypeTags.WITCH_RESISTANT_TO);
+        boolean thorns = source.is(net.minecraft.world.damagesource.DamageTypes.THORNS);
+        boolean magic = !thorns && (CompatManager.ironsSchool(source) != null || source.is(DamageTypeTags.WITCH_RESISTANT_TO));
+        // the same rule as for hits: melee is a blow by the player, not thorns, TNT or other indirect damage
+        boolean melee = !projectile && !magic && !thorns && direct == p;
         if (projectile) d.addCounter("projectile_kills", 1);
         else if (magic) d.addCounter("magic_kills", 1);
-        else d.addCounter("melee_kills", 1);
+        else if (melee) d.addCounter("melee_kills", 1);
         if (threat >= Threat.STRONG || boss) d.addCounter("strong_kills", 1);
         if (dead.getType().is(EntityTypeTags.SKELETONS)) d.addCounter("skeleton_kills", 1);
         if (dead.getType() == EntityType.SPIDER || dead.getType() == EntityType.CAVE_SPIDER) d.addCounter("spider_kills", 1);
@@ -612,7 +622,7 @@ public final class CombatEvents {
         } else if (magic) {
             String school = CompatManager.ironsSchool(source);
             MasterySystem.addMagic(p, d, school != null ? school : "arcane", gain);
-        } else {
+        } else if (melee) {
             MasterySystem.addWeapon(p, d, WeaponClassifier.classify(p.getMainHandItem()), gain);
         }
 

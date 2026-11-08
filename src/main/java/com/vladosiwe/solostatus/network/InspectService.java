@@ -40,7 +40,7 @@ public final class InspectService {
 
     static CompoundTag build(PlayerData viewer, PlayerData t, ServerPlayer target) {
         CompoundTag tag = new CompoundTag();
-        tag.putString("name", target.getGameProfile().getName());
+        tag.putString("name", target.getDisplayName().getString()); // display name: the server may show a project nickname
         tag.putInt("level", t.level);
         tag.putInt("rank", t.rank.ordinal());
         tag.putBoolean("private", t.privateProfile);

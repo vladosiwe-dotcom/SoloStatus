@@ -44,7 +44,7 @@ public final class SystemPresence {
     public static CompoundTag publicInfo(ServerPlayer p) {
         PlayerData d = Hunter.get(p);
         CompoundTag t = new CompoundTag();
-        t.putString("name", p.getGameProfile().getName());
+        t.putString("name", p.getDisplayName().getString());
         t.putInt("level", d.level);
         t.putInt("rank", d.rank.ordinal());
         t.putString("title", d.title);

@@ -33,10 +33,18 @@ public final class ServerEvents {
     @SubscribeEvent
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer p) {
+            PlayerData d = Hunter.get(p);
             AttributeSystem.apply(p);
-            Hunter.get(p).markDirty();
+            // give back health above 20 that vanilla clamped while loading (see PlayerData.savedHealth)
+            if (!p.isDeadOrDying() && d.savedHealth > p.getHealth()) p.setHealth(Math.min(d.savedHealth, p.getMaxHealth()));
+            d.markDirty();
             Notices.forceSync(p);
         }
+    }
+
+    @SubscribeEvent
+    public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer p) Hunter.get(p).savedHealth = p.getHealth();
     }
 
     @SubscribeEvent
@@ -65,6 +73,7 @@ public final class ServerEvents {
         PlayerData d = Hunter.get(p);
         int tick = p.tickCount;
 
+        if (tick % 20 == 0) d.savedHealth = p.getHealth(); // also covers autosaves and crashes
         if (tick % 20 == 0 && d.softDirty) {
             d.softDirty = false;
             d.dirty = true;

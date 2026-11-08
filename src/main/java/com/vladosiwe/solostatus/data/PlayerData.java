@@ -81,6 +81,11 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
     public String title = "";
     /** Временные состояния навыков: ключ -> gameTime окончания. */
     public final Map<String, Long> timedStates = new HashMap<>();
+    /**
+     * Health at the last save. Vanilla loads health before our (transient) max-health bonus is back and clamps
+     * it to 20, so without this a hunter with 40 max HP would log in with 20 every time.
+     */
+    public float savedHealth = -1;
 
     // --- Не сохраняется ---
     public transient boolean dirty = true;
@@ -207,6 +212,7 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
         CompoundTag ts = new CompoundTag();
         timedStates.forEach(ts::putLong);
         t.put("timed", ts);
+        t.putFloat("hp", savedHealth);
         return t;
     }
 
@@ -272,6 +278,7 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
             timedStates.clear();
             CompoundTag ts = t.getCompound("timed");
             for (String k : ts.getAllKeys()) timedStates.put(k, ts.getLong(k));
+            savedHealth = t.contains("hp") ? t.getFloat("hp") : -1;
         } catch (Exception e) {
             // Повреждённые данные не должны ронять сервер: оставляем то, что успели прочитать, остальное — по умолчанию.
             SoloStatus.LOGGER.error("Не удалось полностью прочитать профиль охотника, часть значений сброшена по умолчанию", e);

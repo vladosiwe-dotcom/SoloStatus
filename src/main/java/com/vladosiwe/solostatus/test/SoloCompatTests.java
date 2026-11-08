@@ -27,6 +27,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Zombie;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -134,6 +135,38 @@ public final class SoloCompatTests {
         SkillUnlockSystem.check(p);
         h.assertTrue(d.hasSkill("cross_slash"), "Cross Slash did not awaken");
         h.assertTrue(d.skillPoints == pointsBefore, "awakening must be free");
+        h.succeed();
+    }
+
+    /** Thorns (and other indirect damage) gives XP for a fair kill, but no weapon mastery and no melee kill. */
+    @GameTest(template = "empty")
+    public static void indirectKillGivesNoWeaponMastery(GameTestHelper h) {
+        ServerPlayer p = hunter(h, HunterClass.WARRIOR);
+        p.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_SWORD));
+        PlayerData d = Hunter.get(p);
+        long xpBefore = d.xp; int levelBefore = d.level;
+        Zombie z = h.spawn(EntityType.ZOMBIE, new BlockPos(1, 1, 1));
+        z.hurt(p.damageSources().thorns(p), 1000f);
+        h.assertTrue(d.xp > xpBefore || d.level > levelBefore, "a fair thorns kill gave no XP");
+        h.assertTrue(d.counter("melee_kills") == 0 && d.counter("magic_kills") == 0, "thorns counted as melee/magic kill");
+        h.assertTrue(d.mastery.getOrDefault(WeaponType.SWORD.key, 0.0) == 0, "thorns grew sword mastery: " + d.mastery);
+        h.assertTrue(d.mastery.keySet().stream().noneMatch(k -> k.startsWith("magic:")), "thorns grew magic mastery: " + d.mastery);
+        h.succeed();
+    }
+
+    /** A boss-sized mob without AI (statue, command dummy) gives no boss XP. */
+    @GameTest(template = "empty")
+    public static void bossWithoutAiGivesNothing(GameTestHelper h) {
+        ServerPlayer p = hunter(h, HunterClass.WARRIOR);
+        PlayerData d = Hunter.get(p);
+        Zombie statue = h.spawn(EntityType.ZOMBIE, new BlockPos(1, 1, 1));
+        statue.getAttribute(Attributes.MAX_HEALTH).setBaseValue(300);
+        statue.setHealth(300);
+        statue.setNoAi(true);
+        long xpBefore = d.xp; int levelBefore = d.level;
+        statue.hurt(p.damageSources().playerAttack(p), 10000f);
+        h.assertTrue(d.xp == xpBefore && d.level == levelBefore, "a boss without AI gave XP");
+        h.assertTrue(d.bossesKilled.isEmpty(), "a boss without AI was counted");
         h.succeed();
     }
 }
