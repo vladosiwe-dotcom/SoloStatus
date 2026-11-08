@@ -463,11 +463,44 @@ public class SystemScreen extends Screen {
 
     private record SkillRow(@Nullable String section, @Nullable SkillDef def) {}
 
+    /** Фильтр списка навыков по происхождению. Цвет фильтра совпадает с цветом иконок этого происхождения. */
+    private enum SkillFilter {
+        ALL, CLASS, SPEC, AWAKENING, HIDDEN;
+
+        boolean accepts(SkillDef def) {
+            return switch (this) {
+                case ALL -> true;
+                case CLASS -> def.source == SkillSource.CLASS_START || def.source == SkillSource.CLASS || def.source == SkillSource.ULTIMATE;
+                case SPEC -> def.source == SkillSource.SPEC;
+                case AWAKENING -> def.source == SkillSource.AWAKENING;
+                case HIDDEN -> def.source == SkillSource.HIDDEN;
+            };
+        }
+
+        int color() {
+            return switch (this) {
+                case ALL -> INK;
+                case CLASS -> SkillIcons.CLASS;
+                case SPEC -> SkillIcons.SPEC;
+                case AWAKENING -> SkillIcons.AWAKENING;
+                case HIDDEN -> SkillIcons.HIDDEN;
+            };
+        }
+    }
+
+    private SkillFilter skillFilter = SkillFilter.ALL;
+
+    /** Карточка навыка встроена в окно под списком; на невысоких экранах она открывается поверх, как раньше. */
+    private boolean skillsSplit() {
+        return wh >= 250;
+    }
+
     private List<SkillRow> skillRows() {
         PlayerData d = d();
         List<SkillDef> active = new ArrayList<>(), passive = new ArrayList<>(), learnable = new ArrayList<>(), locked = new ArrayList<>();
         for (SkillDef def : Skills.all()) {
             if (!def.availableFor(d) && !d.hasSkill(def.id)) continue;
+            if (!skillFilter.accepts(def)) continue;
             if (d.hasSkill(def.id)) (def.isActive() ? active : passive).add(def);
             else if (SkillSystem.canAdvance(d, def) == null) learnable.add(def);
             else locked.add(def);
@@ -488,61 +521,94 @@ public class SystemScreen extends Screen {
 
     private void renderSkills(GuiGraphics g, int mx, int my) {
         PlayerData d = d();
-        int y = wy + 18;
-        text(g, font, tr("solostatus.ui.skill_points"), cx0, y, DIM, row(0));
-        textRight(g, font, title(String.valueOf(d.skillPoints)), cx0 + cw, y - 3, d.skillPoints > 0 ? GOLD : DIM, row(0));
-        y += 14;
-        // слоты
+        boolean split = skillsSplit();
+        int y = wy + 16;
+
+        // слоты Z X C V слева, очки навыков справа — одной строкой
         for (int i = 0; i < PlayerData.SKILL_SLOTS; i++) {
             int sx = cx0 + i * 24;
             SkillDef def = Skills.get(d.slots[i]);
-            g.fill(sx, y, sx + 20, y + 20, a(0x90061424, row(1)));
-            g.renderOutline(sx, y, 20, 20, a(def != null ? EDGE : 0x6655C8FF, row(1)));
-            if (def != null && row(1) > 0.5f) g.renderItem(new ItemStack(def.icon), sx + 2, y + 2);
-            text(g, font, bold(Keys.SKILLS[i].getTranslatedKeyMessage().getString()), sx + 1, y + 21, DIM, row(1));
+            g.fill(sx, y, sx + 20, y + 20, a(0x90061424, row(0)));
+            g.renderOutline(sx, y, 20, 20, a(def != null ? SkillIcons.color(def.source) : 0x6655C8FF, row(0)));
+            if (def != null) SkillIcons.draw(g, def, sx + 2, y + 2, 16, true, row(0));
+            text(g, font, bold(Keys.SKILLS[i].getTranslatedKeyMessage().getString()), sx + 1, y + 21, DIM, row(0));
             if (def != null) {
                 int slot = i;
                 hover(mx, my, sx, y, 20, 20, List.of(def.name(), Component.translatable("solostatus.skills.slot_clear")));
                 hots.add(new Hot(sx, y, 20, 20, () -> openSkill(def.id), () -> PacketDistributor.sendToServer(new Payloads.EquipSkill(slot, ""))));
             }
         }
-        text(g, font, tr("solostatus.ui.slots_hint"), cx0 + 4 * 24 + 4, y + 6, DIM, row(1));
-        y += 34;
-        divider(g, cx0, y - 3, cw, row(2));
+        textRight(g, font, title(String.valueOf(d.skillPoints)), cx0 + cw, y + 1, d.skillPoints > 0 ? GOLD : DIM, row(0));
+        textRight(g, font, tr("solostatus.ui.skill_points"), cx0 + cw, y + 18, DIM, row(0));
+        hover(mx, my, cx0, y, 4 * 24, 30, List.of(Component.translatable("solostatus.ui.slots_hint")));
+        y += 32;
+
+        // фильтры по происхождению
+        boolean wide = true;
+        int total = 0;
+        for (SkillFilter f : SkillFilter.values()) total += font.width(trBold("solostatus.ui.filter_" + f.name().toLowerCase())) + 10;
+        if (total > cw) wide = false;
+        int tx = cx0;
+        for (SkillFilter f : SkillFilter.values()) {
+            Component label = wide ? trBold("solostatus.ui.filter_" + f.name().toLowerCase()) : tr("solostatus.ui.filter_" + f.name().toLowerCase());
+            int tw = font.width(label) + 8;
+            boolean sel = f == skillFilter, hov = inside(mx, my, tx, y, tw, 12);
+            if (sel) g.fill(tx, y, tx + tw, y + 12, a(0x2A55C8FF, row(1)));
+            g.fill(tx, y + 11, tx + tw, y + 12, a(sel ? f.color() : 0x3355C8FF, row(1)));
+            text(g, font, label, tx + 4, y + 2, sel || hov ? f.color() : DIM, row(1));
+            SkillFilter target = f;
+            hots.add(new Hot(tx, y, tw, 12, () -> {
+                if (skillFilter == target) return;
+                skillFilter = target;
+                scroll = 0;
+                play(ModSounds.CLICK.get(), 1.1f);
+            }, null));
+            tx += tw + 2;
+        }
+        y += 16;
 
         List<SkillRow> rows = skillRows();
-        int rowH = 16;
-        int listTop = y, listBottom = wy + wh - 10;
-        int visible = (listBottom - listTop) / rowH;
-        scroll = Mth.clamp(scroll, 0, Math.max(0, rows.size() - visible));
+        // выбранный навык должен быть в списке: иначе выбираем первый
+        if (split && rows.stream().noneMatch(r -> r.def() != null && r.def().id.equals(selectedSkill))) {
+            selectedSkill = rows.stream().filter(r -> r.def() != null).map(r -> r.def().id).findFirst().orElse(null);
+        }
+        int paneH = 118;
+        int listTop = y, listBottom = split ? wy + wh - 8 - paneH - 6 : wy + wh - 10;
+        int rowH = 15, secH = 14;
+        int maxScroll = 0;
+        for (int i = rows.size() - 1, used = 0; i >= 0; i--) { // сколько строк можно прокрутить, чтобы конец списка оставался у низа
+            used += rows.get(i).section() != null ? secH : rowH;
+            if (used > listBottom - listTop) { maxScroll = i + 1; break; }
+        }
+        scroll = Mth.clamp(scroll, 0, maxScroll);
+        if (rows.isEmpty()) wrap(g, tr("solostatus.ui.no_skills_filter"), cx0, listTop + 4, cw, DIM, row(2));
         g.enableScissor(wx + 4, listTop, wx + ww - 4, listBottom);
         int yy = listTop;
-        for (int i = scroll; i < rows.size() && yy + rowH <= listBottom + 1; i++) {
+        for (int i = scroll; i < rows.size() && yy < listBottom; i++) {
             SkillRow r = rows.get(i);
-            float ra = row(3 + (i - scroll));
+            float ra = row(2 + (i - scroll));
             if (r.section() != null) {
-                text(g, font, trBold(r.section()), cx0, yy + 5, r.section().endsWith("learnable") ? GOLD : DIM, ra);
-                yy += rowH;
+                // заголовок раздела: отступ сверху, подпись и тонкая линия до края — не путается со строкой навыка
+                Component sec = trBold(r.section());
+                int ty = yy + (i == scroll ? 2 : 5);
+                text(g, font, sec, cx0, ty, r.section().endsWith("learnable") ? GOLD : DIM, ra);
+                g.fill(cx0 + font.width(sec) + 6, ty + 4, cx0 + cw, ty + 5, a(0x3355C8FF, ra));
+                yy += secH;
                 continue;
             }
             SkillDef def = r.def();
             boolean learned = d.hasSkill(def.id);
             boolean hiddenLocked = def.hidden() && !learned;
-            boolean sel = def.id.equals(selectedSkill);
-            boolean hov = inside(mx, my, cx0 - 4, yy, cw + 8, rowH);
+            boolean sel = def.id.equals(selectedSkill) && split;
+            boolean hov = inside(mx, my, cx0 - 4, yy, cw + 8, rowH) && my < listBottom;
             if (sel || hov) g.fill(cx0 - 4, yy, cx0 + cw + 4, yy + rowH, a(sel ? 0x3355C8FF : 0x1A55C8FF, ra));
-            if (hiddenLocked) textCenter(g, font, bold("?"), cx0 + 7, yy + 4, VIOLET, ra);
-            else if (ra > 0.5f) {
-                g.pose().pushPose();
-                g.pose().translate(cx0, yy + 1, 0);
-                g.pose().scale(0.85f, 0.85f, 1f);
-                g.renderItem(new ItemStack(def.icon), 0, 0);
-                g.pose().popPose();
-            }
+            g.fill(cx0 - 4, yy + 2, cx0 - 2, yy + rowH - 2, a(SkillIcons.color(def.source), ra * (learned ? 1f : 0.45f)));
+            if (hiddenLocked) textCenter(g, font, bold("?"), cx0 + 6, yy + 4, VIOLET, ra);
+            else SkillIcons.draw(g, def, cx0, yy + 1, 13, learned, ra);
             Component nm = hiddenLocked ? body("???") : body(def.name());
             int nameColor = hiddenLocked ? VIOLET : learned ? INK : SkillSystem.canAdvance(d, def) == null ? GOLD : DIM;
-            text(g, font, nm, cx0 + 20, yy + 4, nameColor, ra);
-            if (d.unseenSkills.contains(def.id)) text(g, font, bold("NEW"), cx0 + 24 + font.width(nm), yy + 4, GOLD, ra);
+            text(g, font, nm, cx0 + 18, yy + 4, nameColor, ra);
+            if (d.unseenSkills.contains(def.id)) text(g, font, bold("NEW"), cx0 + 22 + font.width(nm), yy + 4, GOLD, ra);
             if (learned) {
                 int slot = slotOf(def.id);
                 if (def.isActive()) keyBadge(g, font, bold(slot >= 0 ? Keys.SKILLS[slot].getTranslatedKeyMessage().getString() : "—"), cx0 + cw, yy + 2, slot >= 0, ra);
@@ -551,18 +617,165 @@ public class SystemScreen extends Screen {
                 textRight(g, font, body(Math.round(def.unlockProgress(d) * 100) + "%"), cx0 + cw, yy + 4, DIM, ra);
             }
             String id = def.id;
-            hots.add(new Hot(cx0 - 4, yy, cw + 8, rowH, () -> openSkill(id), () -> {
+            if (yy + rowH <= listBottom + 1) hots.add(new Hot(cx0 - 4, yy, cw + 8, Math.min(rowH, listBottom - yy), () -> openSkill(id), () -> {
                 if (learned && def.isActive()) assignNextSlot(id);
                 else openSkill(id);
             }));
             yy += rowH;
         }
         g.disableScissor();
-        if (rows.size() > visible) {
-            int barH = Math.max(12, (listBottom - listTop) * visible / rows.size());
-            int barY = listTop + (listBottom - listTop - barH) * scroll / Math.max(1, rows.size() - visible);
+        if (maxScroll > 0) {
+            int track = listBottom - listTop;
+            int barH = Math.max(12, track * track / Math.max(track, track + maxScroll * rowH));
+            int barY = listTop + (track - barH) * scroll / maxScroll;
             g.fill(wx + ww - 7, barY, wx + ww - 5, barY + barH, a(EDGE, 0.6f));
         }
+
+        if (split) {
+            int py = listBottom + 6;
+            divider(g, cx0, py - 3, cw, row(3));
+            renderSkillPane(g, mx, my, cx0, py, cw, wy + wh - 8 - py, row(4));
+        }
+    }
+
+    /** Карточка выбранного навыка внутри окна: что делает, сколько стоит, путь развития, что нужно и кнопки. */
+    private void renderSkillPane(GuiGraphics g, int mx, int my, int x, int y, int w, int h, float alpha) {
+        PlayerData d = d();
+        SkillDef def = Skills.get(selectedSkill);
+        if (def == null) {
+            wrap(g, tr("solostatus.ui.pick_skill"), x, y + 4, w, DIM, alpha);
+            return;
+        }
+        int bottom = y + h;
+        boolean learned = d.hasSkill(def.id);
+        boolean hiddenLocked = def.hidden() && !learned;
+        int rank = d.skillRank(def.id);
+        int src = SkillIcons.color(def.source);
+
+        // шапка: иконка, имя, происхождение и ранги
+        g.renderOutline(x, y, 22, 22, a(learned ? src : 0x6655C8FF, alpha));
+        if (hiddenLocked) textCenter(g, font, bold("?"), x + 11, y + 7, VIOLET, alpha);
+        else SkillIcons.draw(g, def, x + 3, y + 3, 16, learned ? src : SkillIcons.LOCKED, alpha);
+        text(g, font, bold(hiddenLocked ? Component.literal("???") : def.name()), x + 28, y + 2, hiddenLocked ? VIOLET : 0xFFFFFFFF, alpha);
+        text(g, font, body(Component.empty().append(def.category.displayName()).append(" · ")
+                .append(Component.translatable("solostatus.source." + def.source.name().toLowerCase()))), x + 28, y + 13, src, alpha * 0.85f);
+        for (int i = 0; i < def.maxRank; i++) {
+            int px = x + w - (def.maxRank - i) * 9;
+            g.fill(px, y + 4, px + 7, y + 7, a(i < rank ? src : 0x30FFFFFF, alpha));
+        }
+        y += 27;
+        if (hiddenLocked) {
+            wrap(g, body(def.hint()), x, y, w, DIM, alpha);
+            return;
+        }
+
+        y += wrapMax(g, body(def.description()), x, y, w, INK, alpha, 3) + 2;
+
+        if (def.isActive()) {
+            int cur = Math.max(1, rank);
+            String cd = String.format(Locale.ROOT, "%.1f", def.cooldownFor(cur) / 20.0)
+                    + (rank > 0 && rank < def.maxRank ? " → " + String.format(Locale.ROOT, "%.1f", def.cooldownFor(rank + 1) / 20.0) : "");
+            Component line = Component.empty().append(tr("solostatus.skills.cooldown", cd)).append("   ")
+                    .append(tr("solostatus.skills.energy", Math.round(SkillSystem.energyCost(d, def))));
+            text(g, font, line, x, y, DIM, alpha);
+            y += 11;
+        }
+
+        y = skillPath(g, mx, my, def, x, y, w, alpha);
+
+        // что нужно: только невыполненные условия, не больше двух
+        int by = bottom - 14;
+        if (!learned || rank < def.maxRank) {
+            List<Requirement> need = new ArrayList<>();
+            if (!def.availableFor(d)) {
+                Component who = def.spec != null ? def.spec.displayName() : def.hunterClass != null ? def.hunterClass.displayName() : Component.empty();
+                y += wrap(g, tr("solostatus.skills.only_for", who), x, y, w, RED, alpha);
+            }
+            Requirement lvl = Req.level(learned ? def.levelForRank(rank + 1) : def.baseLevel);
+            if (!lvl.met(d)) need.add(lvl);
+            if (!learned) for (Requirement r : def.requirements) if (!r.met(d)) need.add(r);
+            int shown = 0;
+            for (Requirement r : need) {
+                if (shown == 2 || y + 14 > by - 2) break;
+                y = requirement(g, r, x, y, w, alpha);
+                shown++;
+            }
+            if (need.size() > shown && y + 10 <= by - 2) {
+                text(g, font, tr("solostatus.ui.more_requirements", need.size() - shown), x, y, DIM, alpha);
+                y += 10;
+            }
+            if (need.isEmpty() && !learned && def.source.autoAwaken() && y + 10 <= by - 2) {
+                y += wrapMax(g, tr("solostatus.skills.awaken_hint"), x, y, w, DIM, alpha, 1);
+            }
+        }
+
+        // кнопки: слоты (для изученного активного навыка) и изучение / улучшение
+        int bx = x;
+        if (def.isActive() && learned) {
+            for (int i = 0; i < PlayerData.SKILL_SLOTS; i++) {
+                int slot = i;
+                boolean in = def.id.equals(d.slots[i]);
+                Component key = bold(Keys.SKILLS[i].getTranslatedKeyMessage().getString());
+                button(g, font, in ? Component.literal("[").append(key).append("]") : key, bx, by, 18, 14, mx, my, true, alpha);
+                hots.add(new Hot(bx, by, 18, 14, () -> {
+                    PacketDistributor.sendToServer(new Payloads.EquipSkill(slot, def.id));
+                    play(ModSounds.CLICK.get(), 1.3f);
+                }, null));
+                bx += 20;
+            }
+            bx += 4;
+        }
+        boolean manual = (!def.source.autoAwaken() && def.source != SkillSource.CLASS_START) || learned;
+        if (manual && rank < def.maxRank) {
+            String err = SkillSystem.canAdvance(d, def);
+            Component label = trBold(learned ? "solostatus.skills.upgrade" : "solostatus.skills.learn", def.costForRank(rank + 1));
+            int bw = x + w - bx;
+            button(g, font, label, bx, by, bw, 14, mx, my, err == null, alpha);
+            if (err == null) hots.add(new Hot(bx, by, bw, 14, () -> {
+                PacketDistributor.sendToServer(new Payloads.LearnSkill(def.id));
+                play(ModSounds.STAT_UP.get(), 1.4f);
+            }, null));
+            else if (inside(mx, my, bx, by, bw, 14)) tooltip = List.of(Component.translatable(err));
+        } else if (learned && rank >= def.maxRank) {
+            textRight(g, font, trBold("solostatus.ui.max_rank"), x + w, by + 3, GOLD, alpha);
+        }
+    }
+
+    /** Путь развития: предки навыка, сам навык и следующие за ним. Клик по иконке выбирает навык. */
+    private int skillPath(GuiGraphics g, int mx, int my, SkillDef def, int x, int y, int w, float alpha) {
+        List<SkillDef> chain = new ArrayList<>();
+        SkillDef p = def.parent != null ? Skills.get(def.parent) : null;
+        while (p != null && chain.size() < 3) {
+            chain.add(0, p);
+            p = p.parent != null ? Skills.get(p.parent) : null;
+        }
+        int self = chain.size();
+        chain.add(def);
+        for (SkillDef s : Skills.all()) if (def.id.equals(s.parent) && chain.size() < self + 3) chain.add(s);
+        if (chain.size() < 2) return y;
+        PlayerData d = d();
+        Component label = tr("solostatus.ui.path");
+        text(g, font, label, x, y + 3, DIM, alpha);
+        int ix = x + font.width(label) + 4;
+        for (int i = 0; i < chain.size() && ix + 14 <= x + w; i++) {
+            SkillDef s = chain.get(i);
+            boolean has = d.hasSkill(s.id);
+            boolean hiddenLocked = s.hidden() && !has;
+            if (i == self) g.renderOutline(ix - 1, y - 1, 14, 14, a(0xFFFFFFFF, alpha));
+            if (hiddenLocked) textCenter(g, font, bold("?"), ix + 6, y + 3, VIOLET, alpha);
+            else SkillIcons.draw(g, s, ix, y, 12, has, alpha);
+            if (i != self) {
+                hover(mx, my, ix, y, 12, 12, List.of(hiddenLocked ? Component.literal("???") : s.name()));
+                String id = s.id;
+                hots.add(new Hot(ix, y, 12, 12, () -> openSkill(id), null));
+            }
+            ix += 14;
+            if (i < chain.size() - 1 && ix + 20 <= x + w) {
+                text(g, font, body("›"), ix + 1, y + 2, DIM, alpha);
+                ix += 8;
+            }
+        }
+        return y + 15;
     }
 
     private int slotOf(String id) {
@@ -580,7 +793,8 @@ public class SystemScreen extends Screen {
 
     private void openSkill(String id) {
         selectedSkill = id;
-        openOverlay(Overlay.SKILL);
+        if (win == Win.SKILLS && skillsSplit()) play(ModSounds.CLICK.get(), 1.15f); // карточка уже в окне
+        else openOverlay(Overlay.SKILL);
     }
 
     // ============================================================ CLASS
@@ -972,6 +1186,17 @@ public class SystemScreen extends Screen {
             h += 4;
         }
         return y + h + 1;
+    }
+
+    /** Как wrap, но не больше maxLines строк. */
+    private int wrapMax(GuiGraphics g, Component text, int x, int y, int width, int color, float alpha, int maxLines) {
+        int yy = y, n = 0;
+        for (FormattedCharSequence line : font.split(text, width)) {
+            if (n++ >= maxLines) break;
+            if (alpha >= 0.03f) g.drawString(font, line, x, yy, a(color, alpha), false);
+            yy += 10;
+        }
+        return yy - y;
     }
 
     private int wrap(GuiGraphics g, Component text, int x, int y, int width, int color, float alpha) {

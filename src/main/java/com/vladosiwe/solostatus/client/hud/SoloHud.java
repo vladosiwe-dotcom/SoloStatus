@@ -1,6 +1,7 @@
 package com.vladosiwe.solostatus.client.hud;
 
 import com.vladosiwe.solostatus.client.ClientState;
+import com.vladosiwe.solostatus.client.ui.SkillIcons;
 import com.vladosiwe.solostatus.client.Keys;
 import com.vladosiwe.solostatus.client.screen.Holo;
 import com.vladosiwe.solostatus.config.SoloConfig;
@@ -90,7 +91,7 @@ public final class SoloHud {
             g.renderOutline(x, y, 20, 20, Holo.BORDER);
             SkillDef def = Skills.get(d.slots[i]);
             if (def != null) {
-                g.renderItem(new ItemStack(def.icon), x + 2, y + 2);
+                SkillIcons.draw(g, def, x + 2, y + 2, 16, true, 1f);
                 Long ready = d.cooldowns.get(def.id);
                 if (ready != null && ready > gameTime) {
                     int total = def.cooldownFor(Math.max(1, d.skillRank(def.id)));

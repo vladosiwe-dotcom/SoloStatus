@@ -656,7 +656,7 @@
   "solostatus.ui.armor_show": "Show armor",
   "solostatus.ui.hints": "%s — close · Tab — next window · RMB on a skill — to slot",
   "solostatus.ui.skill_points": "Skill points",
-  "solostatus.ui.slots_hint": "Skill slots",
+  "solostatus.ui.slots_hint": "Slots Z X C V. Click a slot to see the skill, right-click to clear it. Right-click a skill in the list to put it in a free slot.",
   "solostatus.ui.lv": "Lv. %s",
   "solostatus.ui.sec_learnable": "AVAILABLE TO LEARN",
   "solostatus.ui.sec_active": "ACTIVE SKILLS",
@@ -703,5 +703,17 @@
   "solostatus.sound.error": "Error",
   "subtitles.solostatus.system.error": "System: error",
   "solostatus.sound.presence": "Nearby System window",
-  "subtitles.solostatus.system.presence": "System: nearby system window"
+  "subtitles.solostatus.system.presence": "System: nearby system window",
+  "solostatus.ui.filter_all": "All",
+  "solostatus.ui.filter_class": "Class",
+  "solostatus.ui.filter_spec": "Spec",
+  "solostatus.ui.filter_awakening": "Awakening",
+  "solostatus.ui.filter_hidden": "Hidden",
+  "solostatus.ui.no_skills_filter": "No skills here yet.",
+  "solostatus.ui.pick_skill": "Pick a skill in the list.",
+  "solostatus.ui.more_requirements": "%s more requirements",
+  "solostatus.ui.path": "Path",
+  "solostatus.ui.max_rank": "MAX RANK",
+  "solostatus.inspect.plate": "INSPECT",
+  "solostatus.inspect.close_hint": "Esc to close"
 }

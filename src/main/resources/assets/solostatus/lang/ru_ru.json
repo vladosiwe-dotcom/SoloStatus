@@ -656,7 +656,7 @@
   "solostatus.ui.armor_show": "Показать броню",
   "solostatus.ui.hints": "%s — закрыть · Tab — следующее окно · ПКМ по навыку — в слот",
   "solostatus.ui.skill_points": "Очки навыков",
-  "solostatus.ui.slots_hint": "Слоты навыков",
+  "solostatus.ui.slots_hint": "Слоты Z X C V. Клик по слоту: карточка навыка, правый клик: убрать из слота. Правый клик по навыку в списке ставит его в свободный слот.",
   "solostatus.ui.lv": "Ур. %s",
   "solostatus.ui.sec_learnable": "МОЖНО ИЗУЧИТЬ",
   "solostatus.ui.sec_active": "АКТИВНЫЕ НАВЫКИ",
@@ -703,5 +703,17 @@
   "solostatus.sound.error": "Ошибка",
   "subtitles.solostatus.system.error": "Система: ошибка",
   "solostatus.sound.presence": "Окно Системы рядом",
-  "subtitles.solostatus.system.presence": "Система: окно системы рядом"
+  "subtitles.solostatus.system.presence": "Система: окно системы рядом",
+  "solostatus.ui.filter_all": "Все",
+  "solostatus.ui.filter_class": "Класс",
+  "solostatus.ui.filter_spec": "Спец",
+  "solostatus.ui.filter_awakening": "Пробуждение",
+  "solostatus.ui.filter_hidden": "Скрытые",
+  "solostatus.ui.no_skills_filter": "Здесь пока нет навыков.",
+  "solostatus.ui.pick_skill": "Выберите навык в списке.",
+  "solostatus.ui.more_requirements": "и ещё условий: %s",
+  "solostatus.ui.path": "Путь",
+  "solostatus.ui.max_rank": "МАКСИМАЛЬНЫЙ РАНГ",
+  "solostatus.inspect.plate": "ОСМОТР",
+  "solostatus.inspect.close_hint": "Esc — закрыть"
 }
