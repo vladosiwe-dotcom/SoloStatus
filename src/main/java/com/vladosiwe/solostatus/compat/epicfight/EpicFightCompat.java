@@ -46,6 +46,8 @@ public final class EpicFightCompat {
 
     private static boolean animationsReady;
     private static boolean eventsHooked;
+    private static String animationsError = "init() not called";
+    private static String eventsError = "init() not called";
     private static Method getPatch;
     private static Method playClientSide;
     private static Class<?> animationsClass;
@@ -61,16 +63,20 @@ public final class EpicFightCompat {
             playClientSide = living.getMethod("playAnimationInClientSide", Class.forName(ASSET_ACCESSOR), float.class);
             animationsClass = Class.forName(ANIMATIONS);
             animationsReady = true;
+            animationsError = null;
             SoloStatus.LOGGER.info("Epic Fight: анимации навыков подключены");
         } catch (Throwable t) {
+            animationsError = t.toString();
             SoloStatus.LOGGER.warn("Epic Fight: анимации навыков недоступны ({}). Навыки будут использовать ванильный взмах.", t.toString());
         }
         try {
             hookDodge();
             hookTakeDamage();
             eventsHooked = true;
+            eventsError = null;
             SoloStatus.LOGGER.info("Epic Fight: уклонения и парирования засчитываются в прогресс системы");
         } catch (Throwable t) {
+            eventsError = t.toString();
             SoloStatus.LOGGER.warn("Epic Fight: события уклонения/парирования недоступны ({})", t.toString());
         }
     }
@@ -78,6 +84,9 @@ public final class EpicFightCompat {
     /** Для проверки интеграции: анимации и события Epic Fight подключены. */
     public static boolean animationsReady() { return animationsReady; }
     public static boolean eventsHooked() { return eventsHooked; }
+    /** Why the part did not connect (null when it did). */
+    public static String animationsError() { return animationsError; }
+    public static String eventsError() { return eventsError; }
 
     /** Имена анимаций, которых нет в этой версии Epic Fight (проверяется наличие поля в классе Animations). */
     public static java.util.List<String> missingAnimations(java.util.Collection<String> names) {

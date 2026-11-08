@@ -59,7 +59,7 @@ public final class SoloGameTests {
      */
     @GameTest(template = "empty")
     public static void playerLevelsUp(GameTestHelper h) {
-        ServerPlayer p = h.makeMockServerPlayerInLevel();
+        ServerPlayer p = TestPlayers.create(h);
         // опыт идёт только после пробуждения Системы — выбора класса
         ClassSystem.chooseClass(p, HunterClass.WARRIOR);
         PlayerData d = Hunter.get(p);

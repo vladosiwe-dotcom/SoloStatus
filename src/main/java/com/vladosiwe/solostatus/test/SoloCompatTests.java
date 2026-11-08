@@ -46,7 +46,7 @@ public final class SoloCompatTests {
     private static boolean required() { return "1".equals(System.getenv("SOLO_COMPAT_REQUIRED")); }
 
     private static ServerPlayer hunter(GameTestHelper h, HunterClass c) {
-        ServerPlayer p = h.makeMockServerPlayerInLevel();
+        ServerPlayer p = TestPlayers.create(h);
         ClassSystem.chooseClass(p, c);
         return p;
     }
@@ -60,8 +60,8 @@ public final class SoloCompatTests {
             return;
         }
         h.assertTrue(CompatManager.epicFightLoaded(), "CompatManager does not see Epic Fight");
-        h.assertTrue(EpicFightCompat.animationsReady(), "Epic Fight animations are not connected");
-        h.assertTrue(EpicFightCompat.eventsHooked(), "Epic Fight dodge/parry events are not connected");
+        h.assertTrue(EpicFightCompat.animationsReady(), "Epic Fight animations are not connected: " + EpicFightCompat.animationsError());
+        h.assertTrue(EpicFightCompat.eventsHooked(), "Epic Fight dodge/parry events are not connected: " + EpicFightCompat.eventsError());
         List<String> missing = EpicFightCompat.missingAnimations(SkillAnimations.allAnimations());
         h.assertTrue(missing.isEmpty(), "animations missing in this Epic Fight version: " + missing);
         h.succeed();

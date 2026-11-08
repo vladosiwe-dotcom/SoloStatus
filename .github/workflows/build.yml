@@ -28,6 +28,18 @@ jobs:
           timeout 600 ./gradlew runGameTestServer --no-daemon --stacktrace 2>&1 | tee gametest.log
           if grep -q "Failed to start the minecraft server" gametest.log; then echo "::error::server failed to start"; exit 1; fi
           grep -Eq "All [0-9]+ required tests passed" gametest.log || { echo "::error::required game tests did not pass"; exit 1; }
+      - name: What the integrations and tests reported
+        if: always()
+        run: grep -E "Epic Fight:|Iron's Spells:|Solo Status System:|failed at|tests passed|tests failed|   - " gametest.log | grep -v "^\s*at " | head -60 || true
+      - name: Epic Fight API as shipped (for reflection mismatches)
+        if: failure()
+        run: |
+          jar=$(ls run/mods/*epic*fight*.jar 2>/dev/null | head -1); [ -n "$jar" ] || exit 0
+          echo "$jar"
+          for c in yesman.epicfight.world.capabilities.EpicFightCapabilities yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch yesman.epicfight.gameasset.Animations; do
+            javap -cp "$jar" "$c" 2>&1 | grep -E "class |getServerPlayerPatch|playAnimationInClientSide|playAnimationSynchronized| static .*(SWORD_AUTO1|BIPED_STEP)" | head -20
+          done
+          unzip -l "$jar" | grep -E "AssetAccessor|StaticAnimation.class" | head
       - name: Upload the mod jar
         if: success()
         uses: actions/upload-artifact@v4
