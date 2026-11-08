@@ -28,6 +28,12 @@ neoForge {
             programArgument '--nogui'
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
+        // Запускается на GitHub: поднимает выделенный сервер с модом и сразу выключает его.
+        // Проверяет, что мод загружается на сервере (реестры, конфиги, сеть) и не тянет клиентский код.
+        gameTestServer {
+            type = "gameTestServer"
+            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+        }
         configureEach {
             systemProperty 'forge.logging.markers', 'REGISTRIES'
             logLevel = org.slf4j.event.Level.INFO

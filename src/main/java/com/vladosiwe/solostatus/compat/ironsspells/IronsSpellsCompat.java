@@ -33,9 +33,10 @@ import java.util.function.Consumer;
  *    и школьным *_spell_power. Сами заклинания не изменяются.
  * 2) Школа магии определяется по id типа урона (irons_spellbooks:&lt;школа&gt;_magic) — так магическое мастерство
  *    растёт от реального урона заклинаниями по противникам.
- * 3) Событие применения заклинания (SpellOnCastEvent) подключается через отражение. ТРЕБУЕТ ПРОВЕРКИ
- *    с вашей версией Iron's Spells: если класс/методы не найдены, функция отключается с сообщением в логе,
- *    остальные части интеграции продолжают работать.
+ * 3) Событие применения заклинания (SpellOnCastEvent, наследник PlayerEvent: getEntity, getSchoolType, getSpellLevel;
+ *    SchoolType.getId() → ResourceLocation) подключается через отражение. Сверено с исходниками Iron's Spells
+ *    ветки 1.21 (1.21.1-3.16.3). Если в другой версии класс или методы изменятся, функция отключится
+ *    с сообщением в логе, остальные части интеграции продолжат работать.
  */
 public final class IronsSpellsCompat {
     public static final String MODID = "irons_spellbooks";

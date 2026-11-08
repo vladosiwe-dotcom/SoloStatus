@@ -17,6 +17,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build the mod
         run: ./gradlew build --no-daemon --stacktrace
+      - name: Start a dedicated server with the mod (smoke test)
+        run: timeout 600 ./gradlew runGameTestServer --no-daemon --stacktrace
       - name: Upload the mod jar
         if: success()
         uses: actions/upload-artifact@v4

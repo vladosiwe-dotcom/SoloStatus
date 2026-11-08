@@ -2,6 +2,7 @@ package com.vladosiwe.solostatus.client.presence;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.mojang.math.Axis;
 import com.vladosiwe.solostatus.SoloStatus;
 import com.vladosiwe.solostatus.achievement.AchievementDef;
 import com.vladosiwe.solostatus.achievement.Achievements;
@@ -37,8 +38,12 @@ import java.util.Map;
 
 /**
  * Окно Системы другого охотника в мире: когда игрок рядом открывает Систему, перед ним появляется
- * голографическое окно STATUS с публичными данными (без 3D-модели). Окно разворачивается из линии,
- * всегда повёрнуто к смотрящему и видно на расстоянии до 32 блоков.
+ * голографическое окно STATUS с публичными данными (без 3D-модели).
+ *
+ * Окно висит перед охотником на уровне груди, в той стороне, куда он смотрит (как окно Системы в аниме),
+ * разворачивается из линии и поворачивается к смотрящему только по горизонтали, поэтому стоит вертикально,
+ * как настоящая панель. Чтобы его было удобно читать: издалека оно немного увеличивается (до 2 раз),
+ * а если подойти вплотную, плавно гаснет и не закрывает весь экран. Видно на расстоянии до 32 блоков.
  */
 @EventBusSubscriber(modid = SoloStatus.MODID, value = Dist.CLIENT)
 public final class PresenceClient {
@@ -103,19 +108,27 @@ public final class PresenceClient {
             float close = e.closedAt >= 0 ? 1f - Mth.clamp((now - e.closedAt) / 220f, 0f, 1f) : 1f;
             float unfold = (1 - (1 - open) * (1 - open) * (1 - open)) * close;
 
+            // перед охотником, по направлению взгляда, чуть ниже глаз: лицо остаётся видно над окном
             Vec3 look = Vec3.directionFromRotation(0, owner.getViewYRot(pt));
-            Vec3 anchor = owner.getPosition(pt).add(look.scale(0.85)).add(0, owner.getBbHeight() * 0.72, 0);
+            Vec3 anchor = owner.getEyePosition(pt).add(look.scale(1.0)).add(0, -0.45, 0);
+            double dist = cam.distanceTo(anchor);
+            float near = (float) Mth.clamp((dist - 0.9) / 0.9, 0.0, 1.0);   // вплотную окно гаснет
+            float far = (float) Mth.clamp((32.0 - dist) / 6.0, 0.0, 1.0);   // на границе видимости тоже
+            float alpha = near * far;
+            if (alpha <= 0.02f) continue;
+            float grow = (float) Mth.clamp(dist / 7.0, 1.0, 2.0);             // издалека текст остаётся читаемым
+            float yaw = (float) Math.atan2(cam.x - anchor.x, cam.z - anchor.z);
             pose.pushPose();
             pose.translate(anchor.x - cam.x, anchor.y - cam.y, anchor.z - cam.z);
-            pose.mulPose(camera.rotation());
-            pose.scale(SCALE, -SCALE, SCALE);
-            draw(pose.last().pose(), buffers, mc.font, e.info, unfold);
+            pose.mulPose(Axis.YP.rotation(yaw));
+            pose.scale(SCALE * grow, -SCALE * grow, SCALE * grow);
+            draw(pose.last().pose(), buffers, mc.font, e.info, unfold, alpha);
             pose.popPose();
         }
         buffers.endBatch();
     }
 
-    private static void draw(Matrix4f m, MultiBufferSource buffers, Font font, CompoundTag info, float unfold) {
+    private static void draw(Matrix4f m, MultiBufferSource buffers, Font font, CompoundTag info, float unfold, float alpha) {
         boolean priv = info.getBoolean("private");
         int h = priv ? 58 : 98;
         int visH = Math.max(2, (int) (h * unfold));
@@ -123,13 +136,15 @@ public final class PresenceClient {
         int light = LightTexture.FULL_BRIGHT;
         VertexConsumer bg = buffers.getBuffer(RenderType.textBackground());
         // свечение и стекло
-        quad(bg, m, x0 - 3, y0 - 3, W + 6, visH + 6, 0x3055C8FF, 0.6f, light);
-        quad(bg, m, x0, y0, W, visH, 0xE6081426, 0.5f, light);
-        quad(bg, m, x0, y0, W, 1, 0xFF55C8FF, 0.4f, light);
-        quad(bg, m, x0, y0 + visH - 1, W, 1, 0xFF55C8FF, 0.4f, light);
-        quad(bg, m, x0, y0, 1, visH, 0xFF55C8FF, 0.4f, light);
-        quad(bg, m, x0 + W - 1, y0, 1, visH, 0xFF55C8FF, 0.4f, light);
-        if (unfold < 0.97f) return;
+        quad(bg, m, x0 - 3, y0 - 3, W + 6, visH + 6, fade(0x3055C8FF, alpha), 0.6f, light);
+        quad(bg, m, x0, y0, W, visH, fade(0xE6081426, alpha), 0.5f, light);
+        quad(bg, m, x0, y0, W, 1, fade(0xFF55C8FF, alpha), 0.4f, light);
+        quad(bg, m, x0, y0 + visH - 1, W, 1, fade(0xFF55C8FF, alpha), 0.4f, light);
+        quad(bg, m, x0, y0, 1, visH, fade(0xFF55C8FF, alpha), 0.4f, light);
+        quad(bg, m, x0 + W - 1, y0, 1, visH, fade(0xFF55C8FF, alpha), 0.4f, light);
+        // текст с прозрачностью ниже ~10% шрифт рисует непрозрачным, поэтому почти погасшее окно рисуется без текста
+        if (unfold < 0.97f || alpha < 0.12f) return;
+        TEXT_ALPHA = alpha;
 
         int x = x0 + 8, y = y0 + 6;
         text(font, m, buffers, SystemFonts.bold(Component.literal("STATUS")), -font.width(SystemFonts.bold(Component.literal("STATUS"))) / 2, y, 0xFFFFFFFF, light);
@@ -178,7 +193,15 @@ public final class PresenceClient {
         vc.addVertex(m, x + w, y, z).setColor(argb).setLight(light);
     }
 
+    private static float TEXT_ALPHA = 1f;
+
+    private static int fade(int argb, float alpha) {
+        int base = argb >>> 24 == 0 ? 0xFF : argb >>> 24; // цвета без альфы (0xRRGGBB) считаем непрозрачными
+        int a = Math.round(base * alpha);
+        return (a << 24) | (argb & 0x00FFFFFF);
+    }
+
     private static void text(Font font, Matrix4f m, MultiBufferSource buffers, Component c, float x, float y, int color, int light) {
-        font.drawInBatch(c, x, y, color, false, m, buffers, Font.DisplayMode.NORMAL, 0, light);
+        font.drawInBatch(c, x, y, fade(color, TEXT_ALPHA), false, m, buffers, Font.DisplayMode.NORMAL, 0, light);
     }
 }

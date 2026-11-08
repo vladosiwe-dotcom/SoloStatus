@@ -11,7 +11,7 @@
 | ModDevGradle | 2.0.x | сборка | https://projects.neoforged.net/neoforged/moddevgradle |
 | Java | 21 | сборка | https://adoptium.net/ |
 | Epic Fight | 21.17.3.1 (проверено по jar) | необязательно | https://www.curseforge.com/minecraft/mc-mods/epic-fight-mod · https://github.com/Epic-Fight/epicfight |
-| Iron's Spells 'n Spellbooks | ветка для 1.21.1 NeoForge | необязательно | https://www.curseforge.com/minecraft/mc-mods/irons-spells-n-spellbooks · https://github.com/iron431/irons-spells-n-spellbooks |
+| Iron's Spells 'n Spellbooks | 1.21.1-3.16.3 (сверено по исходникам) | необязательно | https://www.curseforge.com/minecraft/mc-mods/irons-spells-n-spellbooks · https://github.com/iron431/irons-spells-n-spellbooks |
 | Legendary Tooltips | ветка для 1.21.1 NeoForge | необязательно | https://www.curseforge.com/minecraft/mc-mods/legendary-tooltips |
 | Vosk (распознавание речи) | 0.3.45 (проверено: API и нативная библиотека) | встроено в мод | https://central.sonatype.com/artifact/com.alphacephei/vosk · https://alphacephei.com/vosk/models |
 | Simple Voice Chat | ветка для 1.21.1 NeoForge | необязательно, совместим | https://modrepo.de/minecraft/voicechat |
@@ -25,13 +25,15 @@
 - **Epic Fight, урон.** Атаки Epic Fight проходят через стандартные события урона, поэтому STR, PER, крит, мастерство, качество оружия и пассивки к ним применяются. AGI повышает атрибут скорости атаки, от которого Epic Fight масштабирует скорость анимаций.
 - **Legendary Tooltips.** Качество выставляет ванильный компонент `minecraft:rarity`. По нему Legendary Tooltips выбирает рамку по умолчанию, а цвет названия меняется даже без этого мода.
 
-## Предположения, требующие проверки
+## Iron's Spells — сверено с исходниками
 
-| Что | Как сделано | Риск | Что делать, если не работает |
-|---|---|---|---|
-| Iron's: событие `io.redspace.ironsspellbooks.api.events.SpellOnCastEvent` с методами `getEntity`, `getSchoolType`, `getSpellLevel` | Подключается через отражение | Названия могли измениться | В логе будет предупреждение. Мастерство магии продолжит расти от урона заклинаниями |
-| Iron's: названия атрибутов | По id реестра | Переименование | Модификатор не применится, ошибки не будет |
-| Iron's: имена типов урона `*_magic` | Разбор id | Другое именование | Мастерство будет записано под полным именем типа |
+Все имена ниже сверены с исходным кодом Iron's Spells, ветка `1.21` (версия 1.21.1-3.16.3, https://github.com/iron431/irons-spells-n-spellbooks). Интеграция работает через отражение и реестры, поэтому мод собирается и работает без Iron's Spells.
+
+| Что | Имя в Iron's Spells | Что будет, если в другой версии изменится |
+|---|---|---|
+| Событие применения заклинания | `io.redspace.ironsspellbooks.api.events.SpellOnCastEvent` (наследник `PlayerEvent`): `getEntity()`, `getSchoolType()`, `getSpellLevel()`; школа: `SchoolType.getId()` | в логе будет предупреждение, мастерство магии продолжит расти от урона заклинаниями |
+| Атрибуты | `irons_spellbooks:spell_power`, `max_mana`, `mana_regen`, `cooldown_reduction`, `<школа>_spell_power` (fire, ice, lightning, holy, ender, blood, evocation, nature, eldritch) | модификатор не применится, ошибки не будет |
+| Типы урона | `irons_spellbooks:<школа>_magic` | мастерство запишется под полным именем типа |
 
 ## Epic Fight — реализовано по настоящему API
 
