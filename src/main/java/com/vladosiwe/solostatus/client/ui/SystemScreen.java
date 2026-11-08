@@ -254,7 +254,7 @@ public class SystemScreen extends Screen {
     private void renderDock(GuiGraphics g, int mx, int my) {
         float a = Mth.clamp((since(openAt) - 500) / 250f, 0f, 1f);
         Win[] wins = {Win.STATUS, Win.SKILLS, Win.CLASS, Win.MASTERY, Win.ACHIEVEMENTS};
-        int bw = 74, bh = 16;
+        int bw = 88, bh = 16; // «ACHIEVEMENTS» шрифтом system_bold ≈ 76 единиц + отступы
         int x = wx - bw - 12;
         int y = wy + 18;
         for (Win w : wins) {
