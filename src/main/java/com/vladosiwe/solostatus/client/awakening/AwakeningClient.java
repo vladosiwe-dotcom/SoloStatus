@@ -76,8 +76,9 @@ public final class AwakeningClient {
 
     /** Automated client test (Rift end-to-end run): frames of the scene saved as screenshots. Off unless SOLO_E2E_SHOTS=1. */
     private static final boolean SHOTS = "1".equals(System.getenv("SOLO_E2E_SHOTS"));
-    private static final double[] SHOT_TIMES = {0.6, 1.4, 1.9, 2.4, 3.0, 3.4, 4.4, 5.2, 6.2, 6.8, 7.6};
+    /** Every client tick while the scene plays, plus 1.5 s after it, so CI can assemble a 20 fps video. */
     private static int shotsTaken;
+    private static int afterScene = -1;
 
     @SubscribeEvent
     public static void onTick(ClientTickEvent.Post event) {
@@ -86,13 +87,17 @@ public final class AwakeningClient {
             SCENES.clear();
             return;
         }
-        if (SHOTS && mc.player != null && shotsTaken < SHOT_TIMES.length) {
-            double t = time(mc.player, 0);
-            if (t >= SHOT_TIMES[shotsTaken]) {
-                String name = "awakening-" + shotsTaken + "-" + String.format(java.util.Locale.ROOT, "%.1f", t) + "s.png";
-                shotsTaken++;
-                net.minecraft.client.Screenshot.grab(mc.gameDirectory, name, mc.getMainRenderTarget(),
-                        m -> SoloStatus.LOGGER.info("Awakening: screenshot {}", name));
+        if (SHOTS && mc.player != null && afterScene != 0) {
+            boolean playing = time(mc.player, 0) >= 0;
+            if (playing) afterScene = 30;
+            else if (afterScene > 0) afterScene--;
+            if (playing || afterScene > 0) {
+                String name = String.format(java.util.Locale.ROOT, "awakening-v-%03d.png", shotsTaken++);
+                net.minecraft.client.Screenshot.grab(mc.gameDirectory, name, mc.getMainRenderTarget(), m -> { });
+                if (shotsTaken == 1) SoloStatus.LOGGER.info("Awakening: recording frames");
+            } else if (afterScene == 0 || shotsTaken > 0) {
+                afterScene = 0;
+                SoloStatus.LOGGER.info("Awakening: recorded {} frames", shotsTaken);
             }
         }
         SCENES.entrySet().removeIf(en -> {
