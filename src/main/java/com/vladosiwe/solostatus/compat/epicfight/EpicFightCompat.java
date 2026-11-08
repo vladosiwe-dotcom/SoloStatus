@@ -8,6 +8,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -48,26 +51,39 @@ public final class EpicFightCompat {
     private static boolean eventsHooked;
     private static String animationsError = "init() not called";
     private static String eventsError = "init() not called";
-    private static Method getPatch;
-    private static Method playClientSide;
+    /*
+     * Method handles, not Class.getMethod: getMethod resolves the signature of EVERY public method of the class and
+     * its superclasses, and Epic Fight's entity patches have client-only methods (LocalPlayer…). On a dedicated
+     * server that throws "Attempted to load class LocalPlayer for invalid dist". A handle links only the one member.
+     */
+    private static final MethodHandles.Lookup L = MethodHandles.publicLookup();
+    private static MethodHandle getPatch;
+    private static MethodHandle playClientSide;
+    private static MethodHandle getEntityPatch;
+    private static MethodHandle getOriginal;
     private static Class<?> animationsClass;
     private static final Map<String, Object> ANIM_CACHE = new HashMap<>();
 
     private EpicFightCompat() {}
 
     public static void init() {
+        String step = "EpicFightCapabilities";
         try {
-            Class<?> caps = Class.forName(CAPS);
-            getPatch = caps.getMethod("getServerPlayerPatchAsOptional", Entity.class);
-            Class<?> living = Class.forName(LIVING_PATCH);
-            playClientSide = living.getMethod("playAnimationInClientSide", Class.forName(ASSET_ACCESSOR), float.class);
-            animationsClass = Class.forName(ANIMATIONS);
+            ClassLoader cl = EpicFightCompat.class.getClassLoader();
+            Class<?> caps = Class.forName(CAPS, false, cl);
+            getPatch = L.findStatic(caps, "getServerPlayerPatchAsOptional", MethodType.methodType(Optional.class, Entity.class));
+            step = "LivingEntityPatch.playAnimationInClientSide";
+            Class<?> living = Class.forName(LIVING_PATCH, false, cl);
+            playClientSide = L.findVirtual(living, "playAnimationInClientSide",
+                    MethodType.methodType(void.class, Class.forName(ASSET_ACCESSOR, false, cl), float.class));
+            step = "Animations";
+            animationsClass = Class.forName(ANIMATIONS, false, cl);
             animationsReady = true;
             animationsError = null;
             SoloStatus.LOGGER.info("Epic Fight: анимации навыков подключены");
         } catch (Throwable t) {
-            animationsError = t.toString();
-            SoloStatus.LOGGER.warn("Epic Fight: анимации навыков недоступны ({}). Навыки будут использовать ванильный взмах.", t.toString());
+            animationsError = step + ": " + t;
+            SoloStatus.LOGGER.warn("Epic Fight: анимации навыков недоступны ({}). Навыки будут использовать ванильный взмах.", animationsError);
         }
         try {
             hookDodge();
@@ -81,6 +97,9 @@ public final class EpicFightCompat {
         }
     }
 
+    /** For the integration test: the patch → entity path used by every dodge/parry handler is resolved. */
+    public static boolean patchAccessReady() { return getEntityPatch != null && getOriginal != null; }
+
     /** Для проверки интеграции: анимации и события Epic Fight подключены. */
     public static boolean animationsReady() { return animationsReady; }
     public static boolean eventsHooked() { return eventsHooked; }
@@ -92,7 +111,11 @@ public final class EpicFightCompat {
     public static java.util.List<String> missingAnimations(java.util.Collection<String> names) {
         java.util.List<String> missing = new java.util.ArrayList<>();
         for (String n : names) {
-            try { animationsClass.getField(n); } catch (Throwable t) { missing.add(n); }
+            try {
+                if (animationsClass.getField(n).get(null) == null) missing.add(n + " (not loaded)");
+            } catch (Throwable t) {
+                missing.add(n);
+            }
         }
         return missing;
     }
@@ -106,7 +129,7 @@ public final class EpicFightCompat {
     public static boolean playAnimation(ServerPlayer player, String animationName) {
         if (!animationsReady || animationName == null) return false;
         try {
-            Optional<?> patch = (Optional<?>) getPatch.invoke(null, player);
+            Optional<?> patch = (Optional<?>) getPatch.invoke((Entity) player);
             if (patch.isEmpty()) return false;
             Object anim = animation(animationName);
             if (anim == null) return false;
@@ -132,7 +155,34 @@ public final class EpicFightCompat {
 
     // ============================== События ==============================
 
+    private static void resolvePatchAccess() throws Exception {
+        if (getOriginal != null) return;
+        ClassLoader cl = EpicFightCompat.class.getClassLoader();
+        Class<?> patchEvent = Class.forName(PATCH_EVENT, false, cl);
+        Class<?> livingPatch = Class.forName(LIVING_PATCH, false, cl);
+        try {
+            getEntityPatch = firstVirtual(patchEvent, "getEntityPatch", livingPatch, Class.forName(ENTITY_PATCH, false, cl), Object.class);
+        } catch (Exception e) {
+            getEntityPatch = L.unreflect(patchEvent.getMethod("getEntityPatch"));
+        }
+        getOriginal = firstVirtual(Class.forName(ENTITY_PATCH, false, cl), "getOriginal", Entity.class, LivingEntity.class, Object.class);
+    }
+
+    /** findVirtual with the first return type that matches (generic methods erase to their bound). */
+    private static MethodHandle firstVirtual(Class<?> owner, String name, Class<?>... returnTypes) throws Exception {
+        Exception last = null;
+        for (Class<?> r : returnTypes) {
+            try {
+                return L.findVirtual(owner, name, MethodType.methodType(r));
+            } catch (NoSuchMethodException | IllegalAccessException e) {
+                last = e;
+            }
+        }
+        throw last;
+    }
+
     private static void hookDodge() throws Exception {
+        resolvePatchAccess();
         Object hook = Class.forName(HOOKS_ENTITY).getField("ON_DODGE").get(null);
         register(hook, event -> {
             ServerPlayer p = playerOf(event);
@@ -146,6 +196,8 @@ public final class EpicFightCompat {
 
     private static void hookTakeDamage() throws Exception {
         Object hook = Class.forName(HOOKS_ENTITY).getField("TAKE_DAMAGE_INCOME").get(null);
+        resolvePatchAccess();
+        // the event classes have no client-only members, so plain reflection is safe here (verified on a dedicated server)
         Class<?> income = Class.forName(INCOME_EVENT);
         Method isParried = income.getMethod("isParried");
         Method getResult = income.getMethod("getResult");
@@ -161,7 +213,8 @@ public final class EpicFightCompat {
                 if (!parried && !blocked) return;
                 PlayerData d = Hunter.get(p);
                 long now = p.serverLevel().getGameTime();
-                var source = (net.minecraft.world.damagesource.DamageSource) getSource.invoke(event);
+                Object rawSource = getSource.invoke(event);
+                if (!(rawSource instanceof net.minecraft.world.damagesource.DamageSource source)) return;
                 double fairness = source.getEntity() instanceof LivingEntity le ? Threat.fairness(le, p) : 0;
                 if (now - d.lastBlockTick > 10 && fairness > 0.2) {
                     d.addCounter("blocks", 1);
@@ -197,8 +250,8 @@ public final class EpicFightCompat {
 
     private static ServerPlayer playerOf(Object event) {
         try {
-            Object patch = Class.forName(PATCH_EVENT).getMethod("getEntityPatch").invoke(event);
-            Object original = Class.forName(ENTITY_PATCH).getMethod("getOriginal").invoke(patch);
+            Object patch = getEntityPatch.invoke(event);
+            Object original = getOriginal.invoke(patch);
             return original instanceof ServerPlayer sp ? sp : null;
         } catch (Throwable t) {
             return null;

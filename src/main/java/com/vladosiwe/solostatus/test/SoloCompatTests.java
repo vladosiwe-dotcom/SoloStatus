@@ -62,6 +62,7 @@ public final class SoloCompatTests {
         h.assertTrue(CompatManager.epicFightLoaded(), "CompatManager does not see Epic Fight");
         h.assertTrue(EpicFightCompat.animationsReady(), "Epic Fight animations are not connected: " + EpicFightCompat.animationsError());
         h.assertTrue(EpicFightCompat.eventsHooked(), "Epic Fight dodge/parry events are not connected: " + EpicFightCompat.eventsError());
+        h.assertTrue(EpicFightCompat.patchAccessReady(), "Epic Fight dodge/parry handlers cannot reach the player");
         List<String> missing = EpicFightCompat.missingAnimations(SkillAnimations.allAnimations());
         h.assertTrue(missing.isEmpty(), "animations missing in this Epic Fight version: " + missing);
         h.succeed();
