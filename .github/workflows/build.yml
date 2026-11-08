@@ -49,14 +49,6 @@ jobs:
             javap -cp "$jar" "$c" 2>&1 | grep -E "class |getServerPlayerPatch|playAnimationInClientSide|playAnimationSynchronized| static .*(SWORD_AUTO1|BIPED_STEP)" | head -20
           done
           unzip -l "$jar" | grep -E "AssetAccessor|StaticAnimation.class" | head
-      - name: Epic Fight mode and first-person API (reference for the compat code)
-        if: always()
-        run: |
-          jar=$(ls run/mods/*epic*fight*.jar 2>/dev/null | head -1); [ -n "$jar" ] || exit 0
-          unzip -l "$jar" | grep -oE "yesman/[A-Za-z0-9_/]*(PlayerPatch|ClientConfig|EpicFightOptions|ConfigManager|ClientEngine|FirstPerson)[A-Za-z0-9_$]*\.class" | sort -u | head -40
-          for c in yesman.epicfight.world.capabilities.entitypatch.player.PlayerPatch yesman.epicfight.client.world.capabilities.entitypatch.player.LocalPlayerPatch yesman.epicfight.world.capabilities.entitypatch.player.ServerPlayerPatch; do
-            echo "== $c"; javap -cp "$jar" "$c" 2>&1 | grep -iE "mode|battle|mining|class " | head -30
-          done
       - name: Upload the mod jar
         if: success()
         uses: actions/upload-artifact@v4
