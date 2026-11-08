@@ -7,7 +7,7 @@
 | Компонент | Ожидаемая версия | Тип зависимости | Где проверить |
 |---|---|---|---|
 | Minecraft | 1.21.1 | обязательно | — |
-| NeoForge | 21.1.x (в проекте 21.1.172) | обязательно | https://projects.neoforged.net/neoforged/neoforge |
+| NeoForge | 21.1.228 или новее (этого требуют Create, Epic Fight и Sable) | обязательно | https://projects.neoforged.net/neoforged/neoforge |
 | ModDevGradle | 2.0.x | сборка | https://projects.neoforged.net/neoforged/moddevgradle |
 | Java | 21 | сборка | https://adoptium.net/ |
 | Epic Fight | 21.17.3.1 (проверено по jar) | необязательно | https://www.curseforge.com/minecraft/mc-mods/epic-fight-mod · https://github.com/Epic-Fight/epicfight |
