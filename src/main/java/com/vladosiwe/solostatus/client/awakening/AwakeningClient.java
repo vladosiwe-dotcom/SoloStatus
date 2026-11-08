@@ -47,6 +47,9 @@ public final class AwakeningClient {
     private record Scene(long start, double elapsedAtStart, float yaw, long key) {}
 
     private static final Map<Integer, Scene> SCENES = new HashMap<>();
+    /** Scenes whose end was logged / entities still to be seen drawn as normal players (sync check in the logs). */
+    private static final java.util.Set<Long> ENDED = new java.util.HashSet<>();
+    private static final java.util.Set<Integer> BACK_TO_NORMAL = new java.util.HashSet<>();
     private static boolean fallbackPushed;
     private static boolean headHidden;
     private static boolean announcedFallback;
@@ -65,6 +68,8 @@ public final class AwakeningClient {
         float yaw = e instanceof AbstractClientPlayer p ? p.yBodyRot : 0;
         long start = mc.level.getGameTime() - msg.elapsed();
         SCENES.put(msg.entityId(), new Scene(start, msg.elapsed() / 20.0, yaw, ((long) msg.entityId() << 32) ^ start));
+        SoloStatus.LOGGER.info("Awakening sync: client {} start {} at {} (elapsed {})", e == mc.player ? "own" : "sees",
+                e != null ? e.getName().getString() : "#" + msg.entityId(), start, msg.elapsed());
         if (mc.player != null && e == mc.player) {
             awaitingSince = 0;
             // look where the body faces, so the end of the scene meets the player's own view without a turn
@@ -112,7 +117,7 @@ public final class AwakeningClient {
         // World loaded and no loading screen: tell the server, which starts the first-entry scene now.
         if (!readySent && mc.screen == null && com.vladosiwe.solostatus.client.ClientState.synced) {
             readySent = true;
-            if (!com.vladosiwe.solostatus.client.ClientState.data.introPlayed) awaitingSince = System.currentTimeMillis();
+            if (com.vladosiwe.solostatus.client.ClientState.data.awaitScene) awaitingSince = System.currentTimeMillis();
             net.neoforged.neoforge.network.PacketDistributor.sendToServer(new Payloads.ClientReady());
         }
         if (SHOTS && mc.player != null && afterScene != 0) {
@@ -145,6 +150,15 @@ public final class AwakeningClient {
                 SoloStatus.LOGGER.info("Awakening: recorded {} frames of another player's awakening", otherShots);
             }
         }
+        for (var en : SCENES.entrySet()) {
+            Scene sc = en.getValue();
+            if (mc.level.getGameTime() - sc.start >= AwakeningScene.DURATION && ENDED.add(sc.key)) {
+                Entity e = mc.level.getEntity(en.getKey());
+                SoloStatus.LOGGER.info("Awakening sync: client {} end {} at {}", e == mc.player ? "own" : "sees",
+                        e != null ? e.getName().getString() : "#" + en.getKey(), mc.level.getGameTime());
+                BACK_TO_NORMAL.add(en.getKey());
+            }
+        }
         SCENES.entrySet().removeIf(en -> {
             boolean over = mc.level.getGameTime() - en.getValue().start > AwakeningScene.DURATION + 5;
             if (over && GECKO) com.vladosiwe.solostatus.client.awakening.geo.AwakeningGeo.forget(en.getValue().key);
@@ -159,7 +173,12 @@ public final class AwakeningClient {
         AbstractClientPlayer player = (AbstractClientPlayer) event.getEntity();
         float pt = event.getPartialTick();
         double t = time(player, pt);
-        if (t < 0) return;
+        if (t < 0) {
+            if (BACK_TO_NORMAL.remove(player.getId())) {
+                SoloStatus.LOGGER.info("Awakening sync: client sees {} drawn as a normal player at {}", player.getName().getString(), player.level().getGameTime());
+            }
+            return;
+        }
         Scene s = SCENES.get(player.getId());
         if (GECKO) {
             event.setCanceled(true); // the scene model takes the vanilla model's place (and Epic Fight's, which draws later)
@@ -214,7 +233,12 @@ public final class AwakeningClient {
         var mc = Minecraft.getInstance();
         if (entity != mc.player) return null;
         double t = time(entity, partialTick);
-        if (t < 0) return null;
+        if (t < 0) {
+            if (BACK_TO_NORMAL.remove(entity.getId())) {
+                SoloStatus.LOGGER.info("Awakening sync: client own view back to normal at {}", entity.level().getGameTime());
+            }
+            return null;
+        }
         Scene s = SCENES.get(entity.getId());
         Vec3 feet = entity.getPosition(partialTick);
         return AwakeningCamera.pose(t, LENGTH, feet, s.yaw, entity.getViewYRot(partialTick), entity.getViewXRot(partialTick),

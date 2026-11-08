@@ -88,6 +88,8 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
     public float savedHealth = -1;
     /** The awakening scene has been shown (it plays once, on the first entry into the world). */
     public boolean introPlayed = false;
+    /** The server will play the awakening as soon as the client is ready: the client keeps the eyes closed until then. */
+    public boolean awaitScene = false;
 
     // --- Не сохраняется ---
     public transient boolean dirty = true;
@@ -226,6 +228,7 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
         t.put("timed", ts);
         t.putFloat("hp", savedHealth);
         t.putBoolean("intro", introPlayed);
+        t.putBoolean("await", awaitScene);
         return t;
     }
 
@@ -293,6 +296,7 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
             for (String k : ts.getAllKeys()) timedStates.put(k, ts.getLong(k));
             savedHealth = t.contains("hp") ? t.getFloat("hp") : -1;
             introPlayed = t.getBoolean("intro");
+            awaitScene = t.getBoolean("await");
         } catch (Exception e) {
             // Повреждённые данные не должны ронять сервер: оставляем то, что успели прочитать, остальное — по умолчанию.
             SoloStatus.LOGGER.error("Не удалось полностью прочитать профиль охотника, часть значений сброшена по умолчанию", e);

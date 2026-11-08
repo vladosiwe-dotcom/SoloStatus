@@ -53,7 +53,9 @@ public final class AwakeningScene {
         p.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, DURATION + 20, 4, false, false, false));
         var d = Hunter.get(p);
         d.introPlayed = true;
+        d.awaitScene = false;
         d.markDirty();
+        SoloStatus.LOGGER.info("Awakening sync: server start {} at {}", p.getGameProfile().getName(), now);
         Payloads.Awakening msg = new Payloads.Awakening(p.getId(), 0);
         for (ServerPlayer o : p.serverLevel().players()) {
             if (o == p || o.distanceToSqr(p) < VIEW * VIEW) ModNetwork.toPlayer(o, msg);
@@ -77,15 +79,38 @@ public final class AwakeningScene {
      */
     @SubscribeEvent
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (!(event.getEntity() instanceof ServerPlayer p) || Hunter.get(p).introPlayed || !SoloConfig.AWAKENING_INTRO.get()) return;
+        if (!(event.getEntity() instanceof ServerPlayer p) || !SoloConfig.AWAKENING_INTRO.get()) return;
+        var d = Hunter.get(p);
+        if (d.introPlayed && !SoloConfig.AWAKENING_EVERY_JOIN.get()) return;
         PENDING.add(p.getUUID());
+        d.awaitScene = true; // synced: the client keeps the eyes closed until the scene starts
+        d.markDirty();
+        if (E2E_PLACE) placeInFrontOfAnotherPlayer(p);
         Scheduler.later(400, () -> {
             if (PENDING.remove(p.getUUID()) && !p.hasDisconnected() && p.isAlive()) start(p);
         });
     }
 
     public static void onClientReady(ServerPlayer p) {
-        if (PENDING.remove(p.getUUID()) && p.isAlive() && !Hunter.get(p).introPlayed) start(p);
+        if (PENDING.remove(p.getUUID()) && p.isAlive()) start(p);
+    }
+
+    /**
+     * Two-client end-to-end check only (server environment SOLO_E2E_PLACE=1): a player who joins while someone is
+     * online is put 3.5 blocks in front of that player, side-on, and the watcher is turned to face them, so the
+     * watcher's client sees the whole awakening.
+     */
+    private static final boolean E2E_PLACE = "1".equals(System.getenv("SOLO_E2E_PLACE"));
+
+    private static void placeInFrontOfAnotherPlayer(ServerPlayer joiner) {
+        ServerPlayer watcher = null;
+        for (ServerPlayer o : joiner.server.getPlayerList().getPlayers()) if (o != joiner) { watcher = o; break; }
+        if (watcher == null) return;
+        float yaw = watcher.getYRot();
+        net.minecraft.world.phys.Vec3 at = watcher.position().add(net.minecraft.world.phys.Vec3.directionFromRotation(0, yaw).scale(3.5));
+        joiner.teleportTo(watcher.serverLevel(), at.x, watcher.getY(), at.z, yaw + 90, 0);
+        watcher.connection.teleport(watcher.getX(), watcher.getY(), watcher.getZ(), yaw, 25);
+        SoloStatus.LOGGER.info("Awakening e2e: {} placed in front of {}", joiner.getGameProfile().getName(), watcher.getGameProfile().getName());
     }
 
     @SubscribeEvent
@@ -110,7 +135,7 @@ public final class AwakeningScene {
     }
 
     private static void finish(ServerPlayer p) {
-        if (E2eBot.ON) Scheduler.later(30, () -> { if (!p.hasDisconnected()) E2eBot.wakeNear(p); });
+        SoloStatus.LOGGER.info("Awakening sync: server end {} at {}", p.getGameProfile().getName(), p.serverLevel().getGameTime());
         Notices.send(p, Notices.AWAKENING, Component.translatable("solostatus.notice.awakened"),
                 Component.translatable(Hunter.get(p).hasClass() ? "solostatus.notice.awakened.desc_class" : "solostatus.notice.awakened.desc"));
     }
