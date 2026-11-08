@@ -17,12 +17,6 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build the mod
         run: ./gradlew build --no-daemon --stacktrace
-      - name: Awakening model and animations match their Blockbench source
-        run: |
-          pip install -q pillow
-          python3 tools/blockbench/awakening.py
-          git diff --exit-code -- src/main/resources/assets/solostatus/geo src/main/resources/assets/solostatus/animations \
-            || { echo "::error::regenerate with tools/blockbench/awakening.py"; exit 1; }
       - name: Add Epic Fight and Iron's Spells for the integration tests
         run: python3 tools/fetch_mods.py run/mods /tmp/client-mods "$GITHUB_STEP_SUMMARY" required:epic-fight required:irons-spells-n-spellbooks+irons-lib+curios+geckolib+playeranimator
       - name: Start a dedicated server with the mod (smoke test)

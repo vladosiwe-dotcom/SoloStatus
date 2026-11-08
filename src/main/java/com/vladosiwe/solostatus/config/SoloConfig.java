@@ -40,8 +40,6 @@ public final class SoloConfig {
 
     // --- Осмотр ---
     public static final ModConfigSpec.BooleanValue ALLOW_INSPECT;
-    public static final ModConfigSpec.BooleanValue AWAKENING_INTRO;
-    public static final ModConfigSpec.BooleanValue AWAKENING_EVERY_JOIN;
     public static final ModConfigSpec.IntValue INSPECT_RANGE;
 
     // --- Клиент ---
@@ -91,13 +89,6 @@ public final class SoloConfig {
         b.push("inspect");
         ALLOW_INSPECT = b.comment("Разрешить осмотр статуса других игроков").define("allowInspect", true);
         INSPECT_RANGE = b.defineInRange("inspectRange", 16, 2, 128);
-        b.pop();
-
-        b.push("awakening");
-        AWAKENING_INTRO = b.comment("Сцена пробуждения при входе игрока на сервер (лёжа → открывает глаза → садится → встаёт).",
-                "Сам игрок видит её от первого лица, остальные рядом — со стороны.")
-                .define("introOnFirstJoin", true);
-        AWAKENING_EVERY_JOIN = b.comment("true — при каждом входе на сервер, false — только при самом первом").define("everyJoin", true);
         b.pop();
         SPEC = b.build();
 

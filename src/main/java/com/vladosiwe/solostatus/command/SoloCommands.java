@@ -35,8 +35,6 @@ public final class SoloCommands {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("solostatus")
                 .requires(s -> s.hasPermission(2))
-                .then(Commands.literal("awaken").then(Commands.argument("targets", EntityArgument.players())
-                        .executes(c -> each(c, com.vladosiwe.solostatus.awakening.AwakeningScene::start))))
                 .then(Commands.literal("xp").then(Commands.argument("targets", EntityArgument.players())
                         .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                                 .executes(c -> each(c, p -> LevelSystem.grantXp(p, IntegerArgumentType.getInteger(c, "amount"), com.vladosiwe.solostatus.level.XpReason.COMMAND))))))

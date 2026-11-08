@@ -316,21 +316,4 @@ public final class SoloCompatTests {
         h.succeed();
     }
 
-    /** Awakening scene: starts, protects the hunter, is remembered (plays once), ends after its time. */
-    @GameTest(template = "empty")
-    public static void awakeningScenePlaysOnce(GameTestHelper h) {
-        ServerPlayer p = TestPlayers.create(h);
-        PlayerData d = Hunter.get(p);
-        h.assertTrue(!d.introPlayed, "a new profile has already seen the awakening");
-        com.vladosiwe.solostatus.awakening.AwakeningScene.start(p);
-        h.assertTrue(com.vladosiwe.solostatus.awakening.AwakeningScene.active(p), "the scene did not start");
-        h.assertTrue(d.introPlayed, "the scene is not remembered");
-        var res = p.getEffect(net.minecraft.world.effect.MobEffects.DAMAGE_RESISTANCE);
-        h.assertTrue(res != null && res.getAmplifier() >= 4, "the hunter is not protected while lying");
-        PlayerData copy = d.copy();
-        h.assertTrue(copy.introPlayed, "introPlayed is not saved");
-        com.vladosiwe.solostatus.awakening.AwakeningScene.expireForTest(p);
-        h.assertTrue(!com.vladosiwe.solostatus.awakening.AwakeningScene.active(p), "the scene did not end");
-        h.succeed();
-    }
 }

@@ -9,10 +9,6 @@ displayName="${mod_name}"
 authors="${mod_authors}"
 description='''${mod_description}'''
 
-# Камера сцены пробуждения
-[[mixins]]
-    config="solostatus.mixins.json"
-
 [[dependencies.${mod_id}]]
     modId="neoforge"
     type="required"
@@ -41,13 +37,5 @@ description='''${mod_description}'''
     versionRange="*"
     ordering="AFTER"
     side="BOTH"
-
-# GeckoLib: анимированная модель сцены пробуждения (со скином игрока). Без неё сцена играет на ванильной модели.
-[[dependencies.${mod_id}]]
-    modId="geckolib"
-    type="optional"
-    versionRange="[4.4,5)"
-    ordering="NONE"
-    side="CLIENT"
 
 # Better Combat конфликтует с Epic Fight по управлению атаками — не используйте их вместе.
