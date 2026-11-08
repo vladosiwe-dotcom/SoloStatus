@@ -102,6 +102,8 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
     public transient int manaBladeCharges = 0;
     /** Тик, в который навык уже проиграл анимацию Epic Fight (тогда ванильный взмах не нужен). */
     public transient long animatedTick = -1;
+    /** Skill being cast right now (its animation is played on the first real swing or after a successful cast). */
+    public transient String castingSkill = null;
     public transient long lastComboTick = -1000;
     public transient int comboCount = 0;
     public transient String comboWeapon = "";

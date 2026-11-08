@@ -344,7 +344,7 @@ public class SystemScreen extends Screen {
         long need = d.level < PlayerData.MAX_LEVEL ? LevelSystem.xpToNext(d.level) : LevelSystem.overflowNeed(d.overflowAwakenings);
         long have = d.level < PlayerData.MAX_LEVEL ? d.xp : d.overflowXp;
         barRow(g, "HP", hp / Math.max(1, maxHp), Math.round(hp) + " / " + Math.round(maxHp), 0xFFFF6B6B, y, row(3));
-        barRow(g, "MP", d.energy / Math.max(1, maxE), Math.round(d.energy) + " / " + Math.round(maxE), 0xFF4FA8FF, y + 12, row(4));
+        barRow(g, StatFormulas.usesMana(d) ? "MP" : "SP", d.energy / Math.max(1, maxE), Math.round(d.energy) + " / " + Math.round(maxE), 0xFF4FA8FF, y + 12, row(4));
         barRow(g, "EXP", have / (double) Math.max(1, need), have + " / " + need, 0xFFE8B83A, y + 24, row(5));
         y += 40;
         divider(g, cx0, y, cw, row(6));
@@ -442,7 +442,9 @@ public class SystemScreen extends Screen {
             case AGI -> Component.translatable("solostatus.effect.agi", pct(StatFormulas.moveSpeed(d)), pct(StatFormulas.dodgeChance(d)));
             case PER -> Component.translatable("solostatus.effect.per", pct(StatFormulas.critChance(d)), pct(StatFormulas.projectileDamage(d)));
             case VIT -> Component.translatable("solostatus.effect.vit", Math.round(StatFormulas.bonusHealth(d) * 10) / 10.0, pct(StatFormulas.damageReduction(d)));
-            case INT -> Component.translatable("solostatus.effect.int", pct(StatFormulas.magicPower(d)), Math.round(StatFormulas.maxEnergy(d)));
+            case INT -> StatFormulas.usesMana(d)
+                    ? Component.translatable("solostatus.effect.int", pct(StatFormulas.magicPower(d)), Math.round(StatFormulas.maxEnergy(d)))
+                    : Component.translatable("solostatus.effect.int.no_mana", pct(StatFormulas.magicPower(d)));
             case LUCK -> Component.translatable("solostatus.effect.luck", pct(StatFormulas.extraDropChance(d)), pct(StatFormulas.qualityBonus(d)));
         };
     }

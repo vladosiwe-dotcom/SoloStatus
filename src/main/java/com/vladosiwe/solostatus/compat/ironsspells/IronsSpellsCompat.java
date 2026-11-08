@@ -65,8 +65,9 @@ public final class IronsSpellsCompat {
         double spellPower = Math.min(0.40, StatFormulas.magicPower(d) * 0.8);
         if (d.hunterClass == HunterClass.MAGE) spellPower += 0.05;
         set(p, "spell_power", spellPower, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-        set(p, "max_mana", Math.min(200, StatFormulas.eff(d, Stat.INT) * 2), AttributeModifier.Operation.ADD_VALUE);
-        double regen = Math.min(0.30, StatFormulas.eff(d, Stat.INT) * 0.005) + d.skillRank("arcane_flow") * 0.05;
+        // magic is the harder path: INT adds half of what it used to (cap 100 mana, +15% regen)
+        set(p, "max_mana", Math.min(100, StatFormulas.eff(d, Stat.INT)), AttributeModifier.Operation.ADD_VALUE);
+        double regen = Math.min(0.15, StatFormulas.eff(d, Stat.INT) * 0.003) + d.skillRank("arcane_flow") * 0.05;
         set(p, "mana_regen", regen, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         set(p, "cooldown_reduction", d.skillRank("arcane_flow") * 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 

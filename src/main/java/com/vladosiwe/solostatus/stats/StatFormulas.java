@@ -77,15 +77,24 @@ public final class StatFormulas {
         return Math.min(CAP_MAGIC, eff(d, Stat.INT) * safe(SoloConfig.INT_MAGIC_PER_POINT, 0.005));
     }
 
-    public static double maxEnergy(PlayerData d) {
-        return 100 + d.level * 0.5 + eff(d, Stat.INT) * 1.5 + d.skillRank("arcane_mind") * 15;
+    /** Mage and Support spend mana; everyone else spends stamina. Before a class is chosen: mana. */
+    public static boolean usesMana(PlayerData d) {
+        return d.hunterClass == null || d.hunterClass.usesMana();
     }
 
-    /** Восстановление энергии в секунду. */
+    /**
+     * Skill resource pool. Mana is small and comes from INT (magic is the harder path);
+     * stamina comes from the hunter's level (80 at level 1, 200 at level 100) and a little VIT.
+     */
+    public static double maxEnergy(PlayerData d) {
+        if (usesMana(d)) return 60 + d.level * 0.4 + eff(d, Stat.INT) * 1.0 + d.skillRank("arcane_mind") * 10;
+        return 80 + d.level * 1.2 + eff(d, Stat.VIT) * 0.3;
+    }
+
+    /** Recovery per second. */
     public static double energyRegen(PlayerData d) {
-        double regen = 1.0 + Math.min(3.0, eff(d, Stat.INT) * 0.03);
-        regen *= 1 + d.skillRank("arcane_mind") * 0.10;
-        return regen;
+        if (usesMana(d)) return (0.6 + Math.min(2.0, eff(d, Stat.INT) * 0.02)) * (1 + d.skillRank("arcane_mind") * 0.10);
+        return 1.5 + d.level * 0.02;
     }
 
     public static double extraDropChance(PlayerData d) {

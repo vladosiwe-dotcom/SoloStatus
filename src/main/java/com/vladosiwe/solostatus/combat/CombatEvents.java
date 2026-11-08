@@ -52,6 +52,9 @@ import java.util.List;
 public final class CombatEvents {
     /** Метка призванных навыком существ (Легион теней). */
     public static final String SUMMON_TAG = "solostatus_summon";
+    private static final String FIRST_BOSS_TAG = "solostatus_first_boss";
+    /** After the first victory over a boss kind, a guaranteed Epic/Legendary weapon becomes a chance (no farm of legendaries). */
+    private static final double REPEAT_BOSS_WEAPON_CHANCE = 0.15;
 
     private CombatEvents() {}
 
@@ -378,7 +381,7 @@ public final class CombatEvents {
             int hits = tag.getInt(Threat.HITS_TAG);
             if (hits < 12) { // не больше 12 засчитанных попаданий по одной цели
                 tag.putInt(Threat.HITS_TAG, hits + 1);
-                double gain = 0.6 * Math.sqrt(Math.min(4, Threat.of(target))) * fairness * (skill ? 0.5 : 1.0);
+                double gain = 1.0 * Math.sqrt(Math.min(4, Threat.of(target))) * fairness * (skill ? 0.5 : 1.0);
                 if (type != null && !magic) MasterySystem.addWeapon(p, d, type, gain);
                 if (magic) {
                     MasterySystem.addMagic(p, d, ironSchool != null ? ironSchool : "arcane", gain);
@@ -475,7 +478,7 @@ public final class CombatEvents {
         d.lastBlockTick = now;
         if (counted) {
             d.addCounter("blocks", 1);
-            MasterySystem.addWeapon(p, d, WeaponType.SHIELD, 1.5 * Math.sqrt(Math.min(4, Threat.of(attacker))) * fairness);
+            MasterySystem.addWeapon(p, d, WeaponType.SHIELD, 2.5 * Math.sqrt(Math.min(4, Threat.of(attacker))) * fairness);
         }
 
         // Идеальная защита: блок в первые 10 тиков (+1 за ранг) после поднятия щита
@@ -566,6 +569,7 @@ public final class CombatEvents {
         double gap = Math.max(0.3, Math.min(1.5, threat / (expected * 0.6)));
         if (boss && fairness > 0) { // a boss without AI (statue, command dummy) gives nothing
             boolean first = !d.bossesKilled.contains(type);
+            if (first) dead.getPersistentData().putBoolean(FIRST_BOSS_TAG, true); // read by onDrops
             double bossXp = bossXp(type, dead) * (first ? 1.0 : 0.25);
             LevelSystem.grantXp(p, bossXp * Math.max(0.5, fairness), com.vladosiwe.solostatus.level.XpReason.BOSS);
             com.vladosiwe.solostatus.network.Notices.send(p, com.vladosiwe.solostatus.network.Notices.ACHIEVEMENT,
@@ -615,7 +619,7 @@ public final class CombatEvents {
         }
 
         // --- Мастерство за убийство ---
-        double gain = 6 * Math.pow(threat, 0.8) * fairness * (boss ? 3 : 1);
+        double gain = 12 * Math.pow(threat, 0.8) * fairness * (boss ? 3 : 1);
         if (projectile) {
             WeaponType t = rangedType(weaponFor(p, direct, true));
             if (t != null) MasterySystem.addWeapon(p, d, t, gain);
@@ -691,8 +695,10 @@ public final class CombatEvents {
 
         // Боссы: гарантированное оружие Epic/Legendary и шанс Сферы перерождения
         if (Threat.isBoss(dead)) {
-            ItemStack weapon = QualitySystem.bossWeapon(p.getRandom(), luck);
-            event.getDrops().add(new ItemEntity(dead.level(), dead.getX(), dead.getY(), dead.getZ(), weapon));
+            if (dead.getPersistentData().getBoolean(FIRST_BOSS_TAG) || p.getRandom().nextDouble() < REPEAT_BOSS_WEAPON_CHANCE) {
+                ItemStack weapon = QualitySystem.bossWeapon(p.getRandom(), luck);
+                event.getDrops().add(new ItemEntity(dead.level(), dead.getX(), dead.getY(), dead.getZ(), weapon));
+            }
             if (p.getRandom().nextDouble() < com.vladosiwe.solostatus.config.SoloConfig.BOSS_ORB_CHANCE.get()) {
                 event.getDrops().add(new ItemEntity(dead.level(), dead.getX(), dead.getY(), dead.getZ(),
                         new ItemStack(com.vladosiwe.solostatus.registry.ModItems.RESET_ORB.get())));

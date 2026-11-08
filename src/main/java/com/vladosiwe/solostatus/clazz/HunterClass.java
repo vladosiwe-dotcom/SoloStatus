@@ -29,6 +29,11 @@ public enum HunterClass {
         this.secondary = secondary;
     }
 
+    /** Casters spend mana (from INT); the other classes spend stamina, which grows with the hunter's level. */
+    public boolean usesMana() {
+        return this == MAGE || this == SUPPORT;
+    }
+
     public Component displayName() {
         return Component.translatable("solostatus.class." + key);
     }

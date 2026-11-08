@@ -411,7 +411,7 @@
   "solostatus.status.level": "Level %s",
   "solostatus.status.limit": "Limit Break: %s/%s",
   "solostatus.status.hp": "Health %s/%s",
-  "solostatus.status.energy": "Energy %s/%s",
+  "solostatus.status.energy": "Resource %s/%s",
   "solostatus.status.free_points": "Free points: %s  (Shift — by 5)",
   "solostatus.status.soft_cap": "After %s invested points the effect is halved.",
   "solostatus.status.equipment": "Equipment:",
@@ -419,7 +419,7 @@
   "solostatus.effect.agi": "Speed %s · Dodge %s",
   "solostatus.effect.per": "Crit %s · Projectiles %s",
   "solostatus.effect.vit": "Health +%s · Defense %s",
-  "solostatus.effect.int": "Magic %s · Energy %s",
+  "solostatus.effect.int": "Magic %s · Mana %s",
   "solostatus.effect.luck": "Loot %s · Quality %s",
   "solostatus.class.none": "not awakened",
   "solostatus.class.choose_title": "SYSTEM AWAKENING",
@@ -442,7 +442,7 @@
   "solostatus.skills.points": "Skill points: %s",
   "solostatus.skills.rank": "Rank %s/%s",
   "solostatus.skills.cooldown": "Cooldown: %s s",
-  "solostatus.skills.energy": "Energy: %s",
+  "solostatus.skills.energy": "Cost: %s",
   "solostatus.skills.next_rank": "Next rank: effect ~+%s%%",
   "solostatus.skills.requirements": "Requirements:",
   "solostatus.skills.only_for": "Only for: %s",
@@ -715,5 +715,8 @@
   "solostatus.ui.path": "Path",
   "solostatus.ui.max_rank": "MAX RANK",
   "solostatus.inspect.plate": "INSPECT",
-  "solostatus.inspect.close_hint": "Esc to close"
+  "solostatus.inspect.close_hint": "Esc to close",
+  "solostatus.error.no_mana": "Not enough mana",
+  "solostatus.error.no_stamina": "Not enough stamina",
+  "solostatus.effect.int.no_mana": "Magic %s"
 }

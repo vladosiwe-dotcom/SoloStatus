@@ -112,17 +112,21 @@ public final class SkillSystem {
         if (ready != null && ready > now) return; // клиент тоже показывает перезарядку — без спама уведомлениями
         float cost = energyCost(d, def);
         if (!player.isCreative() && d.energy < cost) {
-            Notices.warn(player, "solostatus.error.no_energy");
+            Notices.warn(player, StatFormulas.usesMana(d) ? "solostatus.error.no_mana" : "solostatus.error.no_stamina");
             return;
         }
 
         boolean ok;
+        d.castingSkill = id;
         try {
-            if (com.vladosiwe.solostatus.compat.CompatManager.playSkillAnimation(player, id)) d.animatedTick = now;
             ok = def.effect.execute(new SkillContext(player, player.serverLevel(), d, def, rank));
+            // spells and buffs do not swing: play the animation once the skill has worked
+            if (ok && d.animatedTick != now && com.vladosiwe.solostatus.compat.CompatManager.playSkillAnimation(player, id)) d.animatedTick = now;
         } catch (Exception e) {
             SoloStatus.LOGGER.error("Ошибка навыка {}", id, e);
             ok = false;
+        } finally {
+            d.castingSkill = null;
         }
         if (!ok) {
             Notices.warn(player, "solostatus.error.no_target");

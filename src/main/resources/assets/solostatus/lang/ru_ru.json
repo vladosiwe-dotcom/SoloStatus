@@ -411,7 +411,7 @@
   "solostatus.status.level": "Уровень %s",
   "solostatus.status.limit": "Предел преодолён: %s/%s",
   "solostatus.status.hp": "Здоровье %s/%s",
-  "solostatus.status.energy": "Энергия %s/%s",
+  "solostatus.status.energy": "Ресурс %s/%s",
   "solostatus.status.free_points": "Свободные очки: %s  (Shift — по 5)",
   "solostatus.status.soft_cap": "После %s вложенных очков эффект уменьшается вдвое.",
   "solostatus.status.equipment": "Экипировка:",
@@ -419,7 +419,7 @@
   "solostatus.effect.agi": "Скорость %s · Уклонение %s",
   "solostatus.effect.per": "Крит %s · Снаряды %s",
   "solostatus.effect.vit": "Здоровье +%s · Защита %s",
-  "solostatus.effect.int": "Магия %s · Энергия %s",
+  "solostatus.effect.int": "Магия %s · Мана %s",
   "solostatus.effect.luck": "Добыча %s · Качество %s",
   "solostatus.class.none": "не пробуждён",
   "solostatus.class.choose_title": "ПРОБУЖДЕНИЕ СИСТЕМЫ",
@@ -442,7 +442,7 @@
   "solostatus.skills.points": "Очки навыков: %s",
   "solostatus.skills.rank": "Ранг %s/%s",
   "solostatus.skills.cooldown": "Перезарядка: %s с",
-  "solostatus.skills.energy": "Энергия: %s",
+  "solostatus.skills.energy": "Стоимость: %s",
   "solostatus.skills.next_rank": "След. ранг: эффект ~+%s%%",
   "solostatus.skills.requirements": "Условия:",
   "solostatus.skills.only_for": "Только для: %s",
@@ -715,5 +715,8 @@
   "solostatus.ui.path": "Путь",
   "solostatus.ui.max_rank": "МАКСИМАЛЬНЫЙ РАНГ",
   "solostatus.inspect.plate": "ОСМОТР",
-  "solostatus.inspect.close_hint": "Esc — закрыть"
+  "solostatus.inspect.close_hint": "Esc — закрыть",
+  "solostatus.error.no_mana": "Недостаточно маны",
+  "solostatus.error.no_stamina": "Недостаточно выносливости",
+  "solostatus.effect.int.no_mana": "Магия %s"
 }

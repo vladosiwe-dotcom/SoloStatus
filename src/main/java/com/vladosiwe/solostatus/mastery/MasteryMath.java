@@ -18,7 +18,8 @@ public final class MasteryMath {
 
     /** Опыт, нужный для перехода с уровня level на level+1. */
     public static double need(int level) {
-        return 60 * Math.pow(level + 1, 1.45);
+        // first awakening (10) ≈ 165 ordinary kills, 25 ≈ 1 650, 50 ≈ 9 800 (strong enemies count more)
+        return 20 * Math.pow(level + 1, 1.6);
     }
 
     public static int level(double xp) {

@@ -13,6 +13,8 @@ import net.minecraft.server.level.ServerPlayer;
  * блоки щитом, магический урон. Уровни 0..50; вехи 10/25/40/50 открывают навыки и бонусы.
  */
 public final class MasterySystem {
+    public static final double MAGIC_PACE = 0.75;
+
     private MasterySystem() {}
 
     public static int level(PlayerData d, WeaponType type) {
@@ -31,15 +33,19 @@ public final class MasterySystem {
         d.softDirty = true;
         if (newLevel > oldLevel) {
             d.markDirty();
-            boolean milestone = newLevel == 10 || newLevel == 25 || newLevel == 40 || newLevel == 50;
-            if (milestone) {
-                int bonus = switch (newLevel) { case 10 -> 300; case 25 -> 1500; case 40 -> 4000; default -> 8000; };
-                com.vladosiwe.solostatus.level.LevelSystem.grantXp(player, bonus, com.vladosiwe.solostatus.level.XpReason.MASTERY);
+            boolean milestone = false;
+            for (int l = oldLevel + 1; l <= newLevel; l++) { // a big gain can cross several levels: no milestone is skipped
+                int bonus = switch (l) { case 10 -> 300; case 25 -> 1500; case 40 -> 4000; case 50 -> 8000; default -> 0; };
+                if (bonus > 0) {
+                    milestone = true;
+                    com.vladosiwe.solostatus.level.LevelSystem.grantXp(player, bonus, com.vladosiwe.solostatus.level.XpReason.MASTERY);
+                }
             }
             if (milestone || newLevel % 5 == 0) {
                 Notices.send(player, milestone ? Notices.ACHIEVEMENT : Notices.INFO,
                         Component.translatable("solostatus.notice.mastery_up", name, newLevel),
-                        Component.translatable(milestone ? "solostatus.notice.mastery_milestone." + newLevel : "solostatus.notice.mastery_up.desc"),
+                        Component.translatable(milestone && (newLevel == 10 || newLevel == 25 || newLevel == 40 || newLevel == 50)
+                                ? "solostatus.notice.mastery_milestone." + newLevel : "solostatus.notice.mastery_up.desc"),
                         key.startsWith("magic:") ? net.minecraft.world.item.Items.ENCHANTED_BOOK : WeaponType.byKey(key).icon);
             }
         }
@@ -52,7 +58,8 @@ public final class MasterySystem {
 
     /** Магическое мастерство по школе (school — путь id школы Iron's Spells или "arcane" для навыков системы). */
     public static void addMagic(ServerPlayer player, PlayerData d, String school, double amount) {
-        add(player, d, "magic:" + school, amount, schoolName(school));
+        // magic is the harder path: schools grow at 75% of a weapon's pace
+        add(player, d, "magic:" + school, amount * MAGIC_PACE, schoolName(school));
     }
 
     public static Component schoolName(String school) {

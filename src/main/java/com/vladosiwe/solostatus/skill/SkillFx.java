@@ -224,7 +224,13 @@ public final class SkillFx {
         PlayerData d = Hunter.get(caster);
         int duration = (int) (ticks * (1 + d.skillRank("resonance") * 0.15));
         t.addEffect(new MobEffectInstance(effect, duration, amplifier), caster);
-        if (t != caster) d.addCounter("buffs_given", 1);
+        if (t == caster) return;
+        if (t instanceof Player) {
+            d.addCounter("buffs_given", 1);
+        } else { // pets and summons count half
+            d.addCounter("buffs_pets", 1);
+            if (d.counter("buffs_pets") % 2 == 0) d.addCounter("buffs_given", 1);
+        }
     }
 
     public static void debuff(ServerPlayer caster, LivingEntity t, Holder<MobEffect> effect, int ticks, int amplifier) {
@@ -306,7 +312,14 @@ public final class SkillFx {
 
     /** Ванильный взмах — только если навык не проиграл анимацию Epic Fight в этот тик. */
     public static void swing(ServerPlayer p) {
-        if (Hunter.get(p).animatedTick == p.serverLevel().getGameTime()) return;
+        PlayerData d = Hunter.get(p);
+        long now = p.serverLevel().getGameTime();
+        if (d.animatedTick == now) return;
+        // the skill really acts: now its Epic Fight animation may play (never for a cast that found no target)
+        if (d.castingSkill != null && com.vladosiwe.solostatus.compat.CompatManager.playSkillAnimation(p, d.castingSkill)) {
+            d.animatedTick = now;
+            return;
+        }
         p.swing(InteractionHand.MAIN_HAND, true);
     }
 
