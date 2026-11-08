@@ -467,13 +467,14 @@ public class SystemScreen extends Screen {
 
     /** Фильтр списка навыков по происхождению. Цвет фильтра совпадает с цветом иконок этого происхождения. */
     private enum SkillFilter {
-        ALL, CLASS, SPEC, AWAKENING, HIDDEN;
+        ALL, CLASS, SPEC, GENERAL, AWAKENING, HIDDEN;
 
         boolean accepts(SkillDef def) {
             return switch (this) {
                 case ALL -> true;
                 case CLASS -> def.source == SkillSource.CLASS_START || def.source == SkillSource.CLASS || def.source == SkillSource.ULTIMATE;
                 case SPEC -> def.source == SkillSource.SPEC;
+                case GENERAL -> def.source == SkillSource.GENERAL;
                 case AWAKENING -> def.source == SkillSource.AWAKENING;
                 case HIDDEN -> def.source == SkillSource.HIDDEN;
             };
@@ -484,6 +485,7 @@ public class SystemScreen extends Screen {
                 case ALL -> INK;
                 case CLASS -> SkillIcons.CLASS;
                 case SPEC -> SkillIcons.SPEC;
+                case GENERAL -> SkillIcons.GENERAL;
                 case AWAKENING -> SkillIcons.AWAKENING;
                 case HIDDEN -> SkillIcons.HIDDEN;
             };

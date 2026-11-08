@@ -46,7 +46,7 @@ public final class StatFormulas {
     }
 
     public static double safeFall(PlayerData d) {
-        return Math.min(3.0, eff(d, Stat.AGI) * 0.03);
+        return Math.min(3.0, eff(d, Stat.AGI) * 0.03) + d.skillRank("acrobatics");
     }
 
     public static double projectileDamage(PlayerData d) {
@@ -70,7 +70,7 @@ public final class StatFormulas {
     }
 
     public static double debuffResist(PlayerData d) {
-        return Math.min(CAP_DEBUFF, eff(d, Stat.VIT) * 0.002);
+        return Math.min(CAP_DEBUFF, eff(d, Stat.VIT) * 0.002) + d.skillRank("iron_will") * 0.04;
     }
 
     public static double magicPower(PlayerData d) {
@@ -93,8 +93,9 @@ public final class StatFormulas {
 
     /** Recovery per second. */
     public static double energyRegen(PlayerData d) {
-        if (usesMana(d)) return (0.6 + Math.min(2.0, eff(d, Stat.INT) * 0.02)) * (1 + d.skillRank("arcane_mind") * 0.10);
-        return 1.5 + d.level * 0.02;
+        double breathing = 1 + d.skillRank("breathing_technique") * 0.08;
+        if (usesMana(d)) return (0.6 + Math.min(2.0, eff(d, Stat.INT) * 0.02)) * (1 + d.skillRank("arcane_mind") * 0.10) * breathing;
+        return (1.5 + d.level * 0.02) * breathing;
     }
 
     public static double extraDropChance(PlayerData d) {

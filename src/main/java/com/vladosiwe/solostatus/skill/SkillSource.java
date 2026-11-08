@@ -13,7 +13,9 @@ public enum SkillSource {
     /** Пробуждается автоматически через боевой опыт, бесплатно. Доступно любому классу. */
     AWAKENING,
     /** Как AWAKENING, но название и условия скрыты до пробуждения. */
-    HIDDEN;
+    HIDDEN,
+    /** Общая техника: любой класс покупает за очки навыков и выбирает по своему стилю. */
+    GENERAL;
 
     public boolean autoAwaken() {
         return this == AWAKENING || this == HIDDEN || this == ULTIMATE;

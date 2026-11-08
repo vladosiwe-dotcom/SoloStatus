@@ -179,6 +179,19 @@ public final class Skills {
         reg(b("mana_blade", AWAKENING, MAGIC, Items.LAPIS_BLOCK).level(18).requires(Req.stat(Stat.INT, 25)).requires(Req.counter("magic_hits", 300))
                 .requires(Req.counter("melee_kills", 300)).cooldown(20, 1.2).energy(25).effect(SkillEffects::manaBlade).build());
 
+        // ============================== GENERAL (любой класс, выбор за очки) ==============================
+        reg(b("parry", GENERAL, DEFENSE, Items.SHIELD).ranks(3).level(3).rankStep(10).cooldown(7, 0.8).energy(8).effect(GeneralSkills::parry).build());
+        reg(b("acrobatics", GENERAL, PASSIVE, Items.FEATHER).ranks(3).level(4).rankStep(10).build());
+        reg(b("body_reinforcement", GENERAL, SUPPORT, Items.IRON_INGOT).ranks(3).level(5).rankStep(10).cooldown(35, 3).energy(20).effect(GeneralSkills::bodyReinforcement).build());
+        reg(b("iron_will", GENERAL, PASSIVE, Items.IRON_BARS).ranks(3).level(6).rankStep(10).build());
+        reg(b("air_step", GENERAL, MOVEMENT, Items.PHANTOM_MEMBRANE).ranks(3).level(8).rankStep(10).cooldown(6, 0.5).energy(8).effect(GeneralSkills::airStep).build());
+        reg(b("breathing_technique", GENERAL, PASSIVE, Items.GLASS_BOTTLE).ranks(3).level(10).rankStep(10).build());
+        reg(b("focus", GENERAL, ATTACK, Items.SPYGLASS).ranks(3).level(12).rankStep(10).cooldown(25, 2).energy(12).effect(GeneralSkills::focus).build());
+        reg(b("weapon_adept", GENERAL, PASSIVE, Items.GRINDSTONE).ranks(3).level(15).rankStep(10).build());
+        reg(b("danger_sense", GENERAL, PASSIVE, Items.SCULK_SENSOR).ranks(3).level(18).rankStep(10).build());
+        reg(b("thought_acceleration", GENERAL, SUPPORT, Items.CLOCK).ranks(3).level(25).rankStep(10).cooldown(50, 5).energy(25).effect(GeneralSkills::thoughtAcceleration).build());
+        reg(b("overwhelming_presence", GENERAL, DEFENSE, Items.WITHER_ROSE).ranks(3).level(30).rankStep(10).cooldown(45, 4).energy(20).effect(GeneralSkills::overwhelmingPresence).build());
+
         // ============================== HIDDEN ==============================
         reg(b("rampage", HIDDEN, PASSIVE, Items.FIRE_CHARGE).level(15).requires(Req.counter("rampages", 5)).build());
         reg(b("shadow_legion", HIDDEN, MAGIC, Items.BONE).ranks(3).level(35).rankStep(15).requires(Req.achievement("legion"))

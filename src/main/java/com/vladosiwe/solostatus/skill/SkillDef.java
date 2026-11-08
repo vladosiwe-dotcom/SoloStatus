@@ -73,7 +73,7 @@ public final class SkillDef {
     public int costForRank(int newRank) {
         if (newRank == 1) {
             return switch (source) {
-                case CLASS -> 1;
+                case CLASS, GENERAL -> 1;
                 case SPEC -> 2;
                 default -> 0;
             };

@@ -169,4 +169,22 @@ public final class SoloCompatTests {
         h.assertTrue(d.bossesKilled.isEmpty(), "a boss without AI was counted");
         h.succeed();
     }
+
+    /** General techniques: any class buys Parry with a skill point, it lands in a free slot and opens its window. */
+    @GameTest(template = "empty")
+    public static void generalSkillsAreBoughtByAnyClass(GameTestHelper h) {
+        ServerPlayer p = hunter(h, HunterClass.MAGE);
+        PlayerData d = Hunter.get(p);
+        LevelSystem.setLevel(p, 5);
+        int points = d.skillPoints;
+        com.vladosiwe.solostatus.skill.SkillSystem.learnOrUpgrade(p, "parry");
+        h.assertTrue(d.hasSkill("parry"), "a Mage could not learn Parry");
+        h.assertTrue(d.skillPoints == points - 1, "Parry must cost one point");
+        int slot = java.util.Arrays.asList(d.slots).indexOf("parry");
+        h.assertTrue(slot >= 0, "Parry was not put into a free slot");
+        com.vladosiwe.solostatus.skill.SkillSystem.cast(p, slot);
+        h.assertTrue(d.stateActive("parry", p.serverLevel().getGameTime()), "Parry window did not open");
+        h.assertTrue(com.vladosiwe.solostatus.stats.StatFormulas.usesMana(d), "Mage must use mana");
+        h.succeed();
+    }
 }

@@ -53,7 +53,7 @@ public final class MasterySystem {
 
     public static void addWeapon(ServerPlayer player, PlayerData d, WeaponType type, double amount) {
         if (type == null || !type.hasMastery()) return;
-        add(player, d, type.key, amount, type.displayName());
+        add(player, d, type.key, amount * (1 + d.skillRank("weapon_adept") * 0.05), type.displayName());
     }
 
     /** Магическое мастерство по школе (school — путь id школы Iron's Spells или "arcane" для навыков системы). */

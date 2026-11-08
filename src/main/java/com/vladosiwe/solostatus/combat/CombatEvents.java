@@ -138,6 +138,30 @@ public final class CombatEvents {
             return true;
         }
 
+        // Парирование (общая техника): ближний удар отведён, атакующий потерял равновесие
+        if (!bypass && byEntity && source.getDirectEntity() == attackerEntity && d.stateActive("parry", now)) {
+            event.setCanceled(true);
+            d.timedStates.remove("parry");
+            LivingEntity attacker = (LivingEntity) attackerEntity;
+            int rank = d.skillRank("parry");
+            if (!Threat.isBoss(attacker)) SkillFx.stun(p, attacker, 20 + 5 * rank);
+            SkillFx.knockback(attacker, p.position(), 0.4);
+            SkillFx.particles(level, ParticleTypes.ENCHANTED_HIT, p.getEyePosition().add(p.getLookAngle()), 14, 0.2, 0.2);
+            SkillFx.sound(level, p.position(), SoundEvents.ANVIL_PLACE, 0.5f, 1.9f);
+            if (now - d.lastBlockTick > 10 && Threat.fairness(attacker, p) > 0.2) d.addCounter("parries", 1);
+            d.lastBlockTick = now; // opens the counter window, like a block
+            return true;
+        }
+
+        // Чувство опасности: шанс увернуться от снаряда
+        int danger = d.skillRank("danger_sense");
+        if (!bypass && danger > 0 && source.getDirectEntity() instanceof Projectile && attackerEntity instanceof LivingEntity shooter
+                && p.getRandom().nextDouble() < 0.05 * danger) {
+            event.setCanceled(true);
+            registerDodge(p, d, shooter, now);
+            return true;
+        }
+
         // Контратака Защитника
         if (byEntity && source.getDirectEntity() == attackerEntity && d.stateActive("counter", now)) {
             event.setCanceled(true);
@@ -250,7 +274,8 @@ public final class CombatEvents {
         Specialization spec = d.specialization;
 
         double add = 0;
-        double critChance = StatFormulas.critChance(d) + (quality != null ? quality.crit() : 0) + MasteryMath.critBonus(masteryLevel);
+        double critChance = StatFormulas.critChance(d) + (quality != null ? quality.crit() : 0) + MasteryMath.critBonus(masteryLevel)
+                + com.vladosiwe.solostatus.skill.GeneralSkills.focusCrit(d, now);
         boolean forceCrit = false;
         double dist = p.distanceTo(target);
 

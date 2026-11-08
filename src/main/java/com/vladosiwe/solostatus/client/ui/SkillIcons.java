@@ -18,6 +18,7 @@ public final class SkillIcons {
     public static final int AWAKENING = 0xFF7DFFC8;  // пробуждения
     public static final int HIDDEN = 0xFFC79BFF;     // скрытые
     public static final int ULTIMATE = 0xFFFF8A5C;   // высшее умение (смена пути)
+    public static final int GENERAL = 0xFFFF8FBF;    // общие техники
     public static final int LOCKED = 0xFF6F8399;     // ещё не изучен
 
     private SkillIcons() {}
@@ -29,6 +30,7 @@ public final class SkillIcons {
             case AWAKENING -> AWAKENING;
             case HIDDEN -> HIDDEN;
             case ULTIMATE -> ULTIMATE;
+            case GENERAL -> GENERAL;
         };
     }
 

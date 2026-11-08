@@ -168,7 +168,7 @@ public final class SkillSystem {
             d.paidRanks.clear();
             d.skills.entrySet().removeIf(e -> {
                 SkillDef def = Skills.get(e.getKey());
-                return def == null || def.source == SkillSource.CLASS || def.source == SkillSource.SPEC;
+                return def == null || def.source == SkillSource.CLASS || def.source == SkillSource.SPEC || def.source == SkillSource.GENERAL;
             });
             d.skills.replaceAll((k, v) -> 1);
             for (int i = 0; i < d.slots.length; i++) if (d.slots[i] != null && !d.hasSkill(d.slots[i])) d.slots[i] = null;
