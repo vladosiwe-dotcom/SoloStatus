@@ -55,7 +55,7 @@ public final class AwakeningScene {
         d.introPlayed = true;
         d.awaitScene = false;
         d.markDirty();
-        SoloStatus.LOGGER.info("Awakening sync: server start {} at {}", p.getGameProfile().getName(), now);
+        SoloStatus.LOGGER.info("Awakening sync: server start {} at {} ms {}", p.getGameProfile().getName(), now, System.currentTimeMillis());
         Payloads.Awakening msg = new Payloads.Awakening(p.getId(), 0);
         for (ServerPlayer o : p.serverLevel().players()) {
             if (o == p || o.distanceToSqr(p) < VIEW * VIEW) ModNetwork.toPlayer(o, msg);
@@ -91,8 +91,12 @@ public final class AwakeningScene {
         });
     }
 
+    /**
+     * The client has loaded the world. The scene starts 1.5 s later: the launcher's rift light fades into the
+     * closed eyes first (the client keeps them closed meanwhile), then the eyes open.
+     */
     public static void onClientReady(ServerPlayer p) {
-        if (PENDING.remove(p.getUUID()) && p.isAlive()) start(p);
+        if (PENDING.remove(p.getUUID())) Scheduler.later(30, () -> { if (!p.hasDisconnected() && p.isAlive()) start(p); });
     }
 
     /**
@@ -135,7 +139,7 @@ public final class AwakeningScene {
     }
 
     private static void finish(ServerPlayer p) {
-        SoloStatus.LOGGER.info("Awakening sync: server end {} at {}", p.getGameProfile().getName(), p.serverLevel().getGameTime());
+        SoloStatus.LOGGER.info("Awakening sync: server end {} at {} ms {}", p.getGameProfile().getName(), p.serverLevel().getGameTime(), System.currentTimeMillis());
         Notices.send(p, Notices.AWAKENING, Component.translatable("solostatus.notice.awakened"),
                 Component.translatable(Hunter.get(p).hasClass() ? "solostatus.notice.awakened.desc_class" : "solostatus.notice.awakened.desc"));
     }

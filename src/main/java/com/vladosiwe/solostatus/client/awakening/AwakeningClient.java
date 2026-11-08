@@ -47,6 +47,12 @@ public final class AwakeningClient {
     private record Scene(long start, double elapsedAtStart, float yaw, long key) {}
 
     private static final Map<Integer, Scene> SCENES = new HashMap<>();
+    /**
+     * Scene clock: client ticks counted here, not the level's game time. The server corrects a client's game time
+     * from time to time (right after joining it is often a few ticks off), and such a correction would make the
+     * scene jump; this counter only moves forward, one step per client tick.
+     */
+    private static long clock;
     /** Scenes whose end was logged / entities still to be seen drawn as normal players (sync check in the logs). */
     private static final java.util.Set<Long> ENDED = new java.util.HashSet<>();
     private static final java.util.Set<Integer> BACK_TO_NORMAL = new java.util.HashSet<>();
@@ -66,10 +72,10 @@ public final class AwakeningClient {
         if (mc.level == null) return;
         Entity e = mc.level.getEntity(msg.entityId());
         float yaw = e instanceof AbstractClientPlayer p ? p.yBodyRot : 0;
-        long start = mc.level.getGameTime() - msg.elapsed();
+        long start = clock - msg.elapsed();
         SCENES.put(msg.entityId(), new Scene(start, msg.elapsed() / 20.0, yaw, ((long) msg.entityId() << 32) ^ start));
-        SoloStatus.LOGGER.info("Awakening sync: client {} start {} at {} (elapsed {})", e == mc.player ? "own" : "sees",
-                e != null ? e.getName().getString() : "#" + msg.entityId(), start, msg.elapsed());
+        SoloStatus.LOGGER.info("Awakening sync: client {} start {} at {} ms {} (elapsed {})", e == mc.player ? "own" : "sees",
+                e != null ? e.getName().getString() : "#" + msg.entityId(), mc.level.getGameTime() - msg.elapsed(), System.currentTimeMillis(), msg.elapsed());
         if (mc.player != null && e == mc.player) {
             awaitingSince = 0;
             // look where the body faces, so the end of the scene meets the player's own view without a turn
@@ -87,7 +93,7 @@ public final class AwakeningClient {
     public static double time(Entity e, float partialTick) {
         Scene s = e == null ? null : SCENES.get(e.getId());
         if (s == null || e.level() == null) return -1;
-        double t = (e.level().getGameTime() - s.start + partialTick) / 20.0;
+        double t = (clock - s.start + partialTick) / 20.0;
         return t >= 0 && t < LENGTH ? t : -1;
     }
 
@@ -108,6 +114,7 @@ public final class AwakeningClient {
     @SubscribeEvent
     public static void onTick(ClientTickEvent.Post event) {
         var mc = Minecraft.getInstance();
+        if (mc.level != null && !mc.isPaused()) clock++;
         if (mc.level == null || mc.player == null) {
             SCENES.clear();
             readySent = false;
@@ -152,15 +159,15 @@ public final class AwakeningClient {
         }
         for (var en : SCENES.entrySet()) {
             Scene sc = en.getValue();
-            if (mc.level.getGameTime() - sc.start >= AwakeningScene.DURATION && ENDED.add(sc.key)) {
+            if (clock - sc.start >= AwakeningScene.DURATION && ENDED.add(sc.key)) {
                 Entity e = mc.level.getEntity(en.getKey());
-                SoloStatus.LOGGER.info("Awakening sync: client {} end {} at {}", e == mc.player ? "own" : "sees",
-                        e != null ? e.getName().getString() : "#" + en.getKey(), mc.level.getGameTime());
+                SoloStatus.LOGGER.info("Awakening sync: client {} end {} at {} ms {}", e == mc.player ? "own" : "sees",
+                        e != null ? e.getName().getString() : "#" + en.getKey(), mc.level.getGameTime(), System.currentTimeMillis());
                 BACK_TO_NORMAL.add(en.getKey());
             }
         }
         SCENES.entrySet().removeIf(en -> {
-            boolean over = mc.level.getGameTime() - en.getValue().start > AwakeningScene.DURATION + 5;
+            boolean over = clock - en.getValue().start > AwakeningScene.DURATION + 5;
             if (over && GECKO) com.vladosiwe.solostatus.client.awakening.geo.AwakeningGeo.forget(en.getValue().key);
             return over;
         });
@@ -175,7 +182,8 @@ public final class AwakeningClient {
         double t = time(player, pt);
         if (t < 0) {
             if (BACK_TO_NORMAL.remove(player.getId())) {
-                SoloStatus.LOGGER.info("Awakening sync: client sees {} drawn as a normal player at {}", player.getName().getString(), player.level().getGameTime());
+                SoloStatus.LOGGER.info("Awakening sync: client sees {} drawn as a normal player at {} ms {}", player.getName().getString(),
+                        player.level().getGameTime(), System.currentTimeMillis());
             }
             return;
         }
@@ -235,7 +243,7 @@ public final class AwakeningClient {
         double t = time(entity, partialTick);
         if (t < 0) {
             if (BACK_TO_NORMAL.remove(entity.getId())) {
-                SoloStatus.LOGGER.info("Awakening sync: client own view back to normal at {}", entity.level().getGameTime());
+                SoloStatus.LOGGER.info("Awakening sync: client own view back to normal at {} ms {}", entity.level().getGameTime(), System.currentTimeMillis());
             }
             return null;
         }
