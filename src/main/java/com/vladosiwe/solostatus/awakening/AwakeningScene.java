@@ -110,6 +110,7 @@ public final class AwakeningScene {
     }
 
     private static void finish(ServerPlayer p) {
+        if (E2eBot.ON) Scheduler.later(30, () -> { if (!p.hasDisconnected()) E2eBot.wakeNear(p); });
         Notices.send(p, Notices.AWAKENING, Component.translatable("solostatus.notice.awakened"),
                 Component.translatable(Hunter.get(p).hasClass() ? "solostatus.notice.awakened.desc_class" : "solostatus.notice.awakened.desc"));
     }

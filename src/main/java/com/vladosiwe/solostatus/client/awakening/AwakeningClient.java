@@ -96,6 +96,9 @@ public final class AwakeningClient {
     /** Every client tick while the scene plays, plus 1.5 s after it, so CI can assemble a 20 fps video. */
     private static int shotsTaken;
     private static int afterScene = -1;
+    /** The same for another player's awakening seen by this client (the multiplayer view). */
+    private static int otherShots;
+    private static int afterOther = -1;
 
     @SubscribeEvent
     public static void onTick(ClientTickEvent.Post event) {
@@ -123,6 +126,23 @@ public final class AwakeningClient {
             } else if (afterScene == 0 || shotsTaken > 0) {
                 afterScene = 0;
                 SoloStatus.LOGGER.info("Awakening: recorded {} frames", shotsTaken);
+            }
+        }
+        if (SHOTS && mc.player != null && afterOther != 0) {
+            boolean other = false;
+            for (var en : SCENES.entrySet()) {
+                Entity e = mc.level.getEntity(en.getKey());
+                if (e != null && e != mc.player && time(e, 0) >= 0) other = true;
+            }
+            if (other) afterOther = 30;
+            else if (afterOther > 0) afterOther--;
+            if (other || afterOther > 0) {
+                String name = String.format(java.util.Locale.ROOT, "awakening-o-%03d.png", otherShots++);
+                net.minecraft.client.Screenshot.grab(mc.gameDirectory, name, mc.getMainRenderTarget(), m -> { });
+                if (otherShots == 1) SoloStatus.LOGGER.info("Awakening: recording another player's awakening");
+            } else if (otherShots > 0) {
+                afterOther = 0;
+                SoloStatus.LOGGER.info("Awakening: recorded {} frames of another player's awakening", otherShots);
             }
         }
         SCENES.entrySet().removeIf(en -> {
