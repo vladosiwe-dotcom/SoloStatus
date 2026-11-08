@@ -15,6 +15,8 @@
 | Legendary Tooltips | ветка для 1.21.1 NeoForge | необязательно | https://www.curseforge.com/minecraft/mc-mods/legendary-tooltips |
 | Vosk (распознавание речи) | 0.3.45 (проверено: API и нативная библиотека) | встроено в мод | https://central.sonatype.com/artifact/com.alphacephei/vosk · https://alphacephei.com/vosk/models |
 | Simple Voice Chat | ветка для 1.21.1 NeoForge | необязательно, совместим | https://modrepo.de/minecraft/voicechat |
+| RPG Series: Spell Engine, Spell Power, Wizards, Rogues & Warriors, Paladins & Priests | версии для 1.21.1 NeoForge (CI скачивает последние с Modrinth) | необязательно | https://modrinth.com/mod/spell-power · https://modrinth.com/mod/wizards |
+| Curios API | версия, которую тянет Iron's Spells | необязательно (без него украшения надеваются в слоты Системы) | https://modrinth.com/mod/curios |
 | Better Combat | **не использовать вместе с Epic Fight** | — | — |
 
 ## Подтверждённые механизмы (стандартный API NeoForge/Minecraft)
@@ -47,6 +49,26 @@
 | Урон атак | стандартные события урона NeoForge | все бонусы Системы применяются к атакам Epic Fight |
 
 Если какой-то части API нет (другая версия Epic Fight), она отключается с сообщением в логе, а остальное работает.
+
+## Epic Fight на выделенном сервере
+
+`Class.getMethod` на патчах сущностей Epic Fight разбирает сигнатуры **всех** публичных методов, включая клиентские (`LocalPlayer`). На выделенном сервере это падает с `Attempted to load class LocalPlayer for invalid dist DEDICATED_SERVER`, и анимации навыков тихо отключались. Теперь используются `MethodHandles`: они связывают только нужный метод. Тест `epicfightintegration` проверяет это на настоящем сервере.
+
+## RPG Series (Spell Engine / Spell Power)
+
+Без compile-зависимости, только через ванильные реестры:
+
+| Что | Имя | Поведение |
+|---|---|---|
+| Атрибуты школ | `spell_power:<школа>` (arcane, fire, frost, healing, lightning, soul) | INT, класс Маг и пассивки специализаций дают множитель (ADD_MULTIPLIED_TOTAL): он усиливает силу заклинаний от снаряжения, а не добавляется сверху |
+| Школа по урону | тип урона `spell_power:<школа>` | магическое мастерство растёт по школам, как с Iron's Spells |
+| Оружие | id предметов: dagger, sickle, double_axe, claymore, hammer, mace, glaive, spear, staff, wand, *_bow | определяется тип оружия для мастерства и качества |
+
+CI делает второй, необязательный прогон тестов с Wizards, Rogues & Warriors и Paladins & Priests и пишет в лог, как Система видит их оружие.
+
+## Украшения и Curios
+
+Кольца и амулеты надеваются ПКМ в 3 слота Системы (2 кольца, амулет) или в слоты Curios `ring`/`necklace` (теги `curios:ring`, `curios:necklace`; слоты включаются игроку файлом `data/solostatus/curios/entities/jewellery.json`). Curios читается через отражение: `CuriosApi.getCuriosInventory(LivingEntity)` → `ICuriosItemHandler.getEquippedCurios()`. Из любых источников действуют максимум 2 кольца и 1 амулет, сумма каждого бонуса ограничена.
 
 ## Голосовые команды (Vosk) — реализовано
 
