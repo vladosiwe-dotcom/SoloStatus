@@ -52,6 +52,8 @@ public final class ModNetwork {
         r.playToClient(Payloads.InspectResult.TYPE, Payloads.InspectResult.CODEC,
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.inspect(p)));
 
+        r.playToServer(Payloads.ClientReady.TYPE, Payloads.ClientReady.CODEC,
+                (p, ctx) -> ctx.enqueueWork(() -> { if (ctx.player() instanceof net.minecraft.server.level.ServerPlayer sp) com.vladosiwe.solostatus.awakening.AwakeningScene.onClientReady(sp); }));
         r.playToServer(Payloads.UnequipAccessory.TYPE, Payloads.UnequipAccessory.CODEC, ServerPayloadHandler::unequipAccessory);
         r.playToServer(Payloads.AllocateStat.TYPE, Payloads.AllocateStat.CODEC, ServerPayloadHandler::allocateStat);
         r.playToServer(Payloads.ChooseClass.TYPE, Payloads.ChooseClass.CODEC, ServerPayloadHandler::chooseClass);

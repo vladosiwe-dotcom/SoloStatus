@@ -53,13 +53,14 @@ public final class AwakeningGeo {
      * @param sceneKey  unique per scene
      * @param elapsedAtStart scene time (s) already passed when this client learned about the scene (late viewers)
      */
-    public static void render(AbstractClientPlayer player, long sceneKey, double elapsedAtStart, float bodyYaw,
+    public static void render(AbstractClientPlayer player, long sceneKey, double elapsedAtStart, float bodyYaw, boolean withoutHead,
                               PoseStack poseStack, MultiBufferSource buffers, int light, float partialTick) {
         if (renderer == null) renderer = new Renderer();
         PlayerSkin skin = player.getSkin();
         Puppet puppet = PUPPETS.computeIfAbsent(sceneKey, k -> new Puppet(AwakeningTimeline.phaseAt(elapsedAtStart)));
         puppet.skin = skin.texture();
         puppet.slim = skin.model() == PlayerSkin.Model.SLIM;
+        puppet.withoutHead = withoutHead;
         poseStack.pushPose();
         poseStack.mulPose(Axis.YP.rotationDegrees(180f - bodyYaw)); // model front (-Z) faces where the hunter looked
         renderer.render(poseStack, puppet, buffers, null, null, light, partialTick);
@@ -80,6 +81,8 @@ public final class AwakeningGeo {
         private final RawAnimation sequence;
         ResourceLocation skin;
         boolean slim;
+        /** The hunter's own first-person view: the camera is in the head, so the head is not drawn. */
+        boolean withoutHead;
 
         Puppet(int fromPhase) {
             RawAnimation a = RawAnimation.begin();
@@ -137,6 +140,10 @@ public final class AwakeningGeo {
         public void preRender(PoseStack poseStack, Puppet animatable, BakedGeoModel model, @Nullable MultiBufferSource bufferSource,
                               @Nullable VertexConsumer buffer, boolean isReRender, float partialTick, int packedLight, int packedOverlay, int colour) {
             this.objectRenderTranslations = new Matrix4f(poseStack.last().pose());
+            model.getBone("head").ifPresent(b -> {
+                b.setHidden(animatable.withoutHead);
+                b.setChildrenHidden(animatable.withoutHead);
+            });
             scaleModelForRender(this.scaleWidth, this.scaleHeight, poseStack, animatable, model, isReRender, partialTick, packedLight, packedOverlay);
         }
     }

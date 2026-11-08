@@ -37,6 +37,8 @@ public final class AwakeningScene {
     private static final double VIEW = 96;
 
     private static final Map<UUID, Long> ACTIVE = new ConcurrentHashMap<>();
+    /** First entry: waiting for the client to finish loading the world. */
+    private static final java.util.Set<UUID> PENDING = ConcurrentHashMap.newKeySet();
 
     private AwakeningScene() {}
 
@@ -68,18 +70,28 @@ public final class AwakeningScene {
         if (elapsed < DURATION) ModNetwork.toPlayer(viewer, new Payloads.Awakening(target.getId(), elapsed));
     }
 
-    /** First entry into the world: the System wakes the hunter (once per profile; can be turned off in the config). */
+    /**
+     * First entry into the world: the System wakes the hunter (once per profile; can be turned off in the config).
+     * The scene starts when the client reports the world is loaded, so the eyes open on a ready world and never
+     * during the loading screen; if a client never reports (no mod on it), it starts after 20 s anyway.
+     */
     @SubscribeEvent
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer p) || Hunter.get(p).introPlayed || !SoloConfig.AWAKENING_INTRO.get()) return;
-        Scheduler.later(60, () -> { // let the client finish loading the world (and the launcher's arrival effect) first
-            if (!p.hasDisconnected() && p.isAlive() && !Hunter.get(p).introPlayed) start(p);
+        PENDING.add(p.getUUID());
+        Scheduler.later(400, () -> {
+            if (PENDING.remove(p.getUUID()) && !p.hasDisconnected() && p.isAlive()) start(p);
         });
+    }
+
+    public static void onClientReady(ServerPlayer p) {
+        if (PENDING.remove(p.getUUID()) && p.isAlive() && !Hunter.get(p).introPlayed) start(p);
     }
 
     @SubscribeEvent
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         ACTIVE.remove(event.getEntity().getUUID());
+        PENDING.remove(event.getEntity().getUUID());
     }
 
     @SubscribeEvent

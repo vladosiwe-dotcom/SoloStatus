@@ -190,6 +190,13 @@ public final class Payloads {
         @Override public Type<Awakening> type() { return TYPE; }
     }
 
+    /** The client has loaded the world (no loading screen): the server may start the first-entry awakening. */
+    public record ClientReady() implements CustomPacketPayload {
+        public static final Type<ClientReady> TYPE = Payloads.typeOf("client_ready");
+        public static final StreamCodec<ByteBuf, ClientReady> CODEC = StreamCodec.unit(new ClientReady());
+        @Override public Type<ClientReady> type() { return TYPE; }
+    }
+
     /** Take a ring/amulet out of a System slot. */
     public record UnequipAccessory(int slot) implements CustomPacketPayload {
         public static final Type<UnequipAccessory> TYPE = Payloads.typeOf("unequip_accessory");

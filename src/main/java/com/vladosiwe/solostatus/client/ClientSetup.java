@@ -35,6 +35,7 @@ public final class ClientSetup {
     @SubscribeEvent
     public static void layers(RegisterGuiLayersEvent event) {
         event.registerAboveAll(SoloStatus.id("hud"), SoloHud::render);
-        event.registerAboveAll(com.vladosiwe.solostatus.client.awakening.AwakeningClient.LAYER, com.vladosiwe.solostatus.client.awakening.AwakeningClient::renderLayer);
+        // below everything: the launcher's rift light (if any) fades out above the closed eyes
+        event.registerBelowAll(com.vladosiwe.solostatus.client.awakening.AwakeningClient.LAYER, com.vladosiwe.solostatus.client.awakening.AwakeningClient::renderLayer);
     }
 }

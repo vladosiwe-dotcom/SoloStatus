@@ -48,9 +48,15 @@ public final class AwakeningClient {
 
     private static final Map<Integer, Scene> SCENES = new HashMap<>();
     private static boolean fallbackPushed;
+    private static boolean headHidden;
     private static boolean announcedFallback;
 
     private AwakeningClient() {}
+
+    /** The hunter's own client told the server it is ready (world loaded); reset on every new connection. */
+    private static boolean readySent;
+    /** Client time (ms) when ready was sent: the eyes stay closed until the scene arrives (at most 4 s). */
+    private static long awaitingSince;
 
     public static void onPacket(Payloads.Awakening msg) {
         var mc = Minecraft.getInstance();
@@ -59,6 +65,17 @@ public final class AwakeningClient {
         float yaw = e instanceof AbstractClientPlayer p ? p.yBodyRot : 0;
         long start = mc.level.getGameTime() - msg.elapsed();
         SCENES.put(msg.entityId(), new Scene(start, msg.elapsed() / 20.0, yaw, ((long) msg.entityId() << 32) ^ start));
+        if (mc.player != null && e == mc.player) {
+            awaitingSince = 0;
+            // look where the body faces, so the end of the scene meets the player's own view without a turn
+            mc.player.setYRot(yaw);
+            mc.player.setXRot(0);
+        }
+    }
+
+    /** First entry, scene not here yet: keep the eyes closed so the world never flashes before the awakening. */
+    private static boolean awaiting() {
+        return awaitingSince > 0 && System.currentTimeMillis() - awaitingSince < 4000;
     }
 
     /** Scene time in seconds for this entity, or -1 when it is not in a scene. */
@@ -71,7 +88,7 @@ public final class AwakeningClient {
 
     public static boolean localActive() {
         var mc = Minecraft.getInstance();
-        return mc.player != null && time(mc.player, 0) >= 0;
+        return mc.player != null && (time(mc.player, 0) >= 0 || awaiting());
     }
 
     /** Automated client test (Rift end-to-end run): frames of the scene saved as screenshots. Off unless SOLO_E2E_SHOTS=1. */
@@ -83,9 +100,17 @@ public final class AwakeningClient {
     @SubscribeEvent
     public static void onTick(ClientTickEvent.Post event) {
         var mc = Minecraft.getInstance();
-        if (mc.level == null) {
+        if (mc.level == null || mc.player == null) {
             SCENES.clear();
+            readySent = false;
+            awaitingSince = 0;
             return;
+        }
+        // World loaded and no loading screen: tell the server, which starts the first-entry scene now.
+        if (!readySent && mc.screen == null && com.vladosiwe.solostatus.client.ClientState.synced) {
+            readySent = true;
+            if (!com.vladosiwe.solostatus.client.ClientState.data.introPlayed) awaitingSince = System.currentTimeMillis();
+            net.neoforged.neoforge.network.PacketDistributor.sendToServer(new Payloads.ClientReady());
         }
         if (SHOTS && mc.player != null && afterScene != 0) {
             boolean playing = time(mc.player, 0) >= 0;
@@ -118,7 +143,9 @@ public final class AwakeningClient {
         Scene s = SCENES.get(player.getId());
         if (GECKO) {
             event.setCanceled(true); // the scene model takes the vanilla model's place (and Epic Fight's, which draws later)
-            com.vladosiwe.solostatus.client.awakening.geo.AwakeningGeo.render(player, s.key, s.elapsedAtStart, s.yaw,
+            // the hunter's own eyes are in the head: draw the body without it
+            boolean ownView = player == Minecraft.getInstance().player;
+            com.vladosiwe.solostatus.client.awakening.geo.AwakeningGeo.render(player, s.key, s.elapsedAtStart, s.yaw, ownView,
                     event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight(), pt);
             return;
         }
@@ -128,6 +155,11 @@ public final class AwakeningClient {
             SoloStatus.LOGGER.info("Awakening: GeckoLib is not installed, the vanilla model plays a simplified scene");
         }
         player.yBodyRot = player.yBodyRotO = s.yaw;
+        if (player == Minecraft.getInstance().player) { // own eyes are in the head
+            event.getRenderer().getModel().head.visible = false;
+            event.getRenderer().getModel().hat.visible = false;
+            headHidden = true;
+        }
         PoseStack ps = event.getPoseStack();
         ps.pushPose();
         fallbackPushed = true;
@@ -146,6 +178,11 @@ public final class AwakeningClient {
         if (fallbackPushed) {
             fallbackPushed = false;
             event.getPoseStack().popPose();
+        }
+        if (headHidden) {
+            headHidden = false;
+            event.getRenderer().getModel().head.visible = true;
+            event.getRenderer().getModel().hat.visible = true;
         }
     }
 
@@ -186,26 +223,34 @@ public final class AwakeningClient {
         if (localActive()) event.setCanceled(true);
     }
 
-    /** Only the scene's own layer is drawn while it plays: no hotbar, crosshair or System HUD. */
+    /**
+     * Only the scene's own layer is drawn while it plays (no hotbar, crosshair or System HUD). The launcher mod's
+     * layers (spellironrift: the rift's light fading out) stay, drawn above the closed eyes.
+     */
     @SubscribeEvent
     public static void onGuiLayer(RenderGuiLayerEvent.Pre event) {
-        if (localActive() && !LAYER.equals(event.getName())) event.setCanceled(true);
+        if (localActive() && !LAYER.equals(event.getName()) && !"spellironrift".equals(event.getName().getNamespace())) {
+            event.setCanceled(true);
+        }
     }
 
-    /** Fade from black (the eyes are still closed) and cinema bars. */
+    /** Eyelids: two dark bands from the top and bottom edges, as open as the model's lids. Closed lids let a little red light through. */
     public static void renderLayer(GuiGraphics g, DeltaTracker delta) {
         var mc = Minecraft.getInstance();
         if (mc.player == null) return;
         double t = time(mc.player, delta.getGameTimeDeltaPartialTick(false));
-        if (t < 0) return;
+        float closed;
+        if (t >= 0) closed = AwakeningTimeline.at("lid_a.scale", t)[1];
+        else if (awaiting()) closed = 1;
+        else return;
+        if (closed <= 0.001f) return;
         int w = g.guiWidth(), h = g.guiHeight();
-        float bars = (float) Math.min(Mth.clamp(t / 0.6, 0, 1), Mth.clamp((LENGTH - t) / 0.8, 0, 1));
-        int bh = Math.round(h * 0.11f * bars);
-        if (bh > 0) {
-            g.fill(0, 0, w, bh, 0xFF000000);
-            g.fill(0, h - bh, w, h, 0xFF000000);
-        }
-        float dark = (float) Mth.clamp(1 - (t - 0.2) / 1.3, 0, 1); // black until the eyes start to open
-        if (dark > 0) g.fill(0, 0, w, h, ((int) (dark * 255) << 24));
+        int band = Math.round(h / 2f * Math.min(1, closed * 1.08f));
+        int lid = 0xFF0C0303;
+        g.fill(0, 0, w, band, lid);
+        g.fill(0, h - band, w, h, lid);
+        int soft = Math.max(2, h / 18); // soft lid edges
+        g.fillGradient(0, band, w, Math.min(h / 2, band + soft), lid, 0x000C0303);
+        g.fillGradient(0, Math.max(h / 2, h - band - soft), w, h - band, 0x000C0303, lid);
     }
 }
