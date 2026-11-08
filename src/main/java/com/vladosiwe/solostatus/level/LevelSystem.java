@@ -55,7 +55,7 @@ public final class LevelSystem {
         if (!d.hasClass()) return; // система ещё не пробуждена
         double titleBonus = d.titleIs("hunter_5000") ? 1.05 : 1.0; // титул «Истребитель тысяч»
         long amount = Math.max(1, Math.round(rawAmount * titleBonus * SoloConfig.XP_MULTIPLIER.get()));
-        net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
+        com.vladosiwe.solostatus.network.ModNetwork.toPlayer(player,
                 new com.vladosiwe.solostatus.network.Payloads.XpGain((int) Math.min(Integer.MAX_VALUE, amount), reason.ordinal()));
 
         if (d.level >= PlayerData.MAX_LEVEL) {

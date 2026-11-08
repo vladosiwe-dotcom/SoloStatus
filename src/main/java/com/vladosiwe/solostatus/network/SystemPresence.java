@@ -60,7 +60,7 @@ public final class SystemPresence {
     public static void onStartTracking(PlayerEvent.StartTracking event) {
         if (event.getTarget() instanceof ServerPlayer target && event.getEntity() instanceof ServerPlayer viewer
                 && OPEN.contains(target.getUUID())) {
-            PacketDistributor.sendToPlayer(viewer, new Payloads.Presence(target.getId(), true, publicInfo(target)));
+            ModNetwork.toPlayer(viewer, new Payloads.Presence(target.getId(), true, publicInfo(target)));
         }
     }
 

@@ -19,7 +19,7 @@ public final class Notices {
     }
 
     public static void send(ServerPlayer player, int kind, Component title, Component body, net.minecraft.world.item.ItemStack icon) {
-        PacketDistributor.sendToPlayer(player, new Payloads.Notice(kind, title, body, icon));
+        ModNetwork.toPlayer(player, new Payloads.Notice(kind, title, body, icon));
     }
 
     public static void send(ServerPlayer player, int kind, Component title, Component body, net.minecraft.world.level.ItemLike icon) {
@@ -35,7 +35,7 @@ public final class Notices {
         PlayerData d = Hunter.get(player);
         if (!d.dirty) return;
         d.dirty = false;
-        PacketDistributor.sendToPlayer(player, new Payloads.SyncData(d.write()));
+        ModNetwork.toPlayer(player, new Payloads.SyncData(d.write()));
     }
 
     public static void forceSync(ServerPlayer player) {
@@ -44,7 +44,7 @@ public final class Notices {
     }
 
     public static void syncEnergy(ServerPlayer player, PlayerData d) {
-        PacketDistributor.sendToPlayer(player, new Payloads.EnergySync(d.energy));
+        ModNetwork.toPlayer(player, new Payloads.EnergySync(d.energy));
     }
 
     public static float maxEnergy(PlayerData d) {

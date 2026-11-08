@@ -51,11 +51,11 @@ public final class SoloGameTests {
     }
 
     /**
-     * Живой игрок на сервере получает опыт и растёт в уровне (данные игрока, начисление опыта, отправка пакетов).
-     * Необязательный тест: у тестового игрока нет настоящего клиента, и если пакеты к нему не уходят,
-     * это не ошибка мода — результат просто будет виден в логе.
+     * Живой игрок на сервере получает опыт и растёт в уровне. У тестового игрока нет клиента с модом,
+     * поэтому заодно проверяется, что сервер не падает при отправке пакетов такому игроку
+     * (так же ведут себя FakePlayer других модов).
      */
-    @GameTest(template = "empty", required = false)
+    @GameTest(template = "empty")
     public static void playerLevelsUp(GameTestHelper h) {
         ServerPlayer p = h.makeMockServerPlayerInLevel();
         PlayerData d = Hunter.get(p);

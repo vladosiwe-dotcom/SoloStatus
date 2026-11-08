@@ -35,7 +35,7 @@ public final class InspectService {
             Notices.warn(viewer, "solostatus.error.inspect_range");
             return;
         }
-        PacketDistributor.sendToPlayer(viewer, new Payloads.InspectResult(entityId, build(Hunter.get(viewer), Hunter.get(target), target)));
+        ModNetwork.toPlayer(viewer, new Payloads.InspectResult(entityId, build(Hunter.get(viewer), Hunter.get(target), target)));
     }
 
     static CompoundTag build(PlayerData viewer, PlayerData t, ServerPlayer target) {
