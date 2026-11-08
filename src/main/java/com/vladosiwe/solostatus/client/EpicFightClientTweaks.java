@@ -6,10 +6,9 @@ import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.fml.config.ConfigTracker;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.config.ModConfigs;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.common.ModConfigSpec;
 
 /**
  * Epic Fight draws the whole player model in first person (its client option ingame.first_person_model). The
@@ -30,13 +29,12 @@ public final class EpicFightClientTweaks {
         done = true;
         if (!ModList.get().isLoaded("epicfight") || SoloConfig.EPIC_FIGHT_FIRST_PERSON_BODY.get()) return;
         try {
-            for (ModConfig config : ConfigTracker.INSTANCE.configSets().get(ModConfig.Type.CLIENT)) {
-                if (!"epicfight".equals(config.getModId())) continue;
+            for (ModConfig config : ModConfigs.getModConfigs("epicfight")) { // FML 4 (NeoForge 21.1) API
+                if (config.getType() != ModConfig.Type.CLIENT) continue;
                 var loaded = config.getLoadedConfig();
                 if (loaded == null || !Boolean.TRUE.equals(loaded.config().get(KEY))) continue;
                 loaded.config().set(KEY, false);
-                loaded.save();
-                if (config.getSpec() instanceof ModConfigSpec spec) spec.afterReload();
+                loaded.save(); // also fires the config reloading event, so Epic Fight picks the value up at once
                 SoloStatus.LOGGER.info("Epic Fight: first-person body model turned off ({} in {})", KEY, config.getFileName());
             }
         } catch (Throwable t) {
