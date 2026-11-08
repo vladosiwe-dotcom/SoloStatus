@@ -35,6 +35,7 @@ public final class VoiceClient {
     private static volatile VoskEngine.State state = VoskEngine.State.STOPPED;
     private static volatile boolean downloading;
     private static String lastHeard = "";
+    private static long lastCommandAt;
     private static long lastHeardAt;
     private static boolean readyAnnounced;
     private static boolean modelHintShown;
@@ -127,9 +128,9 @@ public final class VoiceClient {
         VoskEngine[] self = new VoskEngine[1];
         self[0] = new VoskEngine(nativePath(model), grammar, new VoskEngine.Listener() {
             @Override
-            public void onText(String text) {
+            public void onText(String text, double confidence) {
                 Minecraft.getInstance().execute(() -> {
-                    if (engine == self[0]) handle(text);
+                    if (engine == self[0]) handle(text, confidence);
                 });
             }
 
@@ -166,7 +167,7 @@ public final class VoiceClient {
             chat(Component.translatable("solostatus.voice.error." + detail).withStyle(ChatFormatting.RED));
         } else if (s == VoskEngine.State.LISTENING && !readyAnnounced) {
             readyAnnounced = true;
-            String phrase = "ru".equals(language()) ? "Система, покажи статус" : "System, show status";
+            String phrase = "ru".equals(language()) ? "Система" : "System";
             chat(mode() == VoiceMode.PUSH_TO_TALK
                     ? Component.translatable("solostatus.voice.ready.ptt", Keys.VOICE.getTranslatedKeyMessage(), phrase)
                     : Component.translatable("solostatus.voice.ready", phrase));
@@ -175,14 +176,22 @@ public final class VoiceClient {
 
     // ======================== Команды голосом ========================
 
-    private static void handle(String text) {
+    private static void handle(String text, double confidence) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null) return;
-        VoiceCommands.Command cmd = VoiceCommands.matchVoice(text, language(), customPhrase());
+        VoiceCommands.Command cmd = VoiceCommands.matchVoice(text, language(), customPhrase(), confidence);
         if (cmd == VoiceCommands.Command.NONE) return;
-        lastHeard = text;
-        lastHeardAt = System.currentTimeMillis();
+        long now = System.currentTimeMillis();
+        // Пауза после команды: эхо или повтор слова не должны сразу закрыть только что открытое окно
+        if (now - lastCommandAt < 1500) return;
+        lastCommandAt = now;
+        lastHeard = text.replace("[unk]", "").trim();
+        lastHeardAt = now;
         switch (cmd) {
+            case TOGGLE_STATUS -> {
+                if (mc.screen instanceof SystemScreen) mc.screen.onClose();
+                else if (mc.screen == null || mc.screen instanceof InspectScreen) mc.setScreen(new SystemScreen(SystemScreen.Win.STATUS));
+            }
             case OPEN_STATUS -> {
                 if (mc.screen == null || mc.screen instanceof InspectScreen) mc.setScreen(new SystemScreen(SystemScreen.Win.STATUS));
             }

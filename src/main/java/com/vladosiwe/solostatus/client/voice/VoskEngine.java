@@ -38,8 +38,11 @@ public final class VoskEngine {
     public enum State { LOADING, LISTENING, ERROR, STOPPED }
 
     public interface Listener {
-        /** Распознанная фраза (без пустых результатов). Вызывается из фонового потока. */
-        void onText(String text);
+        /**
+         * Распознанная фраза как есть (с маркерами [unk]) и средняя уверенность слов 0..1.
+         * Вызывается из фонового потока.
+         */
+        void onText(String text, double confidence);
 
         /** Смена состояния; detail — ключ причины ошибки (no_mic, mic_busy, model, native) или null. */
         void onState(State state, String detail);
@@ -47,6 +50,7 @@ public final class VoskEngine {
 
     private static final float SAMPLE_RATE = 16000f;
     private static final Pattern TEXT = Pattern.compile("\"text\"\\s*:\\s*\"([^\"]*)\"");
+    private static final Pattern WORD = Pattern.compile("\"conf\"\\s*:\\s*([0-9.]+)[^}]*?\"word\"\\s*:\\s*\"([^\"]*)\"");
 
     private final String modelPath;
     private final String grammar;
@@ -123,6 +127,7 @@ public final class VoskEngine {
         try (Model model = new Model(modelPath)) {
             recognizer = vosk.newRecognizer(model.getPointer(), SAMPLE_RATE, grammar);
             if (recognizer == null) throw new IOException("recognizer");
+            vosk.setWords(recognizer, true); // уверенность по словам — для защиты от ложных срабатываний
             TargetDataLine line = (TargetDataLine) AudioSystem.getLine(info);
             line.open(format, 8192);
             line.start();
@@ -167,19 +172,37 @@ public final class VoskEngine {
 
     private void emit(String json) {
         String text = extractText(json);
-        if (!text.isEmpty()) listener.onText(text);
+        if (text.isEmpty() || text.replace("[unk]", "").isBlank()) return;
+        listener.onText(text, confidence(json));
     }
 
-    /** Достаёт поле "text" из JSON-ответа Vosk. */
+    /** Поле "text" из JSON-ответа Vosk как есть (маркеры [unk] сохраняются для проверки команды). */
     static String extractText(String json) {
         if (json == null) return "";
         Matcher m = TEXT.matcher(json);
-        return m.find() ? m.group(1).replace("[unk]", "").trim() : "";
+        return m.find() ? m.group(1).trim() : "";
+    }
+
+    /** Средняя уверенность распознанных слов (без [unk]); 1.0, если Vosk не вернул уверенность. */
+    static double confidence(String json) {
+        if (json == null) return 1.0;
+        Matcher m = WORD.matcher(json);
+        double sum = 0;
+        int n = 0;
+        while (m.find()) {
+            if ("[unk]".equals(m.group(2))) continue;
+            try {
+                sum += Double.parseDouble(m.group(1));
+                n++;
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return n == 0 ? 1.0 : sum / n;
     }
 
     /** Прямые вызовы функций libvosk с явной кодировкой UTF-8. */
     static final class NativeVosk {
-        private final Function newRec, newRecGrm, accept, result, finalResult, reset, free;
+        private final Function newRec, newRecGrm, accept, result, finalResult, reset, free, setWords;
 
         NativeVosk() {
             // Та же библиотека, что уже загрузил org.vosk.LibVosk (JNA кэширует экземпляр по имени).
@@ -192,6 +215,7 @@ public final class VoskEngine {
             finalResult = lib.getFunction("vosk_recognizer_final_result");
             reset = lib.getFunction("vosk_recognizer_reset");
             free = lib.getFunction("vosk_recognizer_free");
+            setWords = lib.getFunction("vosk_recognizer_set_words");
         }
 
         Pointer newRecognizer(Pointer model, float rate, String grammar) {
@@ -211,6 +235,10 @@ public final class VoskEngine {
         String finalResult(Pointer rec) {
             Pointer p = finalResult.invokePointer(new Object[]{rec});
             return p == null ? "" : p.getString(0, StandardCharsets.UTF_8.name());
+        }
+
+        void setWords(Pointer rec, boolean on) {
+            setWords.invokeVoid(new Object[]{rec, on ? 1 : 0});
         }
 
         void reset(Pointer rec) {

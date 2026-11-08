@@ -10,12 +10,19 @@ import java.util.Map;
  * что повышает точность и снижает ложные срабатывания на обычную речь.
  */
 public final class VoiceCommands {
-    public enum Command { OPEN_STATUS, OPEN_SKILLS, CLOSE_STATUS, INSPECT, SKILL_1, SKILL_2, SKILL_3, SKILL_4, NONE }
+    public enum Command { TOGGLE_STATUS, OPEN_STATUS, OPEN_SKILLS, CLOSE_STATUS, INSPECT, SKILL_1, SKILL_2, SKILL_3, SKILL_4, NONE }
+
+    /** Минимальная уверенность распознавания для команды из одного слова и для фраз. */
+    public static final double MIN_CONF_SINGLE = 0.80;
+    public static final double MIN_CONF_PHRASE = 0.60;
 
     private static final Map<String, Command> RU = new LinkedHashMap<>();
     private static final Map<String, Command> EN = new LinkedHashMap<>();
 
     static {
+        // Одно слово: открыть/закрыть окно. Срабатывает, только если слово сказано отдельно.
+        RU.put("система", Command.TOGGLE_STATUS);
+        RU.put("статус", Command.TOGGLE_STATUS);
         RU.put("система покажи статус", Command.OPEN_STATUS);
         RU.put("система открой статус", Command.OPEN_STATUS);
         RU.put("система статус", Command.OPEN_STATUS);
@@ -34,6 +41,8 @@ public final class VoiceCommands {
         RU.put("навык три", Command.SKILL_3);
         RU.put("навык четыре", Command.SKILL_4);
 
+        EN.put("system", Command.TOGGLE_STATUS);
+        EN.put("status", Command.TOGGLE_STATUS);
         EN.put("system show status", Command.OPEN_STATUS);
         EN.put("system open status", Command.OPEN_STATUS);
         EN.put("system status", Command.OPEN_STATUS);
@@ -61,9 +70,36 @@ public final class VoiceCommands {
         return map;
     }
 
-    /** Распознанный голосом текст → команда. Принимаются только полные фразы. */
+    /**
+     * Распознанный голосом текст → команда.
+     *
+     * @param raw        результат Vosk как есть, с маркерами [unk] (речь вне списка команд)
+     * @param confidence средняя уверенность распознанных слов (0..1)
+     *
+     * Защита от ложных срабатываний в обычной речи и голосовом чате:
+     *  - команда принимается только полной фразой;
+     *  - команда из ОДНОГО слова («Система», «Статус») — только если сказана отдельно: если вокруг
+     *    прозвучали другие слова ([unk]), это часть разговора, а не команда;
+     *  - нужна уверенность распознавания: ≥ 80% для одного слова, ≥ 60% для фраз.
+     */
+    public static Command matchVoice(String raw, String language, String customOpenPhrase, double confidence) {
+        if (raw == null) return Command.NONE;
+        boolean hasOtherSpeech = raw.contains("[unk]");
+        String cleaned = normalize(raw.replace("[unk]", " "));
+        Command cmd = phrases(language, customOpenPhrase).getOrDefault(cleaned, Command.NONE);
+        if (cmd == Command.NONE) return Command.NONE;
+        boolean singleWord = !cleaned.contains(" ");
+        if (singleWord) {
+            if (hasOtherSpeech || confidence < MIN_CONF_SINGLE) return Command.NONE;
+        } else if (confidence < MIN_CONF_PHRASE) {
+            return Command.NONE;
+        }
+        return cmd;
+    }
+
+    /** Упрощённый вариант для тестов и текстового ввода: без маркеров и с полной уверенностью. */
     public static Command matchVoice(String text, String language, String customOpenPhrase) {
-        return phrases(language, customOpenPhrase).getOrDefault(normalize(text), Command.NONE);
+        return matchVoice(text, language, customOpenPhrase, 1.0);
     }
 
     /** Текст в чате: перехватывается только открытие статуса, чтобы не мешать обычному общению. */
