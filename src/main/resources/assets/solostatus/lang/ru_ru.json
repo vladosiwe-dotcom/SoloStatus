@@ -560,8 +560,6 @@
   "solostatus.skill.explosive_bolt.desc": "Болт взрывается при попадании, раня врагов в радиусе 2.5 блока.",
   "solostatus.skill.arcane_blast": "Тайный взрыв",
   "solostatus.skill.arcane_blast.desc": "Магический взрыв вокруг: урон и отбрасывание в радиусе 4 блоков.",
-  "solostatus.skill.fist_barrage": "Град ударов",
-  "solostatus.skill.fist_barrage.desc": "Шесть молниеносных ударов кулаками по цели.",
   "solostatus.skill.hunter_sense": "Чутьё охотника",
   "solostatus.skill.hunter_sense.desc": "Пассивно: враждебные существа в радиусе 10 блоков (+3 за ранг) подсвечиваются.",
   "solostatus.skill.regeneration": "Восстановление",

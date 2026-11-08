@@ -264,6 +264,8 @@ public final class CombatEvents {
         // Отражённый урон (шипы) и прочие косвенные источники не усиливаются характеристиками.
         if (source.is(net.minecraft.world.damagesource.DamageTypes.THORNS)) return;
         if (!melee && !projectile && !magic) return;
+        // unarmed fighting is not part of the System: an empty hand gets no bonuses, crits or mastery
+        if (melee && p.getMainHandItem().isEmpty()) return;
 
         ItemStack weapon = weaponFor(p, direct, projectile);
         WeaponType type = projectile ? rangedType(weapon) : (magic ? WeaponType.STAFF : WeaponClassifier.classify(weapon));
@@ -626,7 +628,7 @@ public final class CombatEvents {
         boolean thorns = source.is(net.minecraft.world.damagesource.DamageTypes.THORNS);
         boolean magic = !thorns && (CompatManager.magicSchool(source) != null || source.is(DamageTypeTags.WITCH_RESISTANT_TO));
         // the same rule as for hits: melee is a blow by the player, not thorns, TNT or other indirect damage
-        boolean melee = !projectile && !magic && !thorns && direct == p;
+        boolean melee = !projectile && !magic && !thorns && direct == p && !p.getMainHandItem().isEmpty(); // no unarmed progress
         if (projectile) d.addCounter("projectile_kills", 1);
         else if (magic) d.addCounter("magic_kills", 1);
         else if (melee) d.addCounter("melee_kills", 1);

@@ -35,8 +35,9 @@ public enum WeaponType {
         return this == BOW || this == CROSSBOW;
     }
 
+    /** Unarmed fighting is not part of the System: an empty hand has no mastery, skills or bonuses. */
     public boolean hasMastery() {
-        return this != NONE;
+        return this != NONE && this != FIST;
     }
 
     public Component displayName() {

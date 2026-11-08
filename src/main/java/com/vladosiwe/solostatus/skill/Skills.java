@@ -170,8 +170,6 @@ public final class Skills {
                 .cooldown(10, 0.6).energy(18).effect(SkillEffects::explosiveBolt).build());
         reg(b("arcane_blast", AWAKENING, MAGIC, Items.AMETHYST_CLUSTER).level(8).requires(Req.mastery(WeaponType.STAFF, 10))
                 .cooldown(10, 0.6).energy(25).effect(SkillEffects::arcaneBlast).build());
-        reg(b("fist_barrage", AWAKENING, ATTACK, Items.LEATHER).level(8).requires(Req.mastery(WeaponType.FIST, 10))
-                .cooldown(8, 0.5).energy(14).effect(SkillEffects::fistBarrage).build());
 
         // ---- Стиль боя (каждый навык — своя роль, без «невидимых +%») ----
         reg(b("hunter_sense", AWAKENING, PASSIVE, Items.ENDER_EYE).level(15).requires(Req.stat(Stat.PER, 30)).requires(Req.counter("night_kills", 50)).build());

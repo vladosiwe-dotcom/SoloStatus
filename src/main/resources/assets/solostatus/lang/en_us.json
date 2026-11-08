@@ -560,8 +560,6 @@
   "solostatus.skill.explosive_bolt.desc": "A bolt that explodes on hit, damaging enemies within 2.5 blocks.",
   "solostatus.skill.arcane_blast": "Arcane Blast",
   "solostatus.skill.arcane_blast.desc": "A magical burst around you: damage and knockback within 4 blocks.",
-  "solostatus.skill.fist_barrage": "Fist Barrage",
-  "solostatus.skill.fist_barrage.desc": "Six lightning-fast punches at the target.",
   "solostatus.skill.hunter_sense": "Hunter's Sense",
   "solostatus.skill.hunter_sense.desc": "Passive: hostile creatures within 10 blocks (+3 per rank) are highlighted.",
   "solostatus.skill.regeneration": "Recovery",

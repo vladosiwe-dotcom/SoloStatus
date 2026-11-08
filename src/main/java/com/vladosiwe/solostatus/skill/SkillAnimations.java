@@ -41,7 +41,6 @@ public final class SkillAnimations {
             Map.entry("sunder", "AXE_DASH"),
             Map.entry("piercing_thrust", "HEARTPIERCER"),
             Map.entry("ground_pound", "METEOR_SLAM"),
-            Map.entry("fist_barrage", "FIST_AUTO3"),
             Map.entry("frost_arrow", "BIPED_BOW_SHOT"),
             Map.entry("explosive_bolt", "BIPED_CROSSBOW_SHOT"),
             Map.entry("vital_strike", "SHARP_STAB"));

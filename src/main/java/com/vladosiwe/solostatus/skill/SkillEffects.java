@@ -860,21 +860,6 @@ public final class SkillEffects {
         return true;
     }
 
-    public static boolean fistBarrage(SkillContext c) {
-        ServerPlayer p = c.player();
-        LivingEntity t = closestInCone(p, 3.0, 70);
-        if (t == null) return false;
-        double dmg = melee(p) * c.scale(0.4, 0.05);
-        Scheduler.repeat(2, 6, i -> {
-            if (!alive(p) || !t.isAlive() || t.distanceToSqr(p) > 16) return;
-            swing(p);
-            hitPhysical(p, t, dmg);
-            particles(p.serverLevel(), ParticleTypes.CRIT, t.getBoundingBox().getCenter(), 5, 0.2, 0.2);
-            sound(p.serverLevel(), t.position(), SoundEvents.PLAYER_ATTACK_WEAK, 0.7f, 1.2f + i * 0.08f);
-        });
-        return true;
-    }
-
     public static boolean manaBlade(SkillContext c) {
         state(c.data(), c.level(), "mana_blade", 160);
         c.data().manaBladeCharges = 4 + c.rank();
