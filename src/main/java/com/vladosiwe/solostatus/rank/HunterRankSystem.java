@@ -8,7 +8,6 @@ import com.vladosiwe.solostatus.skill.SkillFx;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
 
 import java.util.Map;
 
@@ -81,7 +80,6 @@ public final class HunterRankSystem {
             com.vladosiwe.solostatus.level.LevelSystem.grantXp(player, 1000L * rank.ordinal() * rank.ordinal(), com.vladosiwe.solostatus.level.XpReason.RANK);
             player.serverLevel().sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1, player.getZ(), 60, 0.5, 1, 0.5, 0.4);
             player.serverLevel().sendParticles(SkillFx.SYSTEM_DUST, player.getX(), player.getY() + 1, player.getZ(), 80, 1, 1.5, 1, 0.02);
-            SkillFx.sound(player.serverLevel(), player.position(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 1f, 0.8f);
             Notices.send(player, Notices.RANK_UP, Component.translatable("solostatus.notice.rank_up"), rank.displayName(),
                     net.minecraft.world.item.Items.NETHER_STAR);
         } else if (rank.ordinal() < d.rank.ordinal()) {

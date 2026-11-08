@@ -77,6 +77,8 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
 
     // --- Настройки ---
     public boolean privateProfile = false;
+    /** Активный титул (id достижения-титула) или пустая строка. Эффект действует только у надетого титула. */
+    public String title = "";
     /** Временные состояния навыков: ключ -> gameTime окончания. */
     public final Map<String, Long> timedStates = new HashMap<>();
 
@@ -93,6 +95,8 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
     public transient final java.util.ArrayDeque<Long> killTimes = new java.util.ArrayDeque<>();
     /** Заряды «Клинка маны». */
     public transient int manaBladeCharges = 0;
+    /** Тик, в который навык уже проиграл анимацию Epic Fight (тогда ванильный взмах не нужен). */
+    public transient long animatedTick = -1;
     public transient long lastComboTick = -1000;
     public transient int comboCount = 0;
     public transient String comboWeapon = "";
@@ -117,6 +121,10 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
 
     public boolean hasSkill(String id) {
         return skills.containsKey(id);
+    }
+
+    public boolean titleIs(String id) {
+        return id.equals(title);
     }
 
     public long counter(String key) {
@@ -195,6 +203,7 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
         t.putInt("rank", rank.ordinal());
         t.putInt("rankScore", rankScore);
         t.putBoolean("private", privateProfile);
+        t.putString("title", title);
         CompoundTag ts = new CompoundTag();
         timedStates.forEach(ts::putLong);
         t.put("timed", ts);
@@ -258,6 +267,8 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
             rank = HunterRank.byIndex(t.getInt("rank"));
             rankScore = Math.max(0, t.getInt("rankScore"));
             privateProfile = t.getBoolean("private");
+            title = t.getString("title");
+            if (!title.isEmpty() && !achievements.contains(title)) title = ""; // титул только за полученное достижение
             timedStates.clear();
             CompoundTag ts = t.getCompound("timed");
             for (String k : ts.getAllKeys()) timedStates.put(k, ts.getLong(k));

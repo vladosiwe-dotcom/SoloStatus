@@ -304,7 +304,9 @@ public final class SkillFx {
 
     // ========================= Визуал =========================
 
+    /** Ванильный взмах — только если навык не проиграл анимацию Epic Fight в этот тик. */
     public static void swing(ServerPlayer p) {
+        if (Hunter.get(p).animatedTick == p.serverLevel().getGameTime()) return;
         p.swing(InteractionHand.MAIN_HAND, true);
     }
 

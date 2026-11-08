@@ -1,0 +1,123 @@
+{
+  "system.open": {
+    "subtitle": "subtitles.solostatus.system.open",
+    "sounds": [
+      {
+        "name": "minecraft:block.beacon.power_select",
+        "type": "event"
+      },
+      {
+        "name": "minecraft:block.amethyst_block.resonate",
+        "type": "event"
+      }
+    ]
+  },
+  "system.close": {
+    "subtitle": "subtitles.solostatus.system.close",
+    "sounds": [
+      {
+        "name": "minecraft:block.beacon.deactivate",
+        "type": "event"
+      }
+    ]
+  },
+  "system.click": {
+    "subtitle": "subtitles.solostatus.system.click",
+    "sounds": [
+      {
+        "name": "minecraft:block.amethyst_block.hit",
+        "type": "event"
+      }
+    ]
+  },
+  "system.stat_up": {
+    "subtitle": "subtitles.solostatus.system.stat_up",
+    "sounds": [
+      {
+        "name": "minecraft:block.amethyst_block.chime",
+        "type": "event"
+      }
+    ]
+  },
+  "system.notice": {
+    "subtitle": "subtitles.solostatus.system.notice",
+    "sounds": [
+      {
+        "name": "minecraft:block.note_block.chime",
+        "type": "event"
+      }
+    ]
+  },
+  "system.level_up": {
+    "subtitle": "subtitles.solostatus.system.level_up",
+    "sounds": [
+      {
+        "name": "minecraft:entity.player.levelup",
+        "type": "event"
+      }
+    ]
+  },
+  "system.awakening": {
+    "subtitle": "subtitles.solostatus.system.awakening",
+    "sounds": [
+      {
+        "name": "minecraft:block.beacon.activate",
+        "type": "event"
+      }
+    ]
+  },
+  "system.achievement": {
+    "subtitle": "subtitles.solostatus.system.achievement",
+    "sounds": [
+      {
+        "name": "minecraft:ui.toast.challenge_complete",
+        "type": "event"
+      }
+    ]
+  },
+  "system.hidden_achievement": {
+    "subtitle": "subtitles.solostatus.system.hidden_achievement",
+    "sounds": [
+      {
+        "name": "minecraft:block.end_portal.spawn",
+        "type": "event"
+      }
+    ]
+  },
+  "system.rank_up": {
+    "subtitle": "subtitles.solostatus.system.rank_up",
+    "sounds": [
+      {
+        "name": "minecraft:item.totem.use",
+        "type": "event"
+      }
+    ]
+  },
+  "system.title": {
+    "subtitle": "subtitles.solostatus.system.title",
+    "sounds": [
+      {
+        "name": "minecraft:block.enchantment_table.use",
+        "type": "event"
+      }
+    ]
+  },
+  "system.error": {
+    "subtitle": "subtitles.solostatus.system.error",
+    "sounds": [
+      {
+        "name": "minecraft:block.note_block.bass",
+        "type": "event"
+      }
+    ]
+  },
+  "system.presence": {
+    "subtitle": "subtitles.solostatus.system.presence",
+    "sounds": [
+      {
+        "name": "minecraft:block.amethyst_block.resonate",
+        "type": "event"
+      }
+    ]
+  }
+}

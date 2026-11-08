@@ -1,7 +1,7 @@
 package com.vladosiwe.solostatus.client;
 
 import com.vladosiwe.solostatus.SoloStatus;
-import com.vladosiwe.solostatus.client.screen.StatusScreen;
+import com.vladosiwe.solostatus.client.ui.SystemScreen;
 import com.vladosiwe.solostatus.client.voice.VoiceClient;
 import com.vladosiwe.solostatus.combat.WeaponClassifier;
 import com.vladosiwe.solostatus.combat.WeaponType;
@@ -40,10 +40,10 @@ public final class ClientEvents {
 
         if (ClientState.openStatusNextTick && mc.screen == null) {
             ClientState.openStatusNextTick = false;
-            mc.setScreen(new StatusScreen());
+            mc.setScreen(new SystemScreen());
         }
         while (Keys.OPEN_STATUS.consumeClick()) {
-            if (mc.screen == null) mc.setScreen(new StatusScreen());
+            if (mc.screen == null) mc.setScreen(new SystemScreen());
         }
         while (Keys.INSPECT.consumeClick()) {
             if (mc.crosshairPickEntity instanceof Player target && target != mc.player) {

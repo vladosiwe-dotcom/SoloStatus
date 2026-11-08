@@ -53,7 +53,8 @@ public final class LevelSystem {
         if (rawAmount <= 0) return;
         PlayerData d = Hunter.get(player);
         if (!d.hasClass()) return; // система ещё не пробуждена
-        long amount = Math.max(1, Math.round(rawAmount * SoloConfig.XP_MULTIPLIER.get()));
+        double titleBonus = d.titleIs("hunter_5000") ? 1.05 : 1.0; // титул «Истребитель тысяч»
+        long amount = Math.max(1, Math.round(rawAmount * titleBonus * SoloConfig.XP_MULTIPLIER.get()));
         net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player,
                 new com.vladosiwe.solostatus.network.Payloads.XpGain((int) Math.min(Integer.MAX_VALUE, amount), reason.ordinal()));
 
@@ -106,7 +107,6 @@ public final class LevelSystem {
         ServerLevel level = player.serverLevel();
         level.sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1, player.getZ(), 60, 0.6, 1.0, 0.6, 0.08);
         level.sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1, player.getZ(), 30, 0.4, 0.6, 0.4, 0.3);
-        level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1.0f, 0.8f);
         level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 0.8f, 1.4f);
 
         Notices.send(player, Notices.LEVEL_UP,

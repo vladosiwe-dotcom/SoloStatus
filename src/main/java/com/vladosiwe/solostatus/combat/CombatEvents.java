@@ -164,8 +164,8 @@ public final class CombatEvents {
         if (d.stateActive("berserk", now)) mult *= 1.15;
         if (p.getHealth() < p.getMaxHealth() * 0.3f) mult *= 1 - 0.05 * d.skillRank("tenacity");
         mult *= 1 - guardianAura(p);
-        if (attackerEntity instanceof LivingEntity weak && weak.getMaxHealth() < p.getMaxHealth() * 0.5f) {
-            mult *= 1 - 0.10 * d.skillRank("dominance"); // Властность: слабые враги бьют слабее
+        if (d.titleIs("dragon_slayer") && attackerEntity instanceof LivingEntity bossAttacker && Threat.isBoss(bossAttacker)) {
+            mult *= 0.90; // титул «Драконоборец»
         }
         event.setAmount((float) Math.max(0, amount * mult));
 
@@ -255,22 +255,17 @@ public final class CombatEvents {
             add += StatFormulas.physicalDamage(d);
             add += d.skillRank("warrior_spirit") * 0.04;
             if (hc == HunterClass.WARRIOR) add += 0.05;
-            if (type == WeaponType.FIST) add += d.skillRank("iron_fist") * 0.15;
         } else if (projectile) {
             add += StatFormulas.projectileDamage(d);
             add += d.skillRank("steady_aim") * 0.05;
             if (hc == HunterClass.ARCHER) add += 0.10;
-            if (type == WeaponType.CROSSBOW) add += d.skillRank("heavy_bolts") * 0.06;
             if (dist > 20) add += d.skillRank("deadeye") * 0.08;
-            if (dist > 15 && d.hasSkill("eagle_eye")) add += 0.10;
-            critChance += d.skillRank("eagle_eye") * 0.04;
             if (quality != null) add += quality.effectiveDamageBonus(); // у луков нет атрибута урона
             if (dist > 20 && Threat.fairness(target, p) > 0.2) d.addCounter("long_shots", 1);
         } else if (magic) {
             // С Iron's Spells сила магии идёт через их атрибуты (spell_power), чтобы не масштабировать дважды.
             if (ironSchool == null || !CompatManager.ironsLoaded()) add += StatFormulas.magicPower(d);
             if (hc == HunterClass.MAGE) add += 0.10;
-            if (WeaponClassifier.classify(p.getMainHandItem()) == WeaponType.STAFF) add += d.skillRank("mana_surge") * 0.05;
             if (Threat.fairness(target, p) > 0.2) d.addCounter("magic_hits", 1);
         }
         if (type != null) add += MasteryMath.damageBonus(masteryLevel);
@@ -298,7 +293,7 @@ public final class CombatEvents {
         if (melee && isBehind(p, target)) {
             add += 0.10 * d.skillRank("ambush");
             if (hc == HunterClass.THIEF) add += 0.15;
-            if (d.achievements.contains("shadow_of_death")) add += 0.10;
+            if (d.titleIs("shadow_of_death")) add += 0.15;
             if (spec == Specialization.SHADOW) forceCrit = true;
             if (!skill && Threat.fairness(target, p) > 0.2) d.addCounter("backstabs", 1);
             target.getPersistentData().putLong("solostatus_backstab", now);
@@ -310,15 +305,13 @@ public final class CombatEvents {
         if (SkillFx.marked(target, "hex", null)) add += 0.10 + 0.03 * Math.max(0, d.skillRank("hex") - 1);
 
         // --- Охотник на гигантов и награды достижений ---
-        if (target.getMaxHealth() > p.getMaxHealth() * 2) add += 0.05 * d.skillRank("giant_slayer");
-        if (d.achievements.contains("giant_killer") && Threat.of(target) >= Threat.STRONG) add += 0.05;
-        if (projectile && d.achievements.contains("sharp_eye")) critChance += 0.03;
-        if (magic && ironSchool == null) add += 0.03 * d.skillRank("school_affinity") * (bestMagicIs(d, "arcane") ? 1 : 0);
+        if (d.titleIs("giant_killer") && target.getMaxHealth() > p.getMaxHealth() * 2) add += 0.15;
+        if (d.titleIs("mastery_50") && masteryLevel >= MasteryMath.MAX_LEVEL) add += 0.05;
 
         // --- Награды скрытых достижений ---
-        if (d.achievements.contains("bone_lord") && target.getType().is(EntityTypeTags.SKELETONS)) add += 0.08;
-        if (d.achievements.contains("night_hunter") && level.isNight()) add += 0.05;
-        if (d.achievements.contains("dragon_slayer") && Threat.isBoss(target)) add += 0.05;
+        if (d.titleIs("bone_lord") && target.getType().is(EntityTypeTags.UNDEAD)) add += 0.10;
+        if (d.titleIs("night_hunter") && level.isNight()) add += 0.08;
+        if (d.titleIs("dragon_slayer") && Threat.isBoss(target)) add += 0.10;
 
         // --- Контратака после блока/уклонения ---
         if (melee && !skill && now - d.lastBlockTick <= 40 && d.lastBlockTick > 0) {
@@ -334,7 +327,7 @@ public final class CombatEvents {
             d.lastComboTick = now;
             d.comboWeapon = type.key;
             if (masteryLevel >= 25 && d.comboCount % 4 == 0) {
-                add += 0.25 + (d.achievements.contains("combo_1000") ? 0.10 : 0);
+                add += 0.25;
                 SkillFx.particles(level, ParticleTypes.ENCHANTED_HIT, target.getBoundingBox().getCenter(), 20, 0.4, 0.2);
                 SkillFx.sound(level, target.position(), SoundEvents.PLAYER_ATTACK_STRONG, 0.8f, 1.5f);
                 d.addCounter("combos", 1);
@@ -347,7 +340,7 @@ public final class CombatEvents {
 
         // --- Крит системы (отдельно от ванильного крита в прыжке) ---
         if (forceCrit || p.getRandom().nextDouble() < Math.min(0.6, critChance)) {
-            amount *= (float) (1 + StatFormulas.critDamage(d) + d.skillRank("weak_point") * 0.06);
+            amount *= (float) (1 + StatFormulas.critDamage(d));
             SkillFx.particles(level, ParticleTypes.CRIT, target.getBoundingBox().getCenter(), 12, 0.3, 0.3);
             if (Threat.fairness(target, p) > 0.2) d.addCounter("crits", 1);
         }
@@ -357,10 +350,6 @@ public final class CombatEvents {
         if (melee && !skill && type == WeaponType.GREATSWORD && p.getRandom().nextDouble() < 0.05 * d.skillRank("titan_grip")) {
             SkillFx.stun(p, target, 20);
             SkillFx.particles(level, ParticleTypes.CRIT, target.getBoundingBox().getCenter(), 10, 0.3, 0.2);
-        }
-        if (melee && !skill && type == WeaponType.DAGGER && p.getRandom().nextDouble() < 0.08 * d.skillRank("deep_wounds")) {
-            target.addEffect(new MobEffectInstance(MobEffects.WITHER, 60, 0), p);
-            SkillFx.particles(level, SkillFx.BLOOD_DUST, target.getBoundingBox().getCenter(), 8, 0.2, 0.05);
         }
         // --- Клинок маны: дополнительный магический урон ---
         if (melee && !skill && d.manaBladeCharges > 0 && d.stateActive("mana_blade", now)) {
@@ -422,18 +411,6 @@ public final class CombatEvents {
         };
     }
 
-    /** Совпадает ли школа с лучшим магическим мастерством игрока. */
-    public static boolean bestMagicIs(PlayerData d, String school) {
-        String best = null;
-        double bestXp = -1;
-        for (var e : d.mastery.entrySet()) {
-            if (e.getKey().startsWith("magic:") && e.getValue() > bestXp) {
-                bestXp = e.getValue();
-                best = e.getKey().substring(6);
-            }
-        }
-        return school.equals(best);
-    }
 
     private static boolean isBehind(Player attacker, LivingEntity target) {
         Vec3 look = target.getViewVector(1.0f).multiply(1, 0, 1);
@@ -621,6 +598,9 @@ public final class CombatEvents {
         if ((threat >= Threat.STRONG || boss) && d.lastDamagedTick < now - 600) d.addCounter("flawless_strong", 1);
         if (boss) {
             d.addCounter("boss_kills", 1);
+            // Одиночный рейд: рядом нет других игроков
+            boolean alone = level.getEntitiesOfClass(Player.class, dead.getBoundingBox().inflate(64), o -> o != p && !o.isSpectator()).isEmpty();
+            if (alone) d.addCounter("solo_boss", 1);
             d.bossesKilled.add(type);
         }
 
@@ -650,8 +630,6 @@ public final class CombatEvents {
             }
         }
         if (threat >= 8 && !boss) d.addCounter("giant_kills", 1);
-        int trance = d.skillRank("battle_trance");
-        if (trance > 0) p.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 60 + 20 * trance, trance >= 4 ? 1 : 0, false, false), p);
 
         // --- Пассивки на убийство ---
         int commander = d.skillRank("commander");
@@ -724,9 +702,8 @@ public final class CombatEvents {
         PlayerData d = Hunter.get(p);
         var effect = inst.getEffect();
         var e = effect.value();
-        boolean immune = (e == MobEffects.WITHER.value() && d.achievements.contains("witherbane"))
-                || (e == MobEffects.DARKNESS.value() && d.achievements.contains("deep_dark"))
-                || (e == MobEffects.POISON.value() && d.achievements.contains("arachnophobe") && p.getRandom().nextBoolean());
+        boolean immune = (e == MobEffects.WITHER.value() && d.titleIs("witherbane"))
+                || ((e == MobEffects.DARKNESS.value() || e == MobEffects.BLINDNESS.value()) && d.titleIs("deep_dark"));
         if (immune || p.getRandom().nextDouble() < StatFormulas.debuffResist(d)) {
             event.setResult(MobEffectEvent.Applicable.Result.DO_NOT_APPLY);
         }

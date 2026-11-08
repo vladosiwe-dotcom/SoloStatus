@@ -40,7 +40,6 @@ public final class SkillUnlockSystem {
         level.sendParticles(ParticleTypes.END_ROD, x, y + 1, z, 40, 0.3, 1.5, 0.3, 0.12);
         level.sendParticles(ParticleTypes.ENCHANT, x, y + 2, z, 80, 1, 1, 1, 1.0);
         level.playSound(null, x, y, z, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1f, 1.5f);
-        level.playSound(null, x, y, z, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.PLAYERS, 0.6f, 1.2f);
         Component title = Component.translatable(def.source == SkillSource.HIDDEN ? "solostatus.notice.hidden_skill" : "solostatus.notice.awakening");
         Notices.send(player, Notices.AWAKENING, title, def.name(), def.icon);
     }

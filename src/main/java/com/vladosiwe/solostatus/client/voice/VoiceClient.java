@@ -4,9 +4,8 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.vladosiwe.solostatus.SoloStatus;
 import com.vladosiwe.solostatus.client.ClientState;
 import com.vladosiwe.solostatus.client.Keys;
-import com.vladosiwe.solostatus.client.screen.Holo;
 import com.vladosiwe.solostatus.client.screen.InspectScreen;
-import com.vladosiwe.solostatus.client.screen.StatusScreen;
+import com.vladosiwe.solostatus.client.ui.SystemScreen;
 import com.vladosiwe.solostatus.config.SoloConfig;
 import com.vladosiwe.solostatus.network.Payloads;
 import com.vladosiwe.solostatus.voice.VoiceCommands;
@@ -185,13 +184,15 @@ public final class VoiceClient {
         lastHeardAt = System.currentTimeMillis();
         switch (cmd) {
             case OPEN_STATUS -> {
-                if (mc.screen == null || mc.screen instanceof InspectScreen) {
-                    mc.setScreen(new StatusScreen());
-                    Holo.chime();
-                }
+                if (mc.screen == null || mc.screen instanceof InspectScreen) mc.setScreen(new SystemScreen(SystemScreen.Win.STATUS));
             }
             case CLOSE_STATUS -> {
-                if (mc.screen instanceof StatusScreen || mc.screen instanceof InspectScreen) mc.screen.onClose();
+                if (mc.screen instanceof SystemScreen || mc.screen instanceof InspectScreen) mc.screen.onClose();
+            }
+            case OPEN_SKILLS -> {
+                if (mc.screen == null || mc.screen instanceof SystemScreen || mc.screen instanceof InspectScreen) {
+                    mc.setScreen(new SystemScreen(SystemScreen.Win.SKILLS));
+                }
             }
             case INSPECT -> {
                 if (mc.screen == null && mc.crosshairPickEntity instanceof Player target && target != mc.player) {

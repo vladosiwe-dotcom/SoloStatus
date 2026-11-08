@@ -5,7 +5,6 @@ import com.vladosiwe.solostatus.data.PlayerData;
 import com.vladosiwe.solostatus.network.Payloads;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.sounds.SoundEvents;
 
 /** Обработка пакетов сервера на клиенте. Загружается только на физическом клиенте. */
 public final class ClientPayloadHandler {
@@ -24,13 +23,26 @@ public final class ClientPayloadHandler {
 
     public static void notice(Payloads.Notice msg) {
         ClientState.addNotice(msg.kind(), msg.title(), msg.body(), msg.icon());
-        if (msg.kind() == 6) {
-            Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS, 0.6f));
-        }
+        // Голос/звук Системы для каждого типа события (заменяется ресурспаком)
+        var sound = switch (msg.kind()) {
+            case 1 -> com.vladosiwe.solostatus.registry.ModSounds.LEVEL_UP;
+            case 2 -> com.vladosiwe.solostatus.registry.ModSounds.AWAKENING;
+            case 3 -> com.vladosiwe.solostatus.registry.ModSounds.ACHIEVEMENT;
+            case 4 -> com.vladosiwe.solostatus.registry.ModSounds.HIDDEN_ACHIEVEMENT;
+            case 5 -> com.vladosiwe.solostatus.registry.ModSounds.RANK_UP;
+            case 6 -> com.vladosiwe.solostatus.registry.ModSounds.ERROR;
+            case 7 -> com.vladosiwe.solostatus.registry.ModSounds.TITLE;
+            default -> com.vladosiwe.solostatus.registry.ModSounds.NOTICE;
+        };
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(sound.get(), 1.0f, 0.9f));
     }
 
     public static void xpGain(Payloads.XpGain msg) {
         ClientState.addXpPopup(msg.reason(), msg.amount());
+    }
+
+    public static void presence(Payloads.Presence msg) {
+        com.vladosiwe.solostatus.client.presence.PresenceClient.update(msg.entityId(), msg.open(), msg.info());
     }
 
     public static void inspect(Payloads.InspectResult msg) {

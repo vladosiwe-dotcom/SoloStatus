@@ -19,7 +19,8 @@ public final class StatFormulas {
 
     /** Эффективные очки характеристики с мягким ограничением. */
     public static double eff(PlayerData d, Stat s) {
-        return effOf(d.stat(s));
+        // Титул «Охотник национального уровня»: +3 к каждой характеристике
+        return effOf(d.stat(s) + (d.titleIs("rank_national") ? 3 : 0));
     }
 
     public static double effOf(int value) {
@@ -41,7 +42,7 @@ public final class StatFormulas {
     }
 
     public static double dodgeChance(PlayerData d) {
-        return Math.min(CAP_DODGE, eff(d, Stat.AGI) * safe(SoloConfig.AGI_DODGE_PER_POINT, 0.0015));
+        return Math.min(CAP_DODGE, eff(d, Stat.AGI) * safe(SoloConfig.AGI_DODGE_PER_POINT, 0.0015)) + (d.titleIs("untouchable") ? 0.05 : 0);
     }
 
     public static double safeFall(PlayerData d) {
@@ -77,8 +78,7 @@ public final class StatFormulas {
     }
 
     public static double maxEnergy(PlayerData d) {
-        return 100 + d.level * 0.5 + eff(d, Stat.INT) * 1.5 + d.skillRank("arcane_mind") * 15
-                + (d.achievements.contains("magic_scholar") ? 20 : 0);
+        return 100 + d.level * 0.5 + eff(d, Stat.INT) * 1.5 + d.skillRank("arcane_mind") * 15;
     }
 
     /** Восстановление энергии в секунду. */
@@ -89,8 +89,7 @@ public final class StatFormulas {
     }
 
     public static double extraDropChance(PlayerData d) {
-        return Math.min(CAP_DROP, eff(d, Stat.LUCK) * safe(SoloConfig.LUCK_DROP_PER_POINT, 0.002))
-                + (d.achievements.contains("collector") ? 0.02 : 0);
+        return Math.min(CAP_DROP, eff(d, Stat.LUCK) * safe(SoloConfig.LUCK_DROP_PER_POINT, 0.002));
     }
 
     public static double luckAttribute(PlayerData d) {

@@ -157,6 +157,10 @@ public final class QualitySystem {
             roll(stack, Source.CRAFTED, p.getRandom(), StatFormulas.qualityBonus(Hunter.get(p)));
             return;
         }
+        if (q.tier() == QualityRarity.LEGENDARY) {
+            var d = Hunter.get(p);
+            if (d.counter("legendary_found") == 0) d.addCounter("legendary_found", 1);
+        }
         if (!q.broken() && stack.isDamageableItem() && stack.getDamageValue() >= stack.getMaxDamage() * 0.95) {
             apply(stack, q.withBroken());
             com.vladosiwe.solostatus.network.Notices.warn(p, "solostatus.notice.weapon_broken");

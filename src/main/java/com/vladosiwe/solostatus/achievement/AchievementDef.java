@@ -3,19 +3,22 @@ package com.vladosiwe.solostatus.achievement;
 import com.vladosiwe.solostatus.skill.Requirement;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 
 /**
  * Достижение охотника.
  *
- * @param hidden скрытое: не видно в списке до выполнения, название и награда раскрываются уведомлением
- * @param xp     награда опытом
- * @param sp     награда очками навыков (только за значимые достижения)
- * @param orbs   Сферы перерождения
- * @param perk   есть ли постоянный пассивный бонус (описан в solostatus.achievement.&lt;id&gt;.perk)
+ * @param hidden      скрытое: не видно до выполнения
+ * @param xp          опыт системы
+ * @param sp          очки навыков (только за значимые вехи)
+ * @param orbs        Сферы перерождения
+ * @param title       открывает титул с тем же названием (эффект — solostatus.achievement.&lt;id&gt;.title)
+ * @param rewardSkill редкий навык, который открывается этим достижением (сам навык требует это достижение)
  */
-public record AchievementDef(String id, boolean hidden, Item icon, List<Requirement> requirements, int xp, int sp, int orbs, boolean perk) {
+public record AchievementDef(String id, boolean hidden, Item icon, List<Requirement> requirements, int xp, int sp, int orbs,
+                             boolean title, @Nullable String rewardSkill) {
     public Component name() {
         return Component.translatable("solostatus.achievement." + id);
     }
@@ -24,7 +27,8 @@ public record AchievementDef(String id, boolean hidden, Item icon, List<Requirem
         return Component.translatable("solostatus.achievement." + id + ".desc");
     }
 
-    public Component perkText() {
-        return Component.translatable("solostatus.achievement." + id + ".perk");
+    /** Эффект титула (только для title = true). */
+    public Component titleEffect() {
+        return Component.translatable("solostatus.achievement." + id + ".title");
     }
 }

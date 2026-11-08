@@ -38,7 +38,6 @@ public final class ClassSystem {
         player.serverLevel().sendParticles(SkillFx.SYSTEM_DUST, player.getX(), player.getY() + 1, player.getZ(), 150, 1, 1.5, 1, 0.05);
         player.serverLevel().sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1, player.getZ(), 60, 0.4, 2, 0.4, 0.15);
         SkillFx.sound(player.serverLevel(), player.position(), SoundEvents.BEACON_ACTIVATE, 1f, 1f);
-        SkillFx.sound(player.serverLevel(), player.position(), SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, 0.7f, 0.9f);
         Notices.send(player, Notices.CLASS, Component.translatable("solostatus.notice.class_chosen"), hc.displayName(), hc.icon());
     }
 

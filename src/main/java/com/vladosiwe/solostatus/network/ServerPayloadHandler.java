@@ -38,6 +38,7 @@ public final class ServerPayloadHandler {
             d.stats[stat.ordinal()] += amount;
             AttributeSystem.apply(p);
             d.markDirty();
+            SystemPresence.refresh(p);
         });
     }
 
@@ -81,11 +82,21 @@ public final class ServerPayloadHandler {
         });
     }
 
+    public static void systemOpen(Payloads.SystemOpen msg, IPayloadContext ctx) {
+        run(ctx, p -> SystemPresence.setOpen(p, msg.open()));
+    }
+
+    public static void setTitle(Payloads.SetTitle msg, IPayloadContext ctx) {
+        if (msg.id().length() > 64) return;
+        run(ctx, p -> com.vladosiwe.solostatus.achievement.TitleSystem.equip(p, msg.id()));
+    }
+
     public static void setPrivacy(Payloads.SetPrivacy msg, IPayloadContext ctx) {
         run(ctx, p -> {
             PlayerData d = Hunter.get(p);
             d.privateProfile = msg.hidden();
             d.dirty = true;
+            SystemPresence.refresh(p);
         });
     }
 }

@@ -6,11 +6,9 @@ import com.vladosiwe.solostatus.network.Notices;
 import com.vladosiwe.solostatus.registry.ModItems;
 import com.vladosiwe.solostatus.skill.Requirement;
 import com.vladosiwe.solostatus.skill.SkillFx;
-import com.vladosiwe.solostatus.stats.AttributeSystem;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -39,15 +37,15 @@ public final class AchievementSystem {
             ItemStack orbs = new ItemStack(ModItems.RESET_ORB.get(), def.orbs());
             if (!player.getInventory().add(orbs)) player.drop(orbs, false);
         }
-        if (def.perk()) AttributeSystem.apply(player);
         d.markDirty();
 
         var level = player.serverLevel();
         level.sendParticles(def.hidden() ? ParticleTypes.TOTEM_OF_UNDYING : ParticleTypes.END_ROD,
                 player.getX(), player.getY() + 1.5, player.getZ(), 30, 0.4, 0.6, 0.4, 0.1);
-        SkillFx.sound(level, player.position(), def.hidden() ? SoundEvents.UI_TOAST_CHALLENGE_COMPLETE : SoundEvents.PLAYER_LEVELUP, 0.8f, 1.2f);
 
-        Component body = def.perk() ? Component.translatable("solostatus.notice.achievement.perk", def.description(), def.perkText()) : def.description();
+        Component body = def.title() ? Component.translatable("solostatus.notice.achievement.title", def.description())
+                : def.rewardSkill() != null ? Component.translatable("solostatus.notice.achievement.skill", def.description())
+                : def.description();
         Notices.send(player, def.hidden() ? Notices.HIDDEN_ACHIEVEMENT : Notices.ACHIEVEMENT, def.name(), body, def.icon());
         if (def.xp() > 0) LevelSystem.grantXp(player, def.xp(), com.vladosiwe.solostatus.level.XpReason.ACHIEVEMENT);
     }

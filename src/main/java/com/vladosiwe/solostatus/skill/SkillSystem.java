@@ -118,6 +118,7 @@ public final class SkillSystem {
 
         boolean ok;
         try {
+            if (com.vladosiwe.solostatus.compat.CompatManager.playSkillAnimation(player, id)) d.animatedTick = now;
             ok = def.effect.execute(new SkillContext(player, player.serverLevel(), d, def, rank));
         } catch (Exception e) {
             SoloStatus.LOGGER.error("Ошибка навыка {}", id, e);
@@ -135,7 +136,7 @@ public final class SkillSystem {
     }
 
     public static float energyCost(PlayerData d, SkillDef def) {
-        return (float) (def.energyCost * (1 - d.skillRank("arcane_flow") * 0.06) * (d.achievements.contains("skill_master") ? 0.95 : 1.0));
+        return (float) (def.energyCost * (1 - d.skillRank("arcane_flow") * 0.06));
     }
 
     public static int cooldownFor(PlayerData d, SkillDef def, int rank) {
@@ -181,6 +182,7 @@ public final class SkillSystem {
             }
             d.freeStatPoints += Math.max(0, invested - classBonus);
         }
+        d.addCounter("respecs", 1);
         AttributeSystem.apply(player);
         d.energy = Math.min(d.energy, (float) StatFormulas.maxEnergy(d));
         d.markDirty();

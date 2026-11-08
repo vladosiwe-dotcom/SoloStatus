@@ -7,6 +7,7 @@ import com.vladosiwe.solostatus.registry.ModAttachments;
 import com.vladosiwe.solostatus.registry.ModComponents;
 import com.vladosiwe.solostatus.registry.ModItems;
 import com.vladosiwe.solostatus.registry.ModLootModifiers;
+import com.vladosiwe.solostatus.registry.ModSounds;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
@@ -29,6 +30,7 @@ public final class SoloStatus {
         ModComponents.COMPONENTS.register(modBus);
         ModItems.ITEMS.register(modBus);
         ModLootModifiers.SERIALIZERS.register(modBus);
+        ModSounds.SOUNDS.register(modBus);
 
         container.registerConfig(ModConfig.Type.SERVER, SoloConfig.SPEC);
         container.registerConfig(ModConfig.Type.CLIENT, SoloConfig.CLIENT_SPEC);

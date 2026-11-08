@@ -30,6 +30,8 @@ public final class ModNetwork {
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.notice(p)));
         r.playToClient(Payloads.XpGain.TYPE, Payloads.XpGain.CODEC,
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.xpGain(p)));
+        r.playToClient(Payloads.Presence.TYPE, Payloads.Presence.CODEC,
+                (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.presence(p)));
         r.playToClient(Payloads.InspectResult.TYPE, Payloads.InspectResult.CODEC,
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.inspect(p)));
 
@@ -42,6 +44,8 @@ public final class ModNetwork {
         r.playToServer(Payloads.Respec.TYPE, Payloads.Respec.CODEC, ServerPayloadHandler::respec);
         r.playToServer(Payloads.InspectRequest.TYPE, Payloads.InspectRequest.CODEC, ServerPayloadHandler::inspect);
         r.playToServer(Payloads.MarkSeen.TYPE, Payloads.MarkSeen.CODEC, ServerPayloadHandler::markSeen);
+        r.playToServer(Payloads.SystemOpen.TYPE, Payloads.SystemOpen.CODEC, ServerPayloadHandler::systemOpen);
+        r.playToServer(Payloads.SetTitle.TYPE, Payloads.SetTitle.CODEC, ServerPayloadHandler::setTitle);
         r.playToServer(Payloads.SetPrivacy.TYPE, Payloads.SetPrivacy.CODEC, ServerPayloadHandler::setPrivacy);
     }
 }

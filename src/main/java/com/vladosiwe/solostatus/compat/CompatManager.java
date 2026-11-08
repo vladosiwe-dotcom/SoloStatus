@@ -38,6 +38,11 @@ public final class CompatManager {
         return epicFight;
     }
 
+    /** Анимация Epic Fight для навыка (только визуальная). false — Epic Fight нет или анимация не задана. */
+    public static boolean playSkillAnimation(ServerPlayer player, String skillId) {
+        return epicFight && EpicFightCompat.playAnimation(player, com.vladosiwe.solostatus.skill.SkillAnimations.forSkill(skillId));
+    }
+
     public static void applyMagicAttributes(ServerPlayer player, PlayerData d) {
         if (irons) IronsSpellsCompat.applyAttributes(player, d);
     }

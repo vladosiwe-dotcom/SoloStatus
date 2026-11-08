@@ -94,6 +94,13 @@ public final class ServerEvents {
                 d.counters.put("sprint_m", meters);
                 d.unlockCheckPending = true;
             }
+            // Титулы с постоянным эффектом
+            if (d.titleIs("undying") && p.getHealth() < p.getMaxHealth() * 0.3f) {
+                p.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.REGENERATION, 110, 0, false, false, true));
+            }
+            if (d.titleIs("night_hunter") && p.serverLevel().isNight()) {
+                p.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.NIGHT_VISION, 320, 0, false, false, true));
+            }
             // Чутьё охотника: подсветка враждебных существ рядом
             int sense = d.skillRank("hunter_sense");
             if (sense > 0) {

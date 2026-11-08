@@ -62,6 +62,25 @@ public final class Payloads {
         @Override public Type<XpGain> type() { return TYPE; }
     }
 
+    /** Окно Системы другого игрока открыто/закрыто (публичные данные для голограммы). */
+    public record Presence(int entityId, boolean open, CompoundTag info) implements CustomPacketPayload {
+        public static final Type<Presence> TYPE = Payloads.typeOf("presence");
+        public static final StreamCodec<ByteBuf, Presence> CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT, Presence::entityId,
+                ByteBufCodecs.BOOL, Presence::open,
+                ByteBufCodecs.COMPOUND_TAG, Presence::info,
+                Presence::new);
+        @Override public Type<Presence> type() { return TYPE; }
+    }
+
+    /** Клиент открыл/закрыл окно Системы. */
+    public record SystemOpen(boolean open) implements CustomPacketPayload {
+        public static final Type<SystemOpen> TYPE = Payloads.typeOf("system_open");
+        public static final StreamCodec<ByteBuf, SystemOpen> CODEC =
+                StreamCodec.composite(ByteBufCodecs.BOOL, SystemOpen::open, SystemOpen::new);
+        @Override public Type<SystemOpen> type() { return TYPE; }
+    }
+
     /** Результат осмотра другого игрока: только разрешённые поля. */
     public record InspectResult(int entityId, CompoundTag tag) implements CustomPacketPayload {
         public static final Type<InspectResult> TYPE = Payloads.typeOf("inspect_result");
@@ -143,6 +162,14 @@ public final class Payloads {
         public static final StreamCodec<ByteBuf, MarkSeen> CODEC =
                 StreamCodec.composite(ByteBufCodecs.VAR_INT, MarkSeen::what, MarkSeen::new);
         @Override public Type<MarkSeen> type() { return TYPE; }
+    }
+
+    /** Надеть титул (пустая строка — снять). */
+    public record SetTitle(String id) implements CustomPacketPayload {
+        public static final Type<SetTitle> TYPE = Payloads.typeOf("set_title");
+        public static final StreamCodec<ByteBuf, SetTitle> CODEC =
+                StreamCodec.composite(ByteBufCodecs.STRING_UTF8, SetTitle::id, SetTitle::new);
+        @Override public Type<SetTitle> type() { return TYPE; }
     }
 
     public record SetPrivacy(boolean hidden) implements CustomPacketPayload {

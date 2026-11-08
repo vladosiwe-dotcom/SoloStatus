@@ -60,20 +60,18 @@ public final class IronsSpellsCompat {
         if (d.hunterClass == HunterClass.MAGE) spellPower += 0.05;
         set(p, "spell_power", spellPower, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         set(p, "max_mana", Math.min(200, StatFormulas.eff(d, Stat.INT) * 2), AttributeModifier.Operation.ADD_VALUE);
-        double regen = Math.min(0.30, StatFormulas.eff(d, Stat.INT) * 0.005) + d.skillRank("arcane_flow") * 0.05 + d.skillRank("mana_surge") * 0.02;
+        double regen = Math.min(0.30, StatFormulas.eff(d, Stat.INT) * 0.005) + d.skillRank("arcane_flow") * 0.05;
         set(p, "mana_regen", regen, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         set(p, "cooldown_reduction", d.skillRank("arcane_flow") * 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 
         int att = d.skillRank("elemental_attunement");
         int flow = d.skillRank("arcane_flow");
         int grace = d.skillRank("divine_grace");
-        int affinity = d.skillRank("school_affinity");
         for (String school : SCHOOLS) {
             double v = 0;
             if (att > 0 && (school.equals("fire") || school.equals("ice") || school.equals("lightning"))) v += 0.03 * att;
             if (flow > 0 && (school.equals("ender") || school.equals("evocation") || school.equals("eldritch"))) v += 0.02 * flow;
             if (grace > 0 && (school.equals("holy") || school.equals("nature"))) v += 0.04 * grace;
-            if (affinity > 0 && com.vladosiwe.solostatus.combat.CombatEvents.bestMagicIs(d, school)) v += 0.03 * affinity;
             set(p, school + "_spell_power", v, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         }
     }

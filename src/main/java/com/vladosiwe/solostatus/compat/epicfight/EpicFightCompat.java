@@ -1,27 +1,183 @@
 package com.vladosiwe.solostatus.compat.epicfight;
 
 import com.vladosiwe.solostatus.SoloStatus;
+import com.vladosiwe.solostatus.combat.Threat;
+import com.vladosiwe.solostatus.data.Hunter;
+import com.vladosiwe.solostatus.data.PlayerData;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
- * Интеграция с Epic Fight.
+ * Интеграция с Epic Fight без compile-зависимости (через отражение).
  *
- * Что работает уже сейчас (без compile-зависимости):
- *  - атаки Epic Fight наносят урон через стандартные события урона NeoForge, поэтому к ним применяются
- *    STR/PER/крит/мастерство/качество оружия/пассивки — Solo Status не создаёт вторую боевую систему;
- *  - AGI повышает атрибут скорости атаки, от которого Epic Fight масштабирует скорость анимаций атак;
- *  - блоки щитом Epic Fight, если они проходят через ванильный механизм щита, засчитываются как блоки.
+ * Все имена классов и методов сверены с epic-fight-21.17.3.1-mc1.21.1-neoforge.jar (javap):
+ *  - EpicFightCapabilities.getServerPlayerPatchAsOptional(Entity) → Optional&lt;ServerPlayerPatch&gt;
+ *  - LivingEntityPatch.playAnimationInClientSide(AssetAccessor, float) — анимация видна игроку и всем вокруг,
+ *    но сервер НЕ выполняет фазы атаки анимации: урон остаётся за навыком системы (нет двойного урона).
+ *  - Animations.&lt;ИМЯ&gt; (static AnimationAccessor) — заполняются Epic Fight при загрузке анимаций.
+ *  - EpicFightEventHooks$Entity.ON_DODGE (DodgeEvent) — успешное уклонение.
+ *  - EpicFightEventHooks$Entity.TAKE_DAMAGE_INCOME (TakeDamageEvent$Income: isParried(), getResult()) —
+ *    парирование и блок навыками защиты Epic Fight. Подписка с низким приоритетом, чтобы прочитать результат
+ *    после того, как навык защиты Epic Fight обработал удар.
  *
- * Что требует API-jar Epic Fight для вашей версии (см. docs/INTEGRATIONS.md):
- *  - проигрывание анимаций Epic Fight при применении активных навыков;
- *  - засчитывание уклонений (dodge) и парирований (guard/parry) Epic Fight в счётчики пробуждения;
- *  - регистрация навыков системы как Skill Epic Fight.
- * Эти части намеренно не реализованы «вслепую»: без проверки API они бы стали фиктивными методами.
+ * Если что-то не найдено (другая версия Epic Fight), соответствующая часть отключается с сообщением в логе.
  */
 public final class EpicFightCompat {
+    private static final String CAPS = "yesman.epicfight.world.capabilities.EpicFightCapabilities";
+    private static final String LIVING_PATCH = "yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch";
+    private static final String ENTITY_PATCH = "yesman.epicfight.world.capabilities.entitypatch.EntityPatch";
+    private static final String ANIMATIONS = "yesman.epicfight.gameasset.Animations";
+    private static final String ASSET_ACCESSOR = "yesman.epicfight.api.asset.AssetAccessor";
+    private static final String HOOKS_ENTITY = "yesman.epicfight.api.event.EpicFightEventHooks$Entity";
+    private static final String EVENT_HOOK = "yesman.epicfight.api.event.EventHook";
+    private static final String SUBSCRIPTION = "yesman.epicfight.api.event.subscription.DefaultEventSubscription";
+    private static final String PATCH_EVENT = "yesman.epicfight.api.event.LivingEntityPatchEvent";
+    private static final String INCOME_EVENT = "yesman.epicfight.api.event.types.entity.TakeDamageEvent$Income";
+
+    private static boolean animationsReady;
+    private static Method getPatch;
+    private static Method playClientSide;
+    private static Class<?> animationsClass;
+    private static final Map<String, Object> ANIM_CACHE = new HashMap<>();
+
     private EpicFightCompat() {}
 
     public static void init() {
-        SoloStatus.LOGGER.info("Epic Fight обнаружен: бонусы системы применяются к атакам Epic Fight через события урона. " +
-                "Анимации навыков и счётчики парирований/уклонений Epic Fight подключаются отдельным модулем (docs/INTEGRATIONS.md).");
+        try {
+            Class<?> caps = Class.forName(CAPS);
+            getPatch = caps.getMethod("getServerPlayerPatchAsOptional", Entity.class);
+            Class<?> living = Class.forName(LIVING_PATCH);
+            playClientSide = living.getMethod("playAnimationInClientSide", Class.forName(ASSET_ACCESSOR), float.class);
+            animationsClass = Class.forName(ANIMATIONS);
+            animationsReady = true;
+            SoloStatus.LOGGER.info("Epic Fight: анимации навыков подключены");
+        } catch (Throwable t) {
+            SoloStatus.LOGGER.warn("Epic Fight: анимации навыков недоступны ({}). Навыки будут использовать ванильный взмах.", t.toString());
+        }
+        try {
+            hookDodge();
+            hookTakeDamage();
+            SoloStatus.LOGGER.info("Epic Fight: уклонения и парирования засчитываются в прогресс системы");
+        } catch (Throwable t) {
+            SoloStatus.LOGGER.warn("Epic Fight: события уклонения/парирования недоступны ({})", t.toString());
+        }
+    }
+
+    // ============================== Анимации ==============================
+
+    /**
+     * Проиграть анимацию Epic Fight (только визуально). Возвращает false, если Epic Fight нет
+     * или анимация не найдена — тогда вызывающий код делает обычный взмах.
+     */
+    public static boolean playAnimation(ServerPlayer player, String animationName) {
+        if (!animationsReady || animationName == null) return false;
+        try {
+            Optional<?> patch = (Optional<?>) getPatch.invoke(null, player);
+            if (patch.isEmpty()) return false;
+            Object anim = animation(animationName);
+            if (anim == null) return false;
+            playClientSide.invoke(patch.get(), anim, 0.0f);
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    private static Object animation(String name) {
+        Object cached = ANIM_CACHE.get(name);
+        if (cached != null) return cached;
+        try {
+            Field f = animationsClass.getField(name);
+            Object value = f.get(null); // поля заполняются после регистрации анимаций Epic Fight
+            if (value != null) ANIM_CACHE.put(name, value);
+            return value;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    // ============================== События ==============================
+
+    private static void hookDodge() throws Exception {
+        Object hook = Class.forName(HOOKS_ENTITY).getField("ON_DODGE").get(null);
+        register(hook, event -> {
+            ServerPlayer p = playerOf(event);
+            if (p == null) return;
+            PlayerData d = Hunter.get(p);
+            long now = p.serverLevel().getGameTime();
+            if (now - d.lastBlockTick > 10) d.addCounter("dodges", 1);
+            d.lastBlockTick = now; // окно контратаки
+        });
+    }
+
+    private static void hookTakeDamage() throws Exception {
+        Object hook = Class.forName(HOOKS_ENTITY).getField("TAKE_DAMAGE_INCOME").get(null);
+        Class<?> income = Class.forName(INCOME_EVENT);
+        Method isParried = income.getMethod("isParried");
+        Method getResult = income.getMethod("getResult");
+        Method getSource = income.getMethod("getDamageSource");
+        register(hook, event -> {
+            try {
+                if (!income.isInstance(event)) return;
+                ServerPlayer p = playerOf(event);
+                if (p == null) return;
+                boolean parried = (Boolean) isParried.invoke(event);
+                Object result = getResult.invoke(event);
+                boolean blocked = result != null && "BLOCKED".equals(((Enum<?>) result).name());
+                if (!parried && !blocked) return;
+                PlayerData d = Hunter.get(p);
+                long now = p.serverLevel().getGameTime();
+                var source = (net.minecraft.world.damagesource.DamageSource) getSource.invoke(event);
+                double fairness = source.getEntity() instanceof LivingEntity le ? Threat.fairness(le, p) : 0;
+                if (now - d.lastBlockTick > 10 && fairness > 0.2) {
+                    d.addCounter("blocks", 1);
+                    if (parried) d.addCounter("perfect_guards", 1);
+                }
+                d.lastBlockTick = now;
+            } catch (Throwable ignored) {
+            }
+        });
+    }
+
+    /** Глобальная подписка на хук Epic Fight с низким приоритетом (выполняется после навыков защиты). */
+    private static void register(Object hook, Consumer<Object> handler) throws Exception {
+        Class<?> subType = Class.forName(SUBSCRIPTION);
+        InvocationHandler ih = (proxy, method, args) -> switch (method.getName()) {
+            case "fire" -> {
+                try {
+                    handler.accept(args[0]);
+                } catch (Throwable t) {
+                    // ошибки обработчика не должны ломать Epic Fight
+                }
+                yield null;
+            }
+            case "hashCode" -> System.identityHashCode(proxy);
+            case "equals" -> proxy == args[0];
+            case "toString" -> "SoloStatusEpicFightListener";
+            default -> null;
+        };
+        Object subscription = Proxy.newProxyInstance(subType.getClassLoader(), new Class<?>[]{subType}, ih);
+        Method registerEvent = Class.forName(EVENT_HOOK).getMethod("registerEvent", subType, int.class);
+        registerEvent.invoke(hook, subscription, -100);
+    }
+
+    private static ServerPlayer playerOf(Object event) {
+        try {
+            Object patch = Class.forName(PATCH_EVENT).getMethod("getEntityPatch").invoke(event);
+            Object original = Class.forName(ENTITY_PATCH).getMethod("getOriginal").invoke(patch);
+            return original instanceof ServerPlayer sp ? sp : null;
+        } catch (Throwable t) {
+            return null;
+        }
     }
 }

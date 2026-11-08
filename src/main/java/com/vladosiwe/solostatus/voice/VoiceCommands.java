@@ -10,7 +10,7 @@ import java.util.Map;
  * что повышает точность и снижает ложные срабатывания на обычную речь.
  */
 public final class VoiceCommands {
-    public enum Command { OPEN_STATUS, CLOSE_STATUS, INSPECT, SKILL_1, SKILL_2, SKILL_3, SKILL_4, NONE }
+    public enum Command { OPEN_STATUS, OPEN_SKILLS, CLOSE_STATUS, INSPECT, SKILL_1, SKILL_2, SKILL_3, SKILL_4, NONE }
 
     private static final Map<String, Command> RU = new LinkedHashMap<>();
     private static final Map<String, Command> EN = new LinkedHashMap<>();
@@ -22,6 +22,8 @@ public final class VoiceCommands {
         RU.put("покажи статус", Command.OPEN_STATUS);
         RU.put("открыть статус", Command.OPEN_STATUS);
         RU.put("окно статуса", Command.OPEN_STATUS);
+        RU.put("система навыки", Command.OPEN_SKILLS);
+        RU.put("система покажи навыки", Command.OPEN_SKILLS);
         RU.put("система закрой", Command.CLOSE_STATUS);
         RU.put("система закрой статус", Command.CLOSE_STATUS);
         RU.put("закрой статус", Command.CLOSE_STATUS);
@@ -37,6 +39,8 @@ public final class VoiceCommands {
         EN.put("system status", Command.OPEN_STATUS);
         EN.put("show status", Command.OPEN_STATUS);
         EN.put("status window", Command.OPEN_STATUS);
+        EN.put("system skills", Command.OPEN_SKILLS);
+        EN.put("system show skills", Command.OPEN_SKILLS);
         EN.put("system close", Command.CLOSE_STATUS);
         EN.put("close status", Command.CLOSE_STATUS);
         EN.put("system inspect", Command.INSPECT);

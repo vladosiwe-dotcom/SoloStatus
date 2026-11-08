@@ -10,7 +10,7 @@
 | NeoForge | 21.1.x (в проекте 21.1.172) | обязательно | https://projects.neoforged.net/neoforged/neoforge |
 | ModDevGradle | 2.0.x | сборка | https://projects.neoforged.net/neoforged/moddevgradle |
 | Java | 21 | сборка | https://adoptium.net/ |
-| Epic Fight | ветка для 1.21.1 NeoForge | необязательно | https://www.curseforge.com/minecraft/mc-mods/epic-fight-mod · https://github.com/Epic-Fight/epicfight |
+| Epic Fight | 21.17.3.1 (проверено по jar) | необязательно | https://www.curseforge.com/minecraft/mc-mods/epic-fight-mod · https://github.com/Epic-Fight/epicfight |
 | Iron's Spells 'n Spellbooks | ветка для 1.21.1 NeoForge | необязательно | https://www.curseforge.com/minecraft/mc-mods/irons-spells-n-spellbooks · https://github.com/iron431/irons-spells-n-spellbooks |
 | Legendary Tooltips | ветка для 1.21.1 NeoForge | необязательно | https://www.curseforge.com/minecraft/mc-mods/legendary-tooltips |
 | Vosk (распознавание речи) | 0.3.45 (проверено: API и нативная библиотека) | встроено в мод | https://central.sonatype.com/artifact/com.alphacephei/vosk · https://alphacephei.com/vosk/models |
@@ -32,17 +32,19 @@
 | Iron's: событие `io.redspace.ironsspellbooks.api.events.SpellOnCastEvent` с методами `getEntity`, `getSchoolType`, `getSpellLevel` | Подключается через отражение | Названия могли измениться | В логе будет предупреждение. Мастерство магии продолжит расти от урона заклинаниями |
 | Iron's: названия атрибутов | По id реестра | Переименование | Модификатор не применится, ошибки не будет |
 | Iron's: имена типов урона `*_magic` | Разбор id | Другое именование | Мастерство будет записано под полным именем типа |
-| Epic Fight: блок/парирование через ванильный `LivingShieldBlockEvent` | Стандартное событие | Epic Fight может обрабатывать guard своим механизмом | Подключить события Epic Fight (см. ниже) |
 
-## Что требует API-jar Epic Fight (следующий этап)
+## Epic Fight — реализовано по настоящему API
 
-Чтобы не создавать фиктивные методы, следующие части **не реализованы**, а изолированы в `compat/epicfight`:
+Интеграция построена по jar `epic-fight-21.17.3.1-mc1.21.1-neoforge.jar`: все классы, методы и поля сверены через `javap`. Вызовы идут через отражение, поэтому мод собирается и работает без Epic Fight.
 
-1. **Анимации навыков.** Сейчас навыки используют ванильный взмах, частицы и звуки. Нужно получить `PlayerPatch` через capability Epic Fight и вызвать проигрывание анимации из его реестра анимаций.
-2. **Уклонения и парирования Epic Fight в счётчики пробуждения.** Нужно подписаться на события Epic Fight (dodge / guard / parry success) и вызывать `PlayerData.addCounter("dodges" | "perfect_guards" | "counters")`.
-3. **Регистрация навыков системы как Skill Epic Fight** (по желанию).
+| Что | API Epic Fight | Поведение |
+|---|---|---|
+| Анимации навыков | `LivingEntityPatch.playAnimationInClientSide(AssetAccessor, float)`, `Animations.<ИМЯ>` | Анимацию видят сам игрок и все вокруг. Сервер не запускает фазы атаки анимации, поэтому **урон не удваивается**: его считает навык Системы. 21 анимация, все имена проверены. Список в `skill/SkillAnimations.java` |
+| Уклонения | `EpicFightEventHooks$Entity.ON_DODGE` (`DodgeEvent`) | засчитываются в счётчик уклонений и открывают окно контратаки |
+| Парирование и блок | `EpicFightEventHooks$Entity.TAKE_DAMAGE_INCOME` (`TakeDamageEvent$Income.isParried()`, `getResult() == BLOCKED`) | парирование → «идеальная защита», блок → «блоки». Подписка с приоритетом −100, чтобы прочитать результат после навыка защиты Epic Fight |
+| Урон атак | стандартные события урона NeoForge | все бонусы Системы применяются к атакам Epic Fight |
 
-Как подключить: добавить в `build.gradle` репозиторий и `compileOnly` / `localRuntime` зависимость на Epic Fight нужной версии (или положить jar в `libs/` и подключить `compileOnly files('libs/epicfight-....jar')`). Затем реализовать вызовы в `EpicFightCompat` и обращаться к нему только при `CompatManager.epicFightLoaded()`.
+Если какой-то части API нет (другая версия Epic Fight), она отключается с сообщением в логе, а остальное работает.
 
 ## Голосовые команды (Vosk) — реализовано
 
