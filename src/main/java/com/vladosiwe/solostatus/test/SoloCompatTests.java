@@ -64,6 +64,18 @@ public final class SoloCompatTests {
         h.assertTrue(EpicFightCompat.animationsReady(), "Epic Fight animations are not connected: " + EpicFightCompat.animationsError());
         h.assertTrue(EpicFightCompat.eventsHooked(), "Epic Fight dodge/parry events are not connected: " + EpicFightCompat.eventsError());
         h.assertTrue(EpicFightCompat.patchAccessReady(), "Epic Fight dodge/parry handlers cannot reach the player");
+        h.assertTrue(EpicFightCompat.modeSwitchReady(), "Epic Fight mode switching is not connected: " + EpicFightCompat.modeError());
+        h.assertTrue(com.vladosiwe.solostatus.combat.WeaponClassifier.isCombatWeapon(new ItemStack(Items.IRON_SWORD))
+                && !com.vladosiwe.solostatus.combat.WeaponClassifier.isCombatWeapon(new ItemStack(Items.IRON_PICKAXE))
+                && !com.vladosiwe.solostatus.combat.WeaponClassifier.isCombatWeapon(new ItemStack(Items.IRON_AXE))
+                && !com.vladosiwe.solostatus.combat.WeaponClassifier.isCombatWeapon(ItemStack.EMPTY), "weapon / tool split is wrong");
+        ServerPlayer fighter = TestPlayers.create(h);
+        if (EpicFightCompat.battleMode(fighter) != null) { // a test player has an Epic Fight patch only if it joined the level
+            EpicFightCompat.matchModeToHeldItem(fighter, true);
+            h.assertTrue(Boolean.TRUE.equals(EpicFightCompat.battleMode(fighter)), "a weapon did not switch to battle mode");
+            EpicFightCompat.matchModeToHeldItem(fighter, false);
+            h.assertTrue(Boolean.FALSE.equals(EpicFightCompat.battleMode(fighter)), "a tool did not switch to vanilla mode");
+        }
         List<String> missing = EpicFightCompat.missingAnimations(SkillAnimations.allAnimations());
         h.assertTrue(missing.isEmpty(), "animations missing in this Epic Fight version: " + missing);
         h.succeed();
