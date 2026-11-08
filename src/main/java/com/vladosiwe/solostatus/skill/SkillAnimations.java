@@ -52,4 +52,9 @@ public final class SkillAnimations {
     public static String forSkill(String skillId) {
         return MAP.get(skillId);
     }
+
+    /** Все имена анимаций Epic Fight, которые используют навыки. */
+    public static java.util.Collection<String> allAnimations() {
+        return new java.util.TreeSet<>(MAP.values());
+    }
 }

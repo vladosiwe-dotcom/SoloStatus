@@ -17,7 +17,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build the mod
         run: ./gradlew build --no-daemon --stacktrace
+      - name: Add Epic Fight and Iron's Spells for the integration tests
+        run: python3 tools/fetch_mods.py run/mods /tmp/client-mods "$GITHUB_STEP_SUMMARY" required:epic-fight required:irons-spells-n-spellbooks+irons-lib+curios+geckolib+playeranimator
       - name: Start a dedicated server with the mod (smoke test)
+        env:
+          SOLO_COMPAT_REQUIRED: '1'
         # The game test server can exit with code 0 even when it fails to start, so the log decides.
         run: |
           set -o pipefail

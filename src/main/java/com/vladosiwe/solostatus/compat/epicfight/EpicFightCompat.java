@@ -45,6 +45,7 @@ public final class EpicFightCompat {
     private static final String INCOME_EVENT = "yesman.epicfight.api.event.types.entity.TakeDamageEvent$Income";
 
     private static boolean animationsReady;
+    private static boolean eventsHooked;
     private static Method getPatch;
     private static Method playClientSide;
     private static Class<?> animationsClass;
@@ -67,10 +68,24 @@ public final class EpicFightCompat {
         try {
             hookDodge();
             hookTakeDamage();
+            eventsHooked = true;
             SoloStatus.LOGGER.info("Epic Fight: уклонения и парирования засчитываются в прогресс системы");
         } catch (Throwable t) {
             SoloStatus.LOGGER.warn("Epic Fight: события уклонения/парирования недоступны ({})", t.toString());
         }
+    }
+
+    /** Для проверки интеграции: анимации и события Epic Fight подключены. */
+    public static boolean animationsReady() { return animationsReady; }
+    public static boolean eventsHooked() { return eventsHooked; }
+
+    /** Имена анимаций, которых нет в этой версии Epic Fight (проверяется наличие поля в классе Animations). */
+    public static java.util.List<String> missingAnimations(java.util.Collection<String> names) {
+        java.util.List<String> missing = new java.util.ArrayList<>();
+        for (String n : names) {
+            try { animationsClass.getField(n); } catch (Throwable t) { missing.add(n); }
+        }
+        return missing;
     }
 
     // ============================== Анимации ==============================

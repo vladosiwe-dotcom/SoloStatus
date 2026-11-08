@@ -42,7 +42,12 @@ public final class IronsSpellsCompat {
     public static final String MODID = "irons_spellbooks";
     private static final String[] SCHOOLS = {"fire", "ice", "lightning", "holy", "ender", "blood", "evocation", "nature", "eldritch"};
 
+    private static boolean castHooked;
+
     private IronsSpellsCompat() {}
+
+    /** Для проверки интеграции: событие применения заклинаний подключено. */
+    public static boolean castHooked() { return castHooked; }
 
     public static void init() {
         hookSpellCast();
@@ -101,6 +106,7 @@ public final class IronsSpellsCompat {
             Method getLevel = cls.getMethod("getSpellLevel");
             Consumer listener = ev -> onCast(ev, getEntity, getSchool, getLevel);
             NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, false, (Class<Event>) cls, (Consumer<Event>) listener);
+            castHooked = true;
             SoloStatus.LOGGER.info("Iron's Spells: отслеживание применения заклинаний подключено");
         } catch (Throwable t) {
             SoloStatus.LOGGER.warn("Iron's Spells: событие применения заклинаний недоступно в этой версии ({}). " +
