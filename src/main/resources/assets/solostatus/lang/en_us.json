@@ -770,5 +770,8 @@
   "solostatus.affix.debuff_resist": "effect resistance",
   "solostatus.affix.xp_gain": "System XP",
   "solostatus.affix.mastery_gain": "mastery growth",
-  "solostatus.affix.luck": "luck"
+  "solostatus.affix.luck": "luck",
+  "solostatus.notice.awakened": "Awakening",
+  "solostatus.notice.awakened.desc": "The System has chosen you. Open the System window and choose a class.",
+  "solostatus.notice.awakened.desc_class": "The System is with you again."
 }

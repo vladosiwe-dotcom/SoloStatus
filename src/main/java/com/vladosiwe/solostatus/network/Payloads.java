@@ -182,6 +182,14 @@ public final class Payloads {
         @Override public Type<AccessorySync> type() { return TYPE; }
     }
 
+    /** A hunter's awakening scene: who, and how many ticks of it have already passed (for players who see it late). */
+    public record Awakening(int entityId, int elapsed) implements CustomPacketPayload {
+        public static final Type<Awakening> TYPE = Payloads.typeOf("awakening");
+        public static final StreamCodec<ByteBuf, Awakening> CODEC = StreamCodec.composite(
+                ByteBufCodecs.VAR_INT, Awakening::entityId, ByteBufCodecs.VAR_INT, Awakening::elapsed, Awakening::new);
+        @Override public Type<Awakening> type() { return TYPE; }
+    }
+
     /** Take a ring/amulet out of a System slot. */
     public record UnequipAccessory(int slot) implements CustomPacketPayload {
         public static final Type<UnequipAccessory> TYPE = Payloads.typeOf("unequip_accessory");

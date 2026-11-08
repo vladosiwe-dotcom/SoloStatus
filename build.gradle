@@ -50,9 +50,15 @@ neoForge {
 repositories {
     mavenLocal()
     mavenCentral()
+    // GeckoLib (https://github.com/bernie-g/geckolib/wiki/Installation)
+    maven { url = 'https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/' }
 }
 
 dependencies {
+    // GeckoLib 4 для 1.21.1 (ветка 1.21.1 репозитория, требует NeoForge 21.1.150+). Только для компиляции:
+    // в игре мод работает и без неё (сцена пробуждения тогда упрощённая), а с Iron's Spells она уже стоит.
+    compileOnly("software.bernie.geckolib:geckolib-neoforge-${minecraft_version}:${geckolib_version}") { transitive = false }
+
     // Ядро мода не имеет жёстких зависимостей от Epic Fight и Iron's Spells:
     // интеграции изолированы в пакете compat и включаются только если мод установлен.
 

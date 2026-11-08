@@ -47,6 +47,8 @@ public final class ModNetwork {
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.presence(p)));
         r.playToClient(Payloads.AccessorySync.TYPE, Payloads.AccessorySync.CODEC,
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.accessories(p)));
+        r.playToClient(Payloads.Awakening.TYPE, Payloads.Awakening.CODEC,
+                (p, ctx) -> ctx.enqueueWork(() -> com.vladosiwe.solostatus.client.awakening.AwakeningClient.onPacket(p)));
         r.playToClient(Payloads.InspectResult.TYPE, Payloads.InspectResult.CODEC,
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.inspect(p)));
 
