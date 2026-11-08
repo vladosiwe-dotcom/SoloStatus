@@ -187,4 +187,43 @@ public final class SoloCompatTests {
         h.assertTrue(com.vladosiwe.solostatus.stats.StatFormulas.usesMana(d), "Mage must use mana");
         h.succeed();
     }
+
+    /**
+     * RPG Series (Spell Engine / Spell Power): INT reaches the school attributes, a spell's damage type names its
+     * school. Runs when the mods are present; CI runs it in a separate pass with SOLO_RPG_REQUIRED=1.
+     */
+    @GameTest(template = "empty")
+    public static void rpgSeriesIntegration(GameTestHelper h) {
+        if (!ModList.get().isLoaded("spell_power")) {
+            if ("1".equals(System.getenv("SOLO_RPG_REQUIRED"))) h.fail("Spell Power (RPG Series) is not loaded");
+            h.succeed();
+            return;
+        }
+        h.assertTrue(CompatManager.spellPowerLoaded(), "CompatManager does not see Spell Power");
+        ServerPlayer p = hunter(h, HunterClass.MAGE);
+        AttributeSystem.apply(p);
+        var fireAttr = BuiltInRegistries.ATTRIBUTE.getHolder(ResourceLocation.fromNamespaceAndPath("spell_power", "fire"));
+        h.assertTrue(fireAttr.isPresent(), "spell_power:fire attribute not found");
+        AttributeInstance inst = p.getAttribute(fireAttr.get());
+        h.assertTrue(inst != null && inst.getModifier(SoloStatus.id("sp_fire")) != null, "INT bonus does not reach spell_power:fire");
+
+        var types = p.serverLevel().registryAccess().registryOrThrow(Registries.DAMAGE_TYPE);
+        List<String> spTypes = types.keySet().stream().filter(k -> k.getNamespace().equals("spell_power")).map(ResourceLocation::toString).sorted().toList();
+        var fire = types.getHolder(ResourceKey.create(Registries.DAMAGE_TYPE, ResourceLocation.fromNamespaceAndPath("spell_power", "fire")));
+        h.assertTrue(fire.isPresent(), "spell_power:fire damage type not found; spell_power damage types: " + spTypes);
+        DamageSource src = new DamageSource(fire.get(), p);
+        h.assertTrue("fire".equals(CompatManager.magicSchool(src)), "RPG fire spell is not the fire school: " + CompatManager.magicSchool(src));
+
+        // report how RPG Series weapons are classified (for tuning the id keywords)
+        java.util.Map<String, String> seen = new java.util.TreeMap<>();
+        for (var item : BuiltInRegistries.ITEM) {
+            ResourceLocation id = BuiltInRegistries.ITEM.getKey(item);
+            if (!List.of("wizards", "rogues", "paladins", "archers").contains(id.getNamespace())) continue;
+            ItemStack st = new ItemStack(item);
+            if (st.getMaxStackSize() != 1 || item instanceof net.minecraft.world.item.ArmorItem) continue;
+            seen.put(id.toString(), com.vladosiwe.solostatus.combat.WeaponClassifier.classify(st).key);
+        }
+        SoloStatus.LOGGER.info("RPG Series weapons as the System sees them: {}", seen);
+        h.succeed();
+    }
 }

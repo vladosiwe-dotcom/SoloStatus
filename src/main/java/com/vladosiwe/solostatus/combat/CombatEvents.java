@@ -258,7 +258,7 @@ public final class CombatEvents {
         Entity direct = source.getDirectEntity();
         boolean skill = SkillFx.applyingSkillDamage;
         boolean projectile = direct instanceof Projectile;
-        String ironSchool = CompatManager.ironsSchool(source);
+        String ironSchool = CompatManager.magicSchool(source); // Iron's Spells or RPG Series school
         boolean magic = ironSchool != null || source.is(DamageTypeTags.WITCH_RESISTANT_TO);
         boolean melee = !projectile && !magic && direct == p;
         // Отражённый урон (шипы) и прочие косвенные источники не усиливаются характеристиками.
@@ -292,7 +292,7 @@ public final class CombatEvents {
             if (dist > 20 && Threat.fairness(target, p) > 0.2) d.addCounter("long_shots", 1);
         } else if (magic) {
             // С Iron's Spells сила магии идёт через их атрибуты (spell_power), чтобы не масштабировать дважды.
-            if (ironSchool == null || !CompatManager.ironsLoaded()) add += StatFormulas.magicPower(d);
+            if (ironSchool == null) add += StatFormulas.magicPower(d);
             if (hc == HunterClass.MAGE) add += 0.10;
             if (Threat.fairness(target, p) > 0.2) d.addCounter("magic_hits", 1);
         }
@@ -621,7 +621,7 @@ public final class CombatEvents {
         Entity direct = source.getDirectEntity();
         boolean projectile = direct instanceof Projectile;
         boolean thorns = source.is(net.minecraft.world.damagesource.DamageTypes.THORNS);
-        boolean magic = !thorns && (CompatManager.ironsSchool(source) != null || source.is(DamageTypeTags.WITCH_RESISTANT_TO));
+        boolean magic = !thorns && (CompatManager.magicSchool(source) != null || source.is(DamageTypeTags.WITCH_RESISTANT_TO));
         // the same rule as for hits: melee is a blow by the player, not thorns, TNT or other indirect damage
         boolean melee = !projectile && !magic && !thorns && direct == p;
         if (projectile) d.addCounter("projectile_kills", 1);
@@ -649,7 +649,7 @@ public final class CombatEvents {
             WeaponType t = rangedType(weaponFor(p, direct, true));
             if (t != null) MasterySystem.addWeapon(p, d, t, gain);
         } else if (magic) {
-            String school = CompatManager.ironsSchool(source);
+            String school = CompatManager.magicSchool(source);
             MasterySystem.addMagic(p, d, school != null ? school : "arcane", gain);
         } else if (melee) {
             MasterySystem.addWeapon(p, d, WeaponClassifier.classify(p.getMainHandItem()), gain);

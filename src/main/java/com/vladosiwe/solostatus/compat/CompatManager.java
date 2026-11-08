@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public final class CompatManager {
     private static boolean irons;
+    private static boolean spellPower;
     private static boolean epicFight;
 
     private CompatManager() {}
@@ -22,16 +23,22 @@ public final class CompatManager {
     public static void init() {
         irons = ModList.get().isLoaded("irons_spellbooks");
         epicFight = ModList.get().isLoaded("epicfight");
+        spellPower = ModList.get().isLoaded(com.vladosiwe.solostatus.compat.spellpower.SpellPowerCompat.MODID);
         if (ModList.get().isLoaded("bettercombat") && epicFight) {
             SoloStatus.LOGGER.warn("Обнаружены одновременно Epic Fight и Better Combat. Они управляют атаками по-разному; рекомендуется оставить только Epic Fight.");
         }
         if (irons) IronsSpellsCompat.init();
         if (epicFight) EpicFightCompat.init();
-        SoloStatus.LOGGER.info("Solo Status System: Iron's Spells — {}, Epic Fight — {}", irons ? "есть" : "нет", epicFight ? "есть" : "нет");
+        SoloStatus.LOGGER.info("Solo Status System: Iron's Spells — {}, Epic Fight — {}, RPG Series (Spell Power) — {}",
+                irons ? "есть" : "нет", epicFight ? "есть" : "нет", spellPower ? "есть" : "нет");
     }
 
     public static boolean ironsLoaded() {
         return irons;
+    }
+
+    public static boolean spellPowerLoaded() {
+        return spellPower;
     }
 
     public static boolean epicFightLoaded() {
@@ -45,6 +52,15 @@ public final class CompatManager {
 
     public static void applyMagicAttributes(ServerPlayer player, PlayerData d) {
         if (irons) IronsSpellsCompat.applyAttributes(player, d);
+        if (spellPower) com.vladosiwe.solostatus.compat.spellpower.SpellPowerCompat.applyAttributes(player, d);
+    }
+
+    /** Magic school of a spell from Iron's Spells or the RPG Series (Spell Engine), or null for other damage. */
+    @Nullable
+    public static String magicSchool(DamageSource source) {
+        String s = ironsSchool(source);
+        if (s == null && spellPower) s = com.vladosiwe.solostatus.compat.spellpower.SpellPowerCompat.school(source);
+        return s;
     }
 
     /** Школа магии Iron's Spells для источника урона (например "fire") или null. */

@@ -39,14 +39,14 @@ public final class WeaponClassifier {
         if (item instanceof MaceItem) return WeaponType.MACE;
 
         String path = BuiltInRegistries.ITEM.getKey(item).getPath();
-        if (has(path, "dagger", "knife", "kunai", "sai", "dirk", "stiletto")) return WeaponType.DAGGER;
+        if (has(path, "dagger", "knife", "kunai", "sai", "dirk", "stiletto", "sickle")) return WeaponType.DAGGER;
         if (has(path, "greatsword", "great_sword", "claymore", "zweihander", "greataxe", "great_axe", "colossal")) return WeaponType.GREATSWORD;
         if (has(path, "spear", "lance", "halberd", "glaive", "pike", "javelin")) return WeaponType.SPEAR;
         if (has(path, "staff", "wand", "scepter", "sceptre")) return WeaponType.STAFF;
         if (has(path, "hammer", "maul", "warhammer", "mace", "club")) return WeaponType.MACE;
-        if (item instanceof AxeItem || has(path, "battleaxe", "battle_axe")) return WeaponType.AXE;
+        if (item instanceof AxeItem || has(path, "battleaxe", "battle_axe", "double_axe")) return WeaponType.AXE;
         if (item instanceof SwordItem || has(path, "sword", "katana", "tachi", "uchigatana", "rapier", "saber", "sabre", "scimitar", "blade")) return WeaponType.SWORD;
-        if (item instanceof ProjectileWeaponItem) return WeaponType.BOW;
+        if (item instanceof ProjectileWeaponItem || path.endsWith("_bow") || has(path, "longbow", "shortbow", "recurve")) return WeaponType.BOW;
         return WeaponType.NONE;
     }
 

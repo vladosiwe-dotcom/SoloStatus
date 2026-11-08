@@ -30,7 +30,7 @@ jobs:
           grep -Eq "All [0-9]+ required tests passed" gametest.log || { echo "::error::required game tests did not pass"; exit 1; }
       - name: What the integrations and tests reported
         if: always()
-        run: grep -E "Epic Fight:|Iron's Spells:|Solo Status System:|failed at|tests passed|tests failed|   - " gametest.log | grep -v "^\s*at " | head -60 || true
+        run: grep -E "Epic Fight:|Iron's Spells:|Solo Status System:|RPG Series|failed at|tests passed|tests failed|   - " gametest.log | grep -v "^\s*at " | head -60 || true
       - name: Epic Fight API as shipped (for reflection mismatches)
         if: failure()
         run: |
@@ -47,3 +47,16 @@ jobs:
           name: solostatus-jar
           path: build/libs/*.jar
           if-no-files-found: error
+      # A second pass with the RPG Series (Spell Engine) instead of Epic Fight / Iron's Spells. Optional for now:
+      # it reports in the log and the summary but does not fail the build.
+      - name: RPG Series pass (Spell Engine, Wizards, Rogues, Paladins)
+        continue-on-error: true
+        env:
+          SOLO_RPG_REQUIRED: '1'
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/ef-mods && mv run/mods/* /tmp/ef-mods/ 2>/dev/null || true
+          python3 tools/fetch_mods.py run/mods /tmp/client-rpg "$GITHUB_STEP_SUMMARY" required:wizards optional:rogues-and-warriors optional:paladins-and-priests
+          timeout 600 ./gradlew runGameTestServer --no-daemon 2>&1 | tee rpg.log || true
+          grep -E "RPG Series|Solo Status System:|failed at|tests passed|tests failed|   - |Exception|Missing or unsupported" rpg.log | grep -v "^\s*at " | head -60 || true
+          grep -Eq "All [0-9]+ required tests passed" rpg.log
