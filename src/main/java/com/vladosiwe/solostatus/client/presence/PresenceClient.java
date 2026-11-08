@@ -147,7 +147,7 @@ public final class PresenceClient {
         TEXT_ALPHA = alpha;
 
         int x = x0 + 8, y = y0 + 6;
-        text(font, m, buffers, SystemFonts.bold(Component.literal("STATUS")), -font.width(SystemFonts.bold(Component.literal("STATUS"))) / 2, y, 0xFFFFFFFF, light);
+        text(font, m, buffers, SystemFonts.bold(Component.translatable("solostatus.win.status")), -font.width(SystemFonts.bold(Component.translatable("solostatus.win.status"))) / 2, y, 0xFFFFFFFF, light);
         y += 12;
         HunterRank rank = HunterRank.byIndex(info.getInt("rank"));
         text(font, m, buffers, SystemFonts.bold(Component.literal(info.getString("name"))), x, y, 0xFFEEF8FF, light);
