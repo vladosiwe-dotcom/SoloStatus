@@ -478,7 +478,6 @@
   "solostatus.inspect.need_appraisal": "Detailed information requires the Appraisal skill.",
   "solostatus.inspect.appraisal": "Appraisal (rank %s)",
   "solostatus.inspect.mastery": "Mastery: %s",
-  "solostatus.hud.awaken": "[System] Press %s to awaken",
   "solostatus.hud.system": "[ SYSTEM ]",
   "solostatus.hud.alert": "[ ALERT ]",
   "solostatus.tooltip.quality": "Quality: %s",

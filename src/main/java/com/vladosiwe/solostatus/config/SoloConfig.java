@@ -93,7 +93,7 @@ public final class SoloConfig {
         SPEC = b.build();
 
         ModConfigSpec.Builder c = new ModConfigSpec.Builder();
-        CHAT_PHRASE_ENABLED = c.comment("Открывать окно статуса фразой в чате (текстовый вариант голосовой команды)").define("chatPhraseEnabled", true);
+        CHAT_PHRASE_ENABLED = c.comment("Открывать окно статуса фразой в чате (текстовый вариант голосовой команды)").define("chatPhraseEnabled", false);
         CHAT_PHRASE = c.define("chatPhrase", "Система, покажи статус");
         SHOW_HUD = c.define("showHud", true);
         EPIC_FIGHT_FIRST_PERSON_BODY = c.comment("Epic Fight: показывать своё тело от первого лица (его опция first_person_model).",

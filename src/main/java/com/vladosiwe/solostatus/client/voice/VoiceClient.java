@@ -118,9 +118,11 @@ public final class VoiceClient {
         if (mode() == VoiceMode.OFF) return;
         Path model = modelDir();
         if (model == null) {
+            // the System opens only by voice, so the recognition model is fetched by itself the first time
+            // (once per game session; if that fails, the hint with the manual command is shown)
             if (!modelHintShown) {
                 modelHintShown = true;
-                Minecraft.getInstance().execute(VoiceClient::showModelHint);
+                Minecraft.getInstance().execute(() -> { if (Minecraft.getInstance().player != null) download(); else showModelHint(); });
             }
             return;
         }

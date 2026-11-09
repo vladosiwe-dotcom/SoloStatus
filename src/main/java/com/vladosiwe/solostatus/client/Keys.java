@@ -10,7 +10,7 @@ public final class Keys {
     public static final String CATEGORY = "key.categories.solostatus";
 
     public static final KeyMapping OPEN_STATUS = new KeyMapping("key.solostatus.status", KeyConflictContext.IN_GAME,
-            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_K, CATEGORY);
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_UNKNOWN, CATEGORY); // not bound: the System is called by voice; a key can be set in Controls
     public static final KeyMapping INSPECT = new KeyMapping("key.solostatus.inspect", KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_I, CATEGORY);
     /** Голос: удерживать и говорить (режим PUSH_TO_TALK). */

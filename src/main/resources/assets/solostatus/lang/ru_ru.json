@@ -478,7 +478,6 @@
   "solostatus.inspect.need_appraisal": "Подробные сведения доступны с навыком «Оценка».",
   "solostatus.inspect.appraisal": "Оценка (ранг %s)",
   "solostatus.inspect.mastery": "Мастерство: %s",
-  "solostatus.hud.awaken": "[Система] Нажмите %s, чтобы пробудиться",
   "solostatus.hud.system": "[ СИСТЕМА ]",
   "solostatus.hud.alert": "[ ВНИМАНИЕ ]",
   "solostatus.tooltip.quality": "Качество: %s",

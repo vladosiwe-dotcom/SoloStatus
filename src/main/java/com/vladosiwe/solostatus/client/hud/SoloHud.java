@@ -36,15 +36,8 @@ public final class SoloHud {
         int sh = g.guiHeight();
 
         if (show && ClientState.synced && mc.screen == null) {
-            if (!d.hasClass()) {
-                Component hint = Component.translatable("solostatus.hud.awaken", Keys.OPEN_STATUS.getTranslatedKeyMessage());
-                int w = font.width(hint) + 12;
-                int x = sw / 2 - w / 2;
-                int y = 6;
-                g.fill(x, y, x + w, y + 14, 0xB0061424);
-                g.renderOutline(x, y, w, 14, (System.currentTimeMillis() / 500) % 2 == 0 ? Holo.BORDER : Holo.ACCENT);
-                g.drawCenteredString(font, hint, sw / 2, y + 3, Holo.TEXT);
-            } else if (!mc.player.isSpectator()) {
+            // Before the awakening there is no hint on screen: the System is called by voice ("статус").
+            if (d.hasClass() && !mc.player.isSpectator()) {
                 renderBar(g, mc, font, d, sw, sh);
             }
         }
