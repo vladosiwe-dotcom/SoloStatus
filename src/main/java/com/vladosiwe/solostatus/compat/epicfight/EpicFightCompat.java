@@ -63,6 +63,8 @@ public final class EpicFightCompat {
     /** PlayerPatch.toEpicFightMode(boolean sync), toVanillaMode(boolean sync), isEpicFightMode() — checked against 21.17.3.1. */
     private static MethodHandle toEpicFightMode, toVanillaMode, isEpicFightMode;
     private static String modeError = "init() not called";
+    /** -Dsolostatus.logEpicFightMode=true: log every automatic mode switch (used by the end-to-end test). */
+    private static final boolean LOG_MODE = Boolean.getBoolean("solostatus.logEpicFightMode");
     private static MethodHandle getOriginal;
     private static Class<?> animationsClass;
     private static final Map<String, Object> ANIM_CACHE = new HashMap<>();
@@ -127,6 +129,9 @@ public final class EpicFightCompat {
             boolean battle = (boolean) isEpicFightMode.invoke(patch.get());
             if (weapon && !battle) toEpicFightMode.invoke(patch.get(), true);
             else if (!weapon && battle) toVanillaMode.invoke(patch.get(), true);
+            if (LOG_MODE && weapon != battle)
+                SoloStatus.LOGGER.info("Epic Fight: {} -> {} mode ({})", player.getGameProfile().getName(), weapon ? "battle" : "vanilla",
+                        player.getMainHandItem().getHoverName().getString());
         } catch (Throwable ignored) {
         }
     }
