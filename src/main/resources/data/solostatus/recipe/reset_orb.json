@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "EAE",
+    "ANA",
+    "EAE"
+  ],
+  "key": {
+    "N": { "item": "minecraft:nether_star" },
+    "A": { "item": "minecraft:amethyst_shard" },
+    "E": { "item": "minecraft:echo_shard" }
+  },
+  "result": {
+    "id": "solostatus:reset_orb",
+    "count": 1
+  }
+}

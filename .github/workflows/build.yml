@@ -1,0 +1,65 @@
+name: Build
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build the mod
+        run: ./gradlew build --no-daemon --stacktrace
+      - name: Add Epic Fight and Iron's Spells for the integration tests
+        run: python3 tools/fetch_mods.py run/mods /tmp/client-mods "$GITHUB_STEP_SUMMARY" required:epic-fight required:irons-spells-n-spellbooks+irons-lib+curios+geckolib+playeranimator
+      - name: Start a dedicated server with the mod (smoke test)
+        env:
+          SOLO_COMPAT_REQUIRED: '1'
+        # The game test server can exit with code 0 even when it fails to start, so the log decides.
+        run: |
+          set -o pipefail
+          timeout 600 ./gradlew runGameTestServer --no-daemon --stacktrace 2>&1 | tee gametest.log
+          if grep -q "Failed to start the minecraft server" gametest.log; then echo "::error::server failed to start"; exit 1; fi
+          grep -Eq "All [0-9]+ required tests passed" gametest.log || { echo "::error::required game tests did not pass"; exit 1; }
+      - name: What the integrations and tests reported
+        if: always()
+        run: |
+          grep -E "Epic Fight:|Iron's Spells:|Solo Status System:|Curios:|failed at|tests passed|tests failed|   - " gametest.log | grep -v "^\s*at " | head -60 || true
+          echo "---- first errors ----"
+          grep -nE "ERROR|Exception|Caused by|Error:" gametest.log | grep -v "^[0-9]*:\s*at " | head -25 || true
+      - name: Epic Fight API as shipped (for reflection mismatches)
+        if: failure()
+        run: |
+          jar=$(ls run/mods/*epic*fight*.jar 2>/dev/null | head -1); [ -n "$jar" ] || exit 0
+          echo "$jar"
+          for c in yesman.epicfight.world.capabilities.EpicFightCapabilities yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch yesman.epicfight.gameasset.Animations; do
+            javap -cp "$jar" "$c" 2>&1 | grep -E "class |getServerPlayerPatch|playAnimationInClientSide|playAnimationSynchronized| static .*(SWORD_AUTO1|BIPED_STEP)" | head -20
+          done
+          unzip -l "$jar" | grep -E "AssetAccessor|StaticAnimation.class" | head
+      - name: Upload the mod jar
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: solostatus-jar
+          path: build/libs/*.jar
+          if-no-files-found: error
+      # A second pass with the RPG Series (Spell Engine) instead of Epic Fight / Iron's Spells. Optional for now:
+      # it reports in the log and the summary but does not fail the build.
+      - name: RPG Series pass (Spell Engine, Wizards, Rogues, Paladins)
+        continue-on-error: true
+        env:
+          SOLO_RPG_REQUIRED: '1'
+        run: |
+          set -o pipefail
+          mkdir -p /tmp/ef-mods && mv run/mods/* /tmp/ef-mods/ 2>/dev/null || true
+          python3 tools/fetch_mods.py run/mods /tmp/client-rpg "$GITHUB_STEP_SUMMARY" required:wizards optional:rogues-and-warriors optional:paladins-and-priests
+          timeout 600 ./gradlew runGameTestServer --no-daemon 2>&1 | tee rpg.log || true
+          grep -E "RPG Series weapons|Solo Status System:|failed at|tests passed|tests failed|   - |Missing or unsupported" rpg.log | grep -v "^\s*at " | head -40 || true
+          grep -Eq "All [0-9]+ required tests passed" rpg.log

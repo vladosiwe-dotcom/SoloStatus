@@ -1,0 +1,129 @@
+package com.vladosiwe.solostatus.stats;
+
+import com.vladosiwe.solostatus.config.SoloConfig;
+import com.vladosiwe.solostatus.data.PlayerData;
+
+/**
+ * Формулы производных значений. Используются и сервером (применение), и клиентом (отображение).
+ *
+ * Принцип мягкого ограничения: каждое очко сверх базовых 10 даёт полный эффект до statSoftCap,
+ * затем половину. Каждый эффект дополнительно ограничен жёстким потолком — одна характеристика
+ * не может объективно превзойти остальные.
+ */
+public final class StatFormulas {
+    private StatFormulas() {}
+
+    public static final double CAP_PHYS = 0.60, CAP_MOVE = 0.25, CAP_ATK_SPEED = 0.30, CAP_DODGE = 0.15,
+            CAP_PROJ = 0.60, CAP_CRIT = 0.20, CAP_HEALTH = 40, CAP_REDUCTION = 0.15, CAP_DEBUFF = 0.25,
+            CAP_MAGIC = 0.50, CAP_DROP = 0.20, CAP_LUCK_ATTR = 4.0, CAP_QUALITY = 0.25;
+
+    /** Эффективные очки характеристики с мягким ограничением. */
+    public static double eff(PlayerData d, Stat s) {
+        // Титул «Охотник национального уровня»: +3 к каждой характеристике
+        return effOf(d.stat(s) + (d.titleIs("rank_national") ? 3 : 0));
+    }
+
+    public static double effOf(int value) {
+        int invested = Math.max(0, value - Stat.BASE_VALUE);
+        int soft = safeInt(SoloConfig.STAT_SOFT_CAP, 40);
+        return invested <= soft ? invested : soft + (invested - soft) * 0.5;
+    }
+
+    public static double physicalDamage(PlayerData d) {
+        return Math.min(CAP_PHYS, eff(d, Stat.STR) * safe(SoloConfig.STR_DAMAGE_PER_POINT, 0.006));
+    }
+
+    public static double moveSpeed(PlayerData d) {
+        return Math.min(CAP_MOVE, eff(d, Stat.AGI) * safe(SoloConfig.AGI_SPEED_PER_POINT, 0.0025));
+    }
+
+    public static double attackSpeed(PlayerData d) {
+        return Math.min(CAP_ATK_SPEED, eff(d, Stat.AGI) * 0.004);
+    }
+
+    public static double dodgeChance(PlayerData d) {
+        return Math.min(CAP_DODGE, eff(d, Stat.AGI) * safe(SoloConfig.AGI_DODGE_PER_POINT, 0.0015)) + (d.titleIs("untouchable") ? 0.05 : 0)
+                + d.gear(com.vladosiwe.solostatus.accessory.Affix.DODGE);
+    }
+
+    public static double safeFall(PlayerData d) {
+        return Math.min(3.0, eff(d, Stat.AGI) * 0.03) + d.skillRank("acrobatics");
+    }
+
+    public static double projectileDamage(PlayerData d) {
+        return Math.min(CAP_PROJ, eff(d, Stat.PER) * safe(SoloConfig.PER_PROJECTILE_PER_POINT, 0.006));
+    }
+
+    public static double critChance(PlayerData d) {
+        return Math.min(CAP_CRIT, eff(d, Stat.PER) * safe(SoloConfig.PER_CRIT_PER_POINT, 0.002)) + d.gear(com.vladosiwe.solostatus.accessory.Affix.CRIT_CHANCE);
+    }
+
+    public static double critDamage(PlayerData d) {
+        return 0.5 + Math.min(0.3, eff(d, Stat.PER) * 0.003) + d.gear(com.vladosiwe.solostatus.accessory.Affix.CRIT_DAMAGE);
+    }
+
+    public static double bonusHealth(PlayerData d) {
+        return Math.min(CAP_HEALTH, eff(d, Stat.VIT) * safe(SoloConfig.VIT_HEALTH_PER_POINT, 0.4));
+    }
+
+    public static double damageReduction(PlayerData d) {
+        return Math.min(CAP_REDUCTION, eff(d, Stat.VIT) * safe(SoloConfig.VIT_REDUCTION_PER_POINT, 0.0015));
+    }
+
+    public static double debuffResist(PlayerData d) {
+        return Math.min(CAP_DEBUFF, eff(d, Stat.VIT) * 0.002) + d.skillRank("iron_will") * 0.04 + d.gear(com.vladosiwe.solostatus.accessory.Affix.DEBUFF_RESIST);
+    }
+
+    public static double magicPower(PlayerData d) {
+        return Math.min(CAP_MAGIC, eff(d, Stat.INT) * safe(SoloConfig.INT_MAGIC_PER_POINT, 0.005)) + d.gear(com.vladosiwe.solostatus.accessory.Affix.SPELL_POWER);
+    }
+
+    /** Mage and Support spend mana; everyone else spends stamina. Before a class is chosen: mana. */
+    public static boolean usesMana(PlayerData d) {
+        return d.hunterClass == null || d.hunterClass.usesMana();
+    }
+
+    /**
+     * Skill resource pool. Mana is small and comes from INT (magic is the harder path);
+     * stamina comes from the hunter's level (80 at level 1, 200 at level 100) and a little VIT.
+     */
+    public static double maxEnergy(PlayerData d) {
+        double gear = d.gear(com.vladosiwe.solostatus.accessory.Affix.MAX_ENERGY);
+        if (usesMana(d)) return 60 + d.level * 0.4 + eff(d, Stat.INT) * 1.0 + d.skillRank("arcane_mind") * 10 + gear;
+        return 80 + d.level * 1.2 + eff(d, Stat.VIT) * 0.3 + gear;
+    }
+
+    /** Recovery per second. */
+    public static double energyRegen(PlayerData d) {
+        double breathing = 1 + d.skillRank("breathing_technique") * 0.08 + d.gear(com.vladosiwe.solostatus.accessory.Affix.ENERGY_REGEN);
+        if (usesMana(d)) return (0.6 + Math.min(2.0, eff(d, Stat.INT) * 0.02)) * (1 + d.skillRank("arcane_mind") * 0.10) * breathing;
+        return (1.5 + d.level * 0.02) * breathing;
+    }
+
+    public static double extraDropChance(PlayerData d) {
+        return Math.min(CAP_DROP, eff(d, Stat.LUCK) * safe(SoloConfig.LUCK_DROP_PER_POINT, 0.002));
+    }
+
+    public static double luckAttribute(PlayerData d) {
+        return Math.min(CAP_LUCK_ATTR, eff(d, Stat.LUCK) * 0.05);
+    }
+
+    /** Смещение броска редкости оружия к лучшему качеству. */
+    public static double qualityBonus(PlayerData d) {
+        return Math.min(CAP_QUALITY, eff(d, Stat.LUCK) * 0.003);
+    }
+
+    /** Магическая сила базовых магических навыков системы (до бонуса INT). */
+    public static double baseSpellDamage(PlayerData d) {
+        return 4.0 + d.level * 0.12;
+    }
+
+    // Конфиг сервера доступен только в загруженном мире; эти обёртки защищают экран от ранних вызовов.
+    private static double safe(net.neoforged.neoforge.common.ModConfigSpec.DoubleValue v, double def) {
+        try { return v.get(); } catch (Exception e) { return def; }
+    }
+
+    private static int safeInt(net.neoforged.neoforge.common.ModConfigSpec.IntValue v, int def) {
+        try { return v.get(); } catch (Exception e) { return def; }
+    }
+}
