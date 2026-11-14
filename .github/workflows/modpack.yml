@@ -1,0 +1,77 @@
+name: Modpack
+
+# Builds one archive with everything a player needs for Solo Status on the client:
+# the mod itself, Openace (awakening scene), Epic Fight, Iron's Spells with its libraries,
+# Legendary Tooltips, and the NeoForge installer. Download it from the run's "Artifacts".
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/modpack.yml
+
+jobs:
+  modpack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: solo
+      - uses: actions/checkout@v4
+        with:
+          repository: vladosiwe-dotcom/Openace
+          ref: claude/awakening-mod
+          path: openace
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Solo Status
+        working-directory: solo
+        run: ./gradlew build --no-daemon -q
+      - name: Build Openace
+        working-directory: openace
+        run: ./gradlew build --no-daemon -q
+
+      - name: Collect the two mods
+        run: |
+          mkdir -p pack/mods
+          for d in solo openace; do
+            ls $d/build/libs/*.jar | grep -v -E -- '-(sources|javadoc|slim)\.jar$' | xargs -I{} cp {} pack/mods/
+          done
+          ls -l pack/mods
+
+      - name: Download Epic Fight, Iron's Spells and the rest from Modrinth (with dependencies)
+        run: >
+          python3 solo/tools/fetch_mods.py /tmp/server-mods pack/mods "$GITHUB_STEP_SUMMARY"
+          required:epic-fight
+          required:irons-spells-n-spellbooks+irons-lib+curios+geckolib+playeranimator
+          optional:legendary-tooltips
+
+      - name: Add the NeoForge installer
+        run: |
+          NEO=$(grep '^neo_version=' solo/gradle.properties | cut -d= -f2)
+          curl -fsSL -o "pack/neoforge-$NEO-installer.jar" \
+            "https://maven.neoforged.net/releases/net/neoforged/neoforge/$NEO/neoforge-$NEO-installer.jar"
+          cat > pack/README.txt <<EOF
+          Solo Status System - сборка модов (Minecraft 1.21.1, NeoForge $NEO)
+
+          1. Запустите neoforge-$NEO-installer.jar, выберите "Install client", нажмите OK.
+             (Нужна Java 21, например Adoptium Temurin 21.)
+          2. Откройте папку игры (Windows: Win+R -> %appdata%\.minecraft) и скопируйте
+             все файлы из папки mods этого архива в папку mods игры (создайте её, если нет).
+          3. В лаунчере выберите профиль NeoForge 1.21.1 и запустите игру.
+
+          В игре: K - окно Системы. Голосовая модель скачивается по сообщению в чате
+          при первом входе в мир (~45 МБ).
+          Не добавляйте Better Combat: он конфликтует с Epic Fight.
+          EOF
+          ls -lR pack
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SoloStatus-modpack
+          path: pack
+          if-no-files-found: error
