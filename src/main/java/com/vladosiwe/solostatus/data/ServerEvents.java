@@ -30,6 +30,14 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 public final class ServerEvents {
     private ServerEvents() {}
 
+    /** The weapon in the main hand changed: its attack speed for the hunter's class changes too. */
+    @SubscribeEvent
+    public static void onEquipmentChange(net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent event) {
+        if (event.getSlot() == net.minecraft.world.entity.EquipmentSlot.MAINHAND && event.getEntity() instanceof ServerPlayer p) {
+            AttributeSystem.applyWeaponSpeed(p);
+        }
+    }
+
     @SubscribeEvent
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer p) {

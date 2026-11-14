@@ -70,4 +70,28 @@ public final class SoloGameTests {
         h.assertTrue(Hunter.get(p).level > before, "уровень не вырос: " + before + " → " + Hunter.get(p).level);
         h.succeed();
     }
+
+    /** A class handles its own weapons better: a Warrior swings a dagger 25% slower and a sword 10% faster. */
+    @GameTest(template = "empty")
+    public static void classWeaponProficiency(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.WARRIOR);
+        var id = com.vladosiwe.solostatus.SoloStatus.id("class_weapon_speed");
+        var speed = p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED);
+
+        p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_SWORD));
+        com.vladosiwe.solostatus.stats.AttributeSystem.applyWeaponSpeed(p);
+        var mod = speed.getModifier(id);
+        h.assertTrue(mod != null && Math.abs(mod.amount() - 0.10) < 1e-6, "a sword is not the Warrior's main weapon: " + mod);
+
+        p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.item.ItemStack.EMPTY);
+        com.vladosiwe.solostatus.stats.AttributeSystem.applyWeaponSpeed(p);
+        h.assertTrue(speed.getModifier(id) == null, "an empty hand must have no class speed modifier");
+
+        h.assertTrue(com.vladosiwe.solostatus.clazz.Proficiency.of(HunterClass.WARRIOR, com.vladosiwe.solostatus.combat.WeaponType.DAGGER)
+                == com.vladosiwe.solostatus.clazz.Proficiency.FOREIGN, "a dagger must be foreign to the Warrior");
+        h.assertTrue(com.vladosiwe.solostatus.clazz.Proficiency.of(HunterClass.THIEF, com.vladosiwe.solostatus.combat.WeaponType.DAGGER)
+                == com.vladosiwe.solostatus.clazz.Proficiency.MAIN, "a dagger must be the Thief's main weapon");
+        h.succeed();
+    }
 }

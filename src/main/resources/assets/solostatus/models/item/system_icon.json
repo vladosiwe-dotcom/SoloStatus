@@ -1,0 +1,110 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "solostatus:item/icon/magic"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "custom_model_data": 1
+      },
+      "model": "solostatus:item/icon/weapon_sword"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 2
+      },
+      "model": "solostatus:item/icon/weapon_greatsword"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 3
+      },
+      "model": "solostatus:item/icon/weapon_dagger"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 4
+      },
+      "model": "solostatus:item/icon/weapon_axe"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 5
+      },
+      "model": "solostatus:item/icon/weapon_mace"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 6
+      },
+      "model": "solostatus:item/icon/weapon_spear"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 7
+      },
+      "model": "solostatus:item/icon/weapon_bow"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 8
+      },
+      "model": "solostatus:item/icon/weapon_crossbow"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 9
+      },
+      "model": "solostatus:item/icon/weapon_staff"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 10
+      },
+      "model": "solostatus:item/icon/weapon_shield"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 11
+      },
+      "model": "solostatus:item/icon/magic"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 12
+      },
+      "model": "solostatus:item/icon/class_warrior"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 13
+      },
+      "model": "solostatus:item/icon/class_thief"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 14
+      },
+      "model": "solostatus:item/icon/class_mage"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 15
+      },
+      "model": "solostatus:item/icon/class_defender"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 16
+      },
+      "model": "solostatus:item/icon/class_archer"
+    },
+    {
+      "predicate": {
+        "custom_model_data": 17
+      },
+      "model": "solostatus:item/icon/class_support"
+    }
+  ]
+}

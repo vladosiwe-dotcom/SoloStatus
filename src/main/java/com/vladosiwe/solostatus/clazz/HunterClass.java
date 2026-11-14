@@ -42,16 +42,6 @@ public enum HunterClass {
         return Component.translatable("solostatus.class." + key + ".desc");
     }
 
-    public Item icon() {
-        return switch (this) {
-            case WARRIOR -> Items.IRON_SWORD;
-            case THIEF -> Items.SHEARS;
-            case MAGE -> Items.BLAZE_ROD;
-            case DEFENDER -> Items.SHIELD;
-            case ARCHER -> Items.BOW;
-            case SUPPORT -> Items.GOLDEN_APPLE;
-        };
-    }
 
     public Specialization[] specializations() {
         return switch (this) {

@@ -30,6 +30,7 @@ public final class AttributeSystem {
     private static final ResourceLocation ARMOR = SoloStatus.id("armor");
     private static final ResourceLocation KNOCKBACK = SoloStatus.id("knockback");
     private static final ResourceLocation SAFE_FALL = SoloStatus.id("safe_fall");
+    private static final ResourceLocation WEAPON_SPEED = SoloStatus.id("class_weapon_speed");
 
     private AttributeSystem() {}
 
@@ -59,12 +60,25 @@ public final class AttributeSystem {
         set(player, Attributes.KNOCKBACK_RESISTANCE, KNOCKBACK, Math.min(0.5, knockback), AttributeModifier.Operation.ADD_VALUE);
         set(player, Attributes.SAFE_FALL_DISTANCE, SAFE_FALL, StatFormulas.safeFall(d), AttributeModifier.Operation.ADD_VALUE);
 
+        applyWeaponSpeed(player);
         CompatManager.applyMagicAttributes(player, d);
         com.vladosiwe.solostatus.accessory.AccessorySystem.applyAttributes(player, d);
 
         if (player.getHealth() > player.getMaxHealth()) player.setHealth(player.getMaxHealth());
         float maxEnergy = (float) StatFormulas.maxEnergy(d);
         if (d.energy > maxEnergy) d.energy = maxEnergy;
+    }
+
+    /**
+     * Attack speed of the weapon in the main hand for this class (see Proficiency): a Warrior swings a dagger slower.
+     * Multiplies the total, so it scales whatever speed the weapon itself has. Called on every profile change and
+     * whenever the main-hand item changes.
+     */
+    public static void applyWeaponSpeed(ServerPlayer player) {
+        PlayerData d = Hunter.get(player);
+        var type = com.vladosiwe.solostatus.combat.WeaponClassifier.classify(player.getMainHandItem());
+        double speed = type.melee ? com.vladosiwe.solostatus.clazz.Proficiency.of(d.hunterClass, type).attackSpeed : 0;
+        set(player, Attributes.ATTACK_SPEED, WEAPON_SPEED, speed, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
     }
 
     /** Ставит/обновляет временный модификатор; нулевое значение удаляет его. */

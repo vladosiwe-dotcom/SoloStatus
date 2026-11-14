@@ -300,6 +300,7 @@ public final class CombatEvents {
             if (Threat.fairness(target, p) > 0.2) d.addCounter("magic_hits", 1);
         }
         if (type != null) add += MasteryMath.damageBonus(masteryLevel);
+        if (type != null) add += com.vladosiwe.solostatus.clazz.Proficiency.of(hc, type).damage; // the class's own weapons hit harder
 
         // --- Состояния навыков ---
         if (d.stateActive("berserk", now)) add += 0.20 + 0.05 * (d.skillRank("berserk") - 1);

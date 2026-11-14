@@ -46,14 +46,15 @@ public final class MasterySystem {
                         Component.translatable("solostatus.notice.mastery_up", name, newLevel),
                         Component.translatable(milestone && (newLevel == 10 || newLevel == 25 || newLevel == 40 || newLevel == 50)
                                 ? "solostatus.notice.mastery_milestone." + newLevel : "solostatus.notice.mastery_up.desc"),
-                        key.startsWith("magic:") ? net.minecraft.world.item.Items.ENCHANTED_BOOK : WeaponType.byKey(key).icon);
+                        com.vladosiwe.solostatus.registry.SystemIcon.mastery(key));
             }
         }
     }
 
     public static void addWeapon(ServerPlayer player, PlayerData d, WeaponType type, double amount) {
         if (type == null || !type.hasMastery()) return;
-        add(player, d, type.key, amount * (1 + d.skillRank("weapon_adept") * 0.05), type.displayName());
+        double proficiency = com.vladosiwe.solostatus.clazz.Proficiency.of(d.hunterClass, type).masteryGain;
+        add(player, d, type.key, amount * proficiency * (1 + d.skillRank("weapon_adept") * 0.05), type.displayName());
     }
 
     /** Магическое мастерство по школе (school — путь id школы Iron's Spells или "arcane" для навыков системы). */

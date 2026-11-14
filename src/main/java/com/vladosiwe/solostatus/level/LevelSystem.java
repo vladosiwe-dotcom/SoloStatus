@@ -27,8 +27,13 @@ public final class LevelSystem {
 
     private LevelSystem() {}
 
+    /**
+     * Experience from level to level + 1: 200 at level 1, ≈1 700 at 10, ≈17 800 at 50, ≈42 800 at 90
+     * (≈2 million in all to level 100). Each level asks noticeably more than the one before, but the growth slows down
+     * (power 1.5), so the late game is long without becoming a wall.
+     */
     public static long xpToNext(int level) {
-        return Math.round(30 * Math.pow(level, 1.35) + 70);
+        return Math.round(50 * Math.pow(level, 1.5) + 150);
     }
 
     public static long overflowNeed(int awakenings) {

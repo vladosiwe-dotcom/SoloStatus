@@ -863,7 +863,7 @@ public class SystemScreen extends Screen {
                 boolean h = inside(mx, my, x, cy, cardW, cardH);
                 g.fill(x, cy, x + cardW, cy + cardH, a(h ? 0xD0123A60 : 0xA0081828, ra));
                 g.renderOutline(x, cy, cardW, cardH, a(h ? 0xFFFFFFFF : hc.color, ra));
-                if (ra > 0.5f) g.renderItem(new ItemStack(hc.icon()), x + 4, cy + 4);
+                if (ra > 0.5f) g.renderItem(com.vladosiwe.solostatus.registry.SystemIcon.of(hc), x + 4, cy + 4);
                 text(g, font, bold(hc.displayName()), x + 24, cy + 5, hc.color, ra);
                 text(g, font, body(Component.empty().append(hc.primary.shortName()).append(" +3  ").append(hc.secondary.shortName()).append(" +2")), x + 24, cy + 15, DIM, ra);
                 hover(mx, my, x, cy, cardW, cardH, List.of(hc.displayName(), hc.description()));
@@ -874,7 +874,7 @@ public class SystemScreen extends Screen {
             return;
         }
         HunterClass hc = d.hunterClass;
-        if (row(0) > 0.5f) g.renderItem(new ItemStack(hc.icon()), cx0, y);
+        if (row(0) > 0.5f) g.renderItem(com.vladosiwe.solostatus.registry.SystemIcon.of(hc), cx0, y);
         text(g, font, title(hc.displayName()), cx0 + 20, y + 1, hc.color, row(0));
         y += 20;
         y += wrap(g, body(hc.description()), cx0, y, cw, INK, row(1)) + 6;
@@ -930,7 +930,10 @@ public class SystemScreen extends Screen {
     private void renderMastery(GuiGraphics g, int mx, int my) {
         PlayerData d = d();
         List<String> keys = new ArrayList<>();
-        for (WeaponType t : WeaponType.VALUES) if (t.hasMastery()) keys.add(t.key);
+        // the class's own weapons first: main, then familiar, unfamiliar, foreign
+        java.util.Arrays.stream(WeaponType.VALUES).filter(WeaponType::hasMastery)
+                .sorted(Comparator.comparingInt(t -> com.vladosiwe.solostatus.clazz.Proficiency.of(d.hunterClass, t).ordinal()))
+                .forEach(t -> keys.add(t.key));
         d.mastery.keySet().stream().filter(k -> k.startsWith("magic:")).sorted().forEach(keys::add);
         int y = wy + 18, rowH = 22;
         int visible = (wy + wh - 10 - y) / rowH;
@@ -942,8 +945,19 @@ public class SystemScreen extends Screen {
             boolean magic = key.startsWith("magic:");
             Component name = magic ? MasterySystem.schoolName(key.substring(6)) : WeaponType.byKey(key).displayName();
             float ra = row(i - scroll);
-            if (ra > 0.5f) g.renderItem(new ItemStack(magic ? Items.ENCHANTED_BOOK : WeaponType.byKey(key).icon), cx0, y + 2);
+            if (ra > 0.5f) g.renderItem(com.vladosiwe.solostatus.registry.SystemIcon.mastery(key), cx0, y + 2);
             text(g, font, bold(name), cx0 + 20, y + 1, lvl > 0 ? INK : DIM, ra);
+            if (!magic && d.hunterClass != null) {
+                var prof = com.vladosiwe.solostatus.clazz.Proficiency.of(d.hunterClass, WeaponType.byKey(key));
+                int px = cx0 + 20 + font.width(bold(name)) + 6;
+                int pc = switch (prof) { case MAIN -> GOLD; case FAMILIAR -> 0xFF7DDC8A; case UNFAMILIAR -> 0xFFE8C860; case FOREIGN -> 0xFFE8604A; };
+                Component pl = body(Component.translatable("solostatus.proficiency." + prof.key));
+                text(g, font, pl, px, y + 1, pc, ra);
+                List<Component> tip = new ArrayList<>();
+                tip.add(Component.translatable("solostatus.tooltip.proficiency", d.hunterClass.displayName(), prof.displayName()));
+                tip.add(Component.translatable("solostatus.mastery.proficiency_effect", pct(prof.damage), pct(prof.attackSpeed), pct(prof.masteryGain - 1)));
+                hover(mx, my, cx0 + 20, y, px - cx0 - 20 + font.width(pl), 10, tip);
+            }
             textRight(g, font, bold(lvl + " / " + MasteryMath.MAX_LEVEL), cx0 + cw, y + 1, GOLD, ra);
             bar(g, cx0 + 20, y + 12, cw - 20 - 4 * 15, 4, MasteryMath.progress(xp), 0xFF4FA8FF, ra);
             int[] marks = {10, 25, 40, 50};

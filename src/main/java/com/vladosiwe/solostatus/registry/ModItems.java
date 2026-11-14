@@ -21,6 +21,9 @@ public final class ModItems {
     public static final DeferredItem<com.vladosiwe.solostatus.accessory.AccessoryItem> AMULET = ITEMS.register("amulet",
             () -> new com.vladosiwe.solostatus.accessory.AccessoryItem(com.vladosiwe.solostatus.accessory.AccessoryKind.AMULET, new Item.Properties()));
 
+    /** Hidden item that shows the System's own icons (see SystemIcon); not in any creative tab. */
+    public static final DeferredItem<Item> SYSTEM_ICON = ITEMS.registerSimpleItem("system_icon", new Item.Properties().stacksTo(1));
+
     public static void addToCreativeTabs(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
             event.accept(RESET_ORB.get());

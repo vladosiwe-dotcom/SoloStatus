@@ -38,7 +38,7 @@ public final class ClassSystem {
         player.serverLevel().sendParticles(SkillFx.SYSTEM_DUST, player.getX(), player.getY() + 1, player.getZ(), 150, 1, 1.5, 1, 0.05);
         player.serverLevel().sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1, player.getZ(), 60, 0.4, 2, 0.4, 0.15);
         SkillFx.sound(player.serverLevel(), player.position(), SoundEvents.BEACON_ACTIVATE, 1f, 1f);
-        Notices.send(player, Notices.CLASS, Component.translatable("solostatus.notice.class_chosen"), hc.displayName(), hc.icon());
+        Notices.send(player, Notices.CLASS, Component.translatable("solostatus.notice.class_chosen"), hc.displayName(), com.vladosiwe.solostatus.registry.SystemIcon.of(hc));
     }
 
     public static void chooseSpec(ServerPlayer player, Specialization spec) {
@@ -53,7 +53,7 @@ public final class ClassSystem {
         d.markDirty();
         player.serverLevel().sendParticles(SkillFx.SYSTEM_DUST, player.getX(), player.getY() + 1, player.getZ(), 100, 0.8, 1.2, 0.8, 0.05);
         SkillFx.sound(player.serverLevel(), player.position(), SoundEvents.BEACON_POWER_SELECT, 1f, 1f);
-        Notices.send(player, Notices.CLASS, Component.translatable("solostatus.notice.spec_chosen"), spec.displayName(), spec.parent.icon());
+        Notices.send(player, Notices.CLASS, Component.translatable("solostatus.notice.spec_chosen"), spec.displayName(), com.vladosiwe.solostatus.registry.SystemIcon.of(spec.parent));
     }
 
     /** Условия Испытания смены пути для класса (кроме уровня и специализации). */
