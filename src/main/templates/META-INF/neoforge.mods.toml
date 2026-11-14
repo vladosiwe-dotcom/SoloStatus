@@ -23,14 +23,15 @@ description='''${mod_description}'''
     ordering="NONE"
     side="BOTH"
 
-# Необязательные интеграции: мод работает и без них.
+# Iron's Spells 'n Spellbooks обязателен: магия, мана и заклинания Мага работают через него.
 [[dependencies.${mod_id}]]
     modId="irons_spellbooks"
-    type="optional"
+    type="required"
     versionRange="*"
     ordering="AFTER"
     side="BOTH"
 
+# Необязательная интеграция: мод работает и без Epic Fight.
 [[dependencies.${mod_id}]]
     modId="epicfight"
     type="optional"

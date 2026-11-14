@@ -318,7 +318,8 @@ public class SystemScreen extends Screen {
         label(g, "solostatus.ui.name", cx0, y, row(0));
         text(g, font, bold(name), cx0, y + 9, INK, row(0));
         label(g, "solostatus.ui.level", cx0 + half, y, row(0));
-        text(g, font, title(String.valueOf(d.level)), cx0 + half, y + 8, 0xFFFFFFFF, row(0));
+        // the title font draws its glyphs well above the anchor: y + 14 keeps the number clear of the label
+        text(g, font, title(String.valueOf(d.level)), cx0 + half, y + 14, 0xFFFFFFFF, row(0));
         y += 26;
 
         label(g, "solostatus.ui.class", cx0, y, row(1));

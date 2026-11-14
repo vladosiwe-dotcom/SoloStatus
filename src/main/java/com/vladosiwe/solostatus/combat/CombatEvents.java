@@ -258,7 +258,7 @@ public final class CombatEvents {
         Entity direct = source.getDirectEntity();
         boolean skill = SkillFx.applyingSkillDamage;
         boolean projectile = direct instanceof Projectile;
-        String ironSchool = CompatManager.magicSchool(source); // Iron's Spells or RPG Series school
+        String ironSchool = CompatManager.magicSchool(source); // Iron's Spells school
         boolean magic = ironSchool != null || source.is(DamageTypeTags.WITCH_RESISTANT_TO);
         boolean melee = !projectile && !magic && direct == p;
         // Отражённый урон (шипы) и прочие косвенные источники не усиливаются характеристиками.

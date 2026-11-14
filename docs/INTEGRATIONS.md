@@ -11,12 +11,11 @@
 | ModDevGradle | 2.0.x | сборка | https://projects.neoforged.net/neoforged/moddevgradle |
 | Java | 21 | сборка | https://adoptium.net/ |
 | Epic Fight | 21.17.3.1 (проверено по jar) | необязательно | https://www.curseforge.com/minecraft/mc-mods/epic-fight-mod · https://github.com/Epic-Fight/epicfight |
-| Iron's Spells 'n Spellbooks | 1.21.1-3.16.3 (сверено по исходникам) | необязательно | https://www.curseforge.com/minecraft/mc-mods/irons-spells-n-spellbooks · https://github.com/iron431/irons-spells-n-spellbooks |
+| Iron's Spells 'n Spellbooks | 1.21.1-3.16.3 (сверено по исходникам) | **обязательно** (вместе с Iron's Lib, Curios, GeckoLib, Player Animator) | https://www.curseforge.com/minecraft/mc-mods/irons-spells-n-spellbooks · https://github.com/iron431/irons-spells-n-spellbooks |
 | Legendary Tooltips | ветка для 1.21.1 NeoForge | необязательно | https://www.curseforge.com/minecraft/mc-mods/legendary-tooltips |
 | Vosk (распознавание речи) | 0.3.45 (проверено: API и нативная библиотека) | встроено в мод | https://central.sonatype.com/artifact/com.alphacephei/vosk · https://alphacephei.com/vosk/models |
 | Simple Voice Chat | ветка для 1.21.1 NeoForge | необязательно, совместим | https://modrepo.de/minecraft/voicechat |
-| RPG Series: Spell Engine, Spell Power, Wizards, Rogues & Warriors, Paladins & Priests | версии для 1.21.1 NeoForge (CI скачивает последние с Modrinth) | необязательно | https://modrinth.com/mod/spell-power · https://modrinth.com/mod/wizards |
-| Curios API | версия, которую тянет Iron's Spells | необязательно (без него украшения надеваются в слоты Системы) | https://modrinth.com/mod/curios |
+| Curios API | версия, которую тянет Iron's Spells | ставится вместе с Iron's Spells | https://modrinth.com/mod/curios |
 | Better Combat | **не использовать вместе с Epic Fight** | — | — |
 
 ## Подтверждённые механизмы (стандартный API NeoForge/Minecraft)
@@ -29,7 +28,7 @@
 
 ## Iron's Spells — сверено с исходниками
 
-Все имена ниже сверены с исходным кодом Iron's Spells, ветка `1.21` (версия 1.21.1-3.16.3, https://github.com/iron431/irons-spells-n-spellbooks). Интеграция работает через отражение и реестры, поэтому мод собирается и работает без Iron's Spells.
+Все имена ниже сверены с исходным кодом Iron's Spells, ветка `1.21` (версия 1.21.1-3.16.3, https://github.com/iron431/irons-spells-n-spellbooks). Iron's Spells обязателен: без него игра не запустит мод. Сама интеграция по-прежнему работает через отражение и реестры, поэтому мод собирается без Iron's Spells в зависимостях сборки.
 
 | Что | Имя в Iron's Spells | Что будет, если в другой версии изменится |
 |---|---|---|
@@ -63,18 +62,6 @@
 - **Боевой режим только с оружием.** Сервер следит за главной рукой: меч, кинжал, копьё, булава, двуручник, лук, арбалет, посох или боевой топор включают боевой режим Epic Fight (`PlayerPatch.toEpicFightMode(true)`). Инструменты (и обычный топор), блоки, щит, еда и пустая рука включают ванильный режим (`toVanillaMode(true)`). Переключение происходит при смене предмета, поэтому вручную (R) переключать по-прежнему можно. API сверен с Epic Fight 21.17.3.1.
 - **Рукопашного боя в Системе нет.** У пустой руки нет мастерства, навыков и бонусов Системы.
 - **Тело от первого лица.** Опция Epic Fight `ingame.first_person_model` рисует от первого лица всю модель вместе с бронёй, и она торчит по краям экрана. Solo Status выключает её в клиентском конфиге Epic Fight через `ModConfigs` FML. Вернуть: в клиентском конфиге Solo Status `epicFightFirstPersonBody = true`. Анимации Epic Fight остаются видны со стороны и другим игрокам.
-
-## RPG Series (Spell Engine / Spell Power)
-
-Без compile-зависимости, только через ванильные реестры:
-
-| Что | Имя | Поведение |
-|---|---|---|
-| Атрибуты школ | `spell_power:<школа>` (arcane, fire, frost, healing, lightning, soul) | INT, класс Маг и пассивки специализаций дают множитель (ADD_MULTIPLIED_TOTAL): он усиливает силу заклинаний от снаряжения, а не добавляется сверху |
-| Школа по урону | тип урона `spell_power:<школа>` | магическое мастерство растёт по школам, как с Iron's Spells |
-| Оружие | id предметов: dagger, sickle, double_axe, claymore, hammer, mace, glaive, spear, staff, wand, *_bow | определяется тип оружия для мастерства и качества |
-
-CI делает второй, необязательный прогон тестов с Wizards, Rogues & Warriors и Paladins & Priests и пишет в лог, как Система видит их оружие.
 
 ## Украшения и Curios
 
