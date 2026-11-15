@@ -25,6 +25,10 @@ import static com.vladosiwe.solostatus.skill.SkillSource.*;
  */
 public final class Skills {
     private static final Map<String, SkillDef> BY_ID = new LinkedHashMap<>();
+    // declared before the static block below that registers the skills: it uses them
+    /** Character level at which each tier of a school branch opens, and the column of each school. */
+    private static final int[] TIER_LEVEL = {1, 8, 18, 30};
+    private static final List<String> SCHOOLS = List.of("ender", "fire", "ice", "lightning", "evocation", "blood", "eldritch");
 
     private Skills() {}
 
@@ -84,12 +88,17 @@ public final class Skills {
 
         // ============================== MAGE ==============================
         HunterClass M = HunterClass.MAGE;
-        reg(b("mana_bolt", CLASS_START, MAGIC, Items.AMETHYST_SHARD).forClass(M).cooldown(2.5, 0.15).energy(12).tree(0, 0).effect(SkillEffects::manaBolt).build());
-        reg(b("arcane_mind", CLASS_START, PASSIVE, Items.LAPIS_LAZULI).forClass(M).tree(0, 2).build());
-        reg(b("frost_nova", CLASS, MAGIC, Items.BLUE_ICE).forClass(M).level(5).parent("mana_bolt", 2).cooldown(12, 0.8).energy(25).tree(1, 0).effect(SkillEffects::frostNova).build());
-        reg(b("flame_burst", CLASS, MAGIC, Items.FIRE_CHARGE).forClass(M).level(10).parent("mana_bolt", 2).cooldown(10, 0.6).energy(25).tree(1, 1).effect(SkillEffects::flameBurst).build());
-        reg(b("chain_lightning", CLASS, MAGIC, Items.LIGHTNING_ROD).forClass(M).level(15).parent("flame_burst", 2).cooldown(14, 0.8).energy(30).tree(2, 1).effect(SkillEffects::chainLightning).build());
-        reg(b("mana_shield", CLASS, DEFENSE, Items.PRISMARINE_CRYSTALS).forClass(M).level(20).parent("arcane_mind", 2).cooldown(30, 2).energy(35).tree(1, 2).effect(SkillEffects::manaShield).build());
+        // Every Mage skill is an Iron's Spells spell: the rank is the spell level, Iron's spends the mana and plays its
+        // own cast. One branch per school, four spells each from a starter to a capstone; the school's passive raises
+        // its spell power. Eldritch opens late and only after a capstone of another school.
+        reg(b("arcane_mind", CLASS_START, PASSIVE, Items.LAPIS_LAZULI).forClass(M).tree(0, 4).build());
+        school(M, "ender", true, "magic_missile", "teleport", "summon_swords", "black_hole");
+        school(M, "fire", false, "firebolt", "burning_dash", "fireball", "raise_hell");
+        school(M, "ice", false, "icicle", "frost_step", "ice_tomb", "blizzard");
+        school(M, "lightning", false, "ball_lightning", "chain_lightning", "thunder_step", "lightning_bolt");
+        school(M, "evocation", false, "fang_strike", "shield", "summon_vex", "fang_swirl");
+        school(M, "blood", false, "blood_needles", "blood_step", "blood_slash", "raise_dead");
+        eldritch(M);
 
         // ============================== DEFENDER ==============================
         HunterClass D = HunterClass.DEFENDER;
@@ -198,6 +207,50 @@ public final class Skills {
         reg(b("second_wind", HIDDEN, PASSIVE, Items.TOTEM_OF_UNDYING).ranks(3).level(20).rankStep(15).requires(Req.achievement("undying")).build());
         reg(b("ruler_grip", HIDDEN, MAGIC, Items.DRAGON_BREATH).ranks(3).level(40).rankStep(15).requires(Req.achievement("sovereign"))
                 .cooldown(30, 3).energy(40).effect(SkillEffects::rulerGrip).build());
+    }
+
+    /** Id of the skill that casts this Iron's spell. */
+    public static String spellSkill(String spell) {
+        return "spell_" + spell;
+    }
+
+    /**
+     * A school branch of four Iron's spells: each needs rank 2 of the one before it. The first spell of the starting
+     * school is given with the class. Plus the school's passive (+school spell power), learnable from level 5.
+     */
+    private static void school(HunterClass c, String school, boolean starting, String... spells) {
+        int column = SCHOOLS.indexOf(school);
+        String prev = null;
+        for (int tier = 0; tier < spells.length; tier++) {
+            SkillSource src = tier == 0 && starting ? CLASS_START : CLASS;
+            var b = b(spellSkill(spells[tier]), src, MAGIC, Items.ENCHANTED_BOOK).forClass(c).level(TIER_LEVEL[tier]).rankStep(6)
+                    .tree(column, tier).spell(spells[tier], school);
+            if (prev != null) b.parent(prev, 2);
+            reg(b.build());
+            prev = spellSkill(spells[tier]);
+        }
+        reg(b(school + "_affinity", CLASS, PASSIVE, Items.AMETHYST_SHARD).forClass(c).level(5).school(school).tree(column, 4).build());
+    }
+
+    /** Eldritch: forbidden magic, from level 40 and only after the capstone of another school. */
+    private static void eldritch(HunterClass c) {
+        int column = SCHOOLS.indexOf("eldritch");
+        Requirement anyCapstone = Req.anyOf(List.of(Req.skill(spellSkill("black_hole"), 1), Req.skill(spellSkill("raise_hell"), 1),
+                Req.skill(spellSkill("blizzard"), 1), Req.skill(spellSkill("lightning_bolt"), 1), Req.skill(spellSkill("fang_swirl"), 1),
+                Req.skill(spellSkill("raise_dead"), 1)));
+        String[] spells = {"eldritch_blast", "sculk_tentacles", "sonic_boom"};
+        int[] levels = {40, 48, 56};
+        String prev = null;
+        for (int tier = 0; tier < spells.length; tier++) {
+            var b = b(spellSkill(spells[tier]), CLASS, MAGIC, Items.ECHO_SHARD).forClass(c).level(levels[tier]).rankStep(8).ranks(3)
+                    .tree(column, tier).spell(spells[tier], "eldritch");
+            if (prev == null) b.requires(anyCapstone);
+            else b.parent(prev, 2);
+            reg(b.build());
+            prev = spellSkill(spells[tier]);
+        }
+        reg(b("eldritch_affinity", CLASS, PASSIVE, Items.SCULK_CATALYST).forClass(c).level(40).requires(anyCapstone).school("eldritch")
+                .tree(column, 4).build());
     }
 
     private static void spec(Specialization s, String activeId, Item activeIcon, SkillEffect effect, double cd, double cdPerRank, float energy,

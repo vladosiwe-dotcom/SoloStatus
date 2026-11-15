@@ -66,8 +66,9 @@ public final class IronsSpellsCompat {
         if (d.hunterClass == HunterClass.MAGE) spellPower += 0.05;
         set(p, "spell_power", spellPower, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         // magic is the harder path: INT adds half of what it used to (cap 100 mana, +15% regen)
-        set(p, "max_mana", Math.min(100, StatFormulas.eff(d, Stat.INT)), AttributeModifier.Operation.ADD_VALUE);
-        double regen = Math.min(0.15, StatFormulas.eff(d, Stat.INT) * 0.003) + d.skillRank("arcane_flow") * 0.05;
+        // INT (up to 100) and the Mage's Arcane Mind (+15 per rank) raise Iron's mana: casters spend it on every skill
+        set(p, "max_mana", Math.min(100, StatFormulas.eff(d, Stat.INT)) + d.skillRank("arcane_mind") * 15, AttributeModifier.Operation.ADD_VALUE);
+        double regen = Math.min(0.15, StatFormulas.eff(d, Stat.INT) * 0.003) + d.skillRank("arcane_flow") * 0.05 + d.skillRank("arcane_mind") * 0.10;
         set(p, "mana_regen", regen, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         set(p, "cooldown_reduction", d.skillRank("arcane_flow") * 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 
@@ -79,6 +80,7 @@ public final class IronsSpellsCompat {
             if (att > 0 && (school.equals("fire") || school.equals("ice") || school.equals("lightning"))) v += 0.03 * att;
             if (flow > 0 && (school.equals("ender") || school.equals("evocation") || school.equals("eldritch"))) v += 0.02 * flow;
             if (grace > 0 && (school.equals("holy") || school.equals("nature"))) v += 0.04 * grace;
+            v += 0.05 * d.skillRank(school + "_affinity"); // the Mage's school passive: +5% of that school's power per rank
             set(p, school + "_spell_power", v, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         }
     }
@@ -137,5 +139,10 @@ public final class IronsSpellsCompat {
         } catch (Exception e) {
             // Не роняем игру из-за несовпадения API — просто пропускаем событие
         }
+    }
+
+    /** Effect of a Mage skill that is an Iron's spell: casts it at the skill's rank. */
+    public static boolean castSkillSpell(ServerPlayer player, String spell, int rank) {
+        return IronsSpellsBridge.cast(player, spell, rank);
     }
 }

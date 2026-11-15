@@ -42,6 +42,14 @@ public final class SkillIcons {
     public static void draw(GuiGraphics g, SkillDef def, int x, int y, int size, int argb, float alpha) {
         float a = ((argb >>> 24) & 0xFF) / 255f * alpha;
         if (a < 0.02f) return;
+        if (def.isSpell()) { // a Mage spell shows Iron's own spell icon in its colours; not learned yet = dimmed
+            float k = argb == LOCKED ? 0.45f : 1f;
+            RenderSystem.enableBlend();
+            g.setColor(k, k, k, a);
+            g.blit(com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.icon(def.ironsSpell), x, y, size, size, 0f, 0f, 16, 16, 16, 16);
+            g.setColor(1f, 1f, 1f, 1f);
+            return;
+        }
         RenderSystem.enableBlend();
         g.setColor(((argb >> 16) & 0xFF) / 255f, ((argb >> 8) & 0xFF) / 255f, (argb & 0xFF) / 255f, a);
         g.blit(texture(def), x, y, size, size, 0f, 0f, 64, 64, 64, 64);

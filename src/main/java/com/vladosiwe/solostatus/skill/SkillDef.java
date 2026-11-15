@@ -31,6 +31,10 @@ public final class SkillDef {
     public final int treeColumn;
     public final int treeRow;
     @Nullable public final String parent;
+    /** Iron's Spells spell this skill casts (path of irons_spellbooks:<spell>), or null for the System's own skills. */
+    @Nullable public final String ironsSpell;
+    /** Magic school branch of the skill tree (fire, ice...), or null. */
+    @Nullable public final String school;
 
     private SkillDef(Builder b) {
         id = b.id; source = b.source; category = b.category; icon = b.icon; maxRank = b.maxRank;
@@ -38,10 +42,16 @@ public final class SkillDef {
         cooldownTicks = b.cooldownTicks; cooldownReductionPerRank = b.cooldownReductionPerRank; energyCost = b.energyCost;
         requirements = List.copyOf(b.requirements); effect = b.effect;
         treeColumn = b.treeColumn; treeRow = b.treeRow; parent = b.parent;
+        ironsSpell = b.ironsSpell; school = b.school;
     }
 
     public boolean isActive() {
         return effect != null;
+    }
+
+    /** A Mage skill that casts an Iron's Spells spell (its rank is the spell level). */
+    public boolean isSpell() {
+        return ironsSpell != null;
     }
 
     public boolean hidden() {
@@ -49,10 +59,12 @@ public final class SkillDef {
     }
 
     public Component name() {
+        if (ironsSpell != null) return Component.translatable("spell.irons_spellbooks." + ironsSpell); // Iron's own name
         return Component.translatable("solostatus.skill." + id);
     }
 
     public Component description() {
+        if (ironsSpell != null) return Component.translatable("spell.irons_spellbooks." + ironsSpell + ".guide");
         return Component.translatable("solostatus.skill." + id + ".desc");
     }
 
@@ -123,6 +135,7 @@ public final class SkillDef {
         private SkillEffect effect;
         private int treeColumn, treeRow;
         private String parent;
+        private String ironsSpell, school;
 
         private Builder(String id, SkillSource source, SkillCategory category, Item icon) {
             this.id = id; this.source = source; this.category = category; this.icon = icon;
@@ -148,6 +161,15 @@ public final class SkillDef {
             this.requirements.add(Req.skill(parentId, rank));
             return this;
         }
+        /** Casts the Iron's Spells spell irons_spellbooks:<spell> at the skill's rank as its level. */
+        public Builder spell(String spell, String school) {
+            this.ironsSpell = spell;
+            this.school = school;
+            this.effect = ctx -> com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsCompat.castSkillSpell(ctx.player(), spell, ctx.rank());
+            return this;
+        }
+        /** Puts a skill (a school passive) into a magic school branch. */
+        public Builder school(String school) { this.school = school; return this; }
         public SkillDef build() { return new SkillDef(this); }
     }
 }

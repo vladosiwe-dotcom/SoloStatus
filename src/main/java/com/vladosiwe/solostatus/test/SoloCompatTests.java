@@ -99,6 +99,53 @@ public final class SoloCompatTests {
         h.succeed();
     }
 
+    /** Every Mage skill is a real Iron's spell that is cast with one press (no held spells on a skill key). */
+    @GameTest(template = "empty")
+    public static void mageSchoolsAreIronsSpells(GameTestHelper h) {
+        if (!ModList.get().isLoaded("irons_spellbooks")) {
+            if (required()) h.fail("Iron's Spells is not loaded");
+            h.succeed();
+            return;
+        }
+        int spells = 0;
+        for (var def : com.vladosiwe.solostatus.skill.Skills.all()) {
+            if (!def.isSpell()) continue;
+            spells++;
+            h.assertTrue(com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.available(def.ironsSpell), "no Iron's spell " + def.ironsSpell);
+            String type = com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.castType(def.ironsSpell);
+            h.assertTrue(!type.equals("CONTINUOUS"), def.ironsSpell + " must be held: it does not fit a skill key");
+        }
+        h.assertTrue(spells >= 24, "too few Mage spells: " + spells);
+        h.succeed();
+    }
+
+    /** A Mage casts its starting spell through a System skill key: Iron's casts it and the slot gets the cooldown. */
+    @GameTest(template = "empty", timeoutTicks = 100)
+    public static void mageCastsThroughTheSystem(GameTestHelper h) {
+        if (!ModList.get().isLoaded("irons_spellbooks")) {
+            if (required()) h.fail("Iron's Spells is not loaded");
+            h.succeed();
+            return;
+        }
+        ServerPlayer p = hunter(h, HunterClass.MAGE);
+        AttributeSystem.apply(p);
+        PlayerData d = Hunter.get(p);
+        String start = com.vladosiwe.solostatus.skill.Skills.spellSkill("magic_missile");
+        h.assertTrue(d.hasSkill(start), "the Mage did not get Magic Missile at the start");
+        int slot = java.util.Arrays.asList(d.slots).indexOf(start);
+        h.assertTrue(slot >= 0, "Magic Missile is not on a skill key");
+        com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.spendMana(p, -200); // a new player may start with no mana
+        float before = com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.mana(p);
+        com.vladosiwe.solostatus.skill.SkillSystem.cast(p, slot);
+        long now = p.serverLevel().getGameTime();
+        h.assertTrue(d.cooldowns.getOrDefault(start, 0L) > now, "the skill key got no cooldown: Iron's refused the cast");
+        h.runAfterDelay(20, () -> {
+            float after = com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.mana(p);
+            h.assertTrue(after < before, "Iron's mana was not spent: " + before + " -> " + after);
+            h.succeed();
+        });
+    }
+
     @GameTest(template = "empty")
     public static void ironsSpellsIntegration(GameTestHelper h) {
         if (!ModList.get().isLoaded("irons_spellbooks")) {

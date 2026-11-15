@@ -343,11 +343,12 @@ public class SystemScreen extends Screen {
         // полосы
         float maxHp = minecraft != null && minecraft.player != null ? minecraft.player.getMaxHealth() : 20;
         float hp = minecraft != null && minecraft.player != null ? minecraft.player.getHealth() : 20;
-        float maxE = (float) StatFormulas.maxEnergy(d);
+        float maxE = minecraft != null && minecraft.player != null ? com.vladosiwe.solostatus.skill.ManaPool.max(minecraft.player, d) : (float) StatFormulas.maxEnergy(d);
+        float curE = com.vladosiwe.solostatus.skill.ManaPool.clientCurrent(d);
         long need = d.level < PlayerData.MAX_LEVEL ? LevelSystem.xpToNext(d.level) : LevelSystem.overflowNeed(d.overflowAwakenings);
         long have = d.level < PlayerData.MAX_LEVEL ? d.xp : d.overflowXp;
         barRow(g, "HP", hp / Math.max(1, maxHp), Math.round(hp) + " / " + Math.round(maxHp), 0xFFFF6B6B, y, row(3));
-        barRow(g, StatFormulas.usesMana(d) ? "MP" : "SP", d.energy / Math.max(1, maxE), Math.round(d.energy) + " / " + Math.round(maxE), 0xFF4FA8FF, y + 12, row(4));
+        barRow(g, StatFormulas.usesMana(d) ? "MP" : "SP", curE / Math.max(1, maxE), Math.round(curE) + " / " + Math.round(maxE), 0xFF4FA8FF, y + 12, row(4));
         barRow(g, "EXP", have / (double) Math.max(1, need), have + " / " + need, 0xFFE8B83A, y + 24, row(5));
         y += 40;
         divider(g, cx0, y, cw, row(6));
@@ -506,13 +507,35 @@ public class SystemScreen extends Screen {
 
     private record SkillRow(@Nullable String section, @Nullable SkillDef def) {}
 
+    /**
+     * Cooldown and cost of an active skill. A Mage spell shows Iron's numbers: mana at the spell level of this rank
+     * (→ the next rank) and Iron's cooldown for this player.
+     */
+    private Component costLine(PlayerData d, SkillDef def, int rank) {
+        int cur = Math.max(1, rank);
+        boolean next = rank > 0 && rank < def.maxRank;
+        if (def.isSpell()) {
+            int mana = com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.manaCost(def.ironsSpell, cur);
+            String manaText = mana + (next ? " → " + com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.manaCost(def.ironsSpell, rank + 1) : "");
+            int cdTicks = minecraft != null && minecraft.player != null
+                    ? com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.cooldownTicks(minecraft.player, def.ironsSpell) : 0;
+            return Component.empty().append(tr("solostatus.skills.cooldown", String.format(Locale.ROOT, "%.1f", cdTicks / 20.0))).append("   ")
+                    .append(tr("solostatus.skills.mana", manaText)).append("   ").append(tr("solostatus.skills.spell_level", cur));
+        }
+        String cd = String.format(Locale.ROOT, "%.1f", def.cooldownFor(cur) / 20.0)
+                + (next ? " → " + String.format(Locale.ROOT, "%.1f", def.cooldownFor(rank + 1) / 20.0) : "");
+        return Component.empty().append(tr("solostatus.skills.cooldown", cd)).append("   ")
+                .append(tr("solostatus.skills.energy", Math.round(SkillSystem.energyCost(d, def))));
+    }
+
     /** Фильтр списка навыков по происхождению. Цвет фильтра совпадает с цветом иконок этого происхождения. */
     private enum SkillFilter {
-        ALL, CLASS, SPEC, GENERAL, AWAKENING, HIDDEN;
+        ALL, SCHOOLS, CLASS, SPEC, GENERAL, AWAKENING, HIDDEN;
 
         boolean accepts(SkillDef def) {
             return switch (this) {
                 case ALL -> true;
+                case SCHOOLS -> def.school != null;
                 case CLASS -> def.source == SkillSource.CLASS_START || def.source == SkillSource.CLASS || def.source == SkillSource.ULTIMATE;
                 case SPEC -> def.source == SkillSource.SPEC;
                 case GENERAL -> def.source == SkillSource.GENERAL;
@@ -524,6 +547,7 @@ public class SystemScreen extends Screen {
         int color() {
             return switch (this) {
                 case ALL -> INK;
+                case SCHOOLS -> 0xFFB48CFF;
                 case CLASS -> SkillIcons.CLASS;
                 case SPEC -> SkillIcons.SPEC;
                 case GENERAL -> SkillIcons.GENERAL;
@@ -534,14 +558,36 @@ public class SystemScreen extends Screen {
     }
 
     private SkillFilter skillFilter = SkillFilter.ALL;
+    private boolean schoolsDefaulted;
 
     /** Карточка навыка встроена в окно под списком; на невысоких экранах она открывается поверх, как раньше. */
     private boolean skillsSplit() {
         return wh >= 250;
     }
 
+    /** The Schools view only exists for a class with magic school branches (the Mage). */
+    private boolean hasSchools() {
+        PlayerData d = d();
+        return Skills.all().stream().anyMatch(def -> def.school != null && def.availableFor(d));
+    }
+
+    private boolean filterShown(SkillFilter f) {
+        return f != SkillFilter.SCHOOLS || hasSchools();
+    }
+
     private List<SkillRow> skillRows() {
         PlayerData d = d();
+        if (skillFilter == SkillFilter.SCHOOLS) {
+            // one branch per school in learning order (spells by tier, then the school's passive)
+            List<SkillRow> rows = new ArrayList<>();
+            java.util.LinkedHashMap<String, List<SkillDef>> bySchool = new java.util.LinkedHashMap<>();
+            for (SkillDef def : Skills.all()) {
+                if (def.school == null || (!def.availableFor(d) && !d.hasSkill(def.id))) continue;
+                bySchool.computeIfAbsent(def.school, k -> new ArrayList<>()).add(def);
+            }
+            bySchool.forEach((school, defs) -> addSection(rows, "solostatus.school." + school, defs));
+            return rows;
+        }
         List<SkillDef> active = new ArrayList<>(), passive = new ArrayList<>(), learnable = new ArrayList<>(), locked = new ArrayList<>();
         for (SkillDef def : Skills.all()) {
             if (!def.availableFor(d) && !d.hasSkill(def.id)) continue;
@@ -566,6 +612,11 @@ public class SystemScreen extends Screen {
 
     private void renderSkills(GuiGraphics g, int mx, int my) {
         PlayerData d = d();
+        if (!schoolsDefaulted) { // a Mage opens on the school branches
+            schoolsDefaulted = true;
+            if (hasSchools() && skillFilter == SkillFilter.ALL) skillFilter = SkillFilter.SCHOOLS;
+        }
+        if (!filterShown(skillFilter)) skillFilter = SkillFilter.ALL;
         boolean split = skillsSplit();
         int y = wy + 16;
 
@@ -591,10 +642,11 @@ public class SystemScreen extends Screen {
         // фильтры по происхождению
         boolean wide = true;
         int total = 0;
-        for (SkillFilter f : SkillFilter.values()) total += font.width(trBold("solostatus.ui.filter_" + f.name().toLowerCase())) + 10;
+        for (SkillFilter f : SkillFilter.values()) if (filterShown(f)) total += font.width(trBold("solostatus.ui.filter_" + f.name().toLowerCase())) + 10;
         if (total > cw) wide = false;
         int tx = cx0;
         for (SkillFilter f : SkillFilter.values()) {
+            if (!filterShown(f)) continue;
             Component label = wide ? trBold("solostatus.ui.filter_" + f.name().toLowerCase()) : tr("solostatus.ui.filter_" + f.name().toLowerCase());
             int tw = font.width(label) + 8;
             boolean sel = f == skillFilter, hov = inside(mx, my, tx, y, tw, 12);
@@ -648,12 +700,19 @@ public class SystemScreen extends Screen {
             boolean hov = inside(mx, my, cx0 - 4, yy, cw + 8, rowH) && my < listBottom;
             if (sel || hov) g.fill(cx0 - 4, yy, cx0 + cw + 4, yy + rowH, a(sel ? 0x3355C8FF : 0x1A55C8FF, ra));
             g.fill(cx0 - 4, yy + 2, cx0 - 2, yy + rowH - 2, a(SkillIcons.color(def.source), ra * (learned ? 1f : 0.45f)));
+            // school branches: each spell steps in under the one it grows from, joined by a line
+            int ind = skillFilter == SkillFilter.SCHOOLS && def.isSpell() ? def.treeRow * 8 : 0;
+            if (ind > 0) {
+                int lx = cx0 + ind - 5;
+                g.fill(lx, yy - 6, lx + 1, yy + 8, a(0x6655C8FF, ra));
+                g.fill(lx, yy + 7, lx + 4, yy + 8, a(0x6655C8FF, ra));
+            }
             if (hiddenLocked) textCenter(g, font, bold("?"), cx0 + 6, yy + 4, VIOLET, ra);
-            else SkillIcons.draw(g, def, cx0, yy + 1, 13, learned, ra);
+            else SkillIcons.draw(g, def, cx0 + ind, yy + 1, 13, learned, ra);
             Component nm = hiddenLocked ? body("???") : body(def.name());
             int nameColor = hiddenLocked ? VIOLET : learned ? INK : SkillSystem.canAdvance(d, def) == null ? GOLD : DIM;
-            text(g, font, nm, cx0 + 18, yy + 4, nameColor, ra);
-            if (d.unseenSkills.contains(def.id)) text(g, font, bold("NEW"), cx0 + 22 + font.width(nm), yy + 4, GOLD, ra);
+            text(g, font, nm, cx0 + 18 + ind, yy + 4, nameColor, ra);
+            if (d.unseenSkills.contains(def.id)) text(g, font, bold("NEW"), cx0 + 22 + ind + font.width(nm), yy + 4, GOLD, ra);
             if (learned) {
                 int slot = slotOf(def.id);
                 if (def.isActive()) keyBadge(g, font, bold(slot >= 0 ? Keys.SKILLS[slot].getTranslatedKeyMessage().getString() : "—"), cx0 + cw, yy + 2, slot >= 0, ra);
@@ -718,10 +777,7 @@ public class SystemScreen extends Screen {
 
         if (def.isActive()) {
             int cur = Math.max(1, rank);
-            String cd = String.format(Locale.ROOT, "%.1f", def.cooldownFor(cur) / 20.0)
-                    + (rank > 0 && rank < def.maxRank ? " → " + String.format(Locale.ROOT, "%.1f", def.cooldownFor(rank + 1) / 20.0) : "");
-            Component line = Component.empty().append(tr("solostatus.skills.cooldown", cd)).append("   ")
-                    .append(tr("solostatus.skills.energy", Math.round(SkillSystem.energyCost(d, def))));
+            Component line = costLine(d, def, rank);
             text(g, font, line, x, y, DIM, alpha);
             y += 11;
         }
@@ -1114,11 +1170,7 @@ public class SystemScreen extends Screen {
         y += wrap(g, body(def.description()), x, y, w, INK, 1f) + 4;
         if (def.isActive()) {
             int cur = Math.max(1, rank);
-            String cd = String.format(Locale.ROOT, "%.1f", def.cooldownFor(cur) / 20.0)
-                    + (rank > 0 && rank < def.maxRank ? " → " + String.format(Locale.ROOT, "%.1f", def.cooldownFor(rank + 1) / 20.0) : "");
-            text(g, font, tr("solostatus.skills.cooldown", cd), x, y, DIM, 1f);
-            y += 10;
-            text(g, font, tr("solostatus.skills.energy", Math.round(SkillSystem.energyCost(d, def))), x, y, DIM, 1f);
+            text(g, font, costLine(d, def, rank), x, y, DIM, 1f);
             y += 12;
         }
         if (!learned) {

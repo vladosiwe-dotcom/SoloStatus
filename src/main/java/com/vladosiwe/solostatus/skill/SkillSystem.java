@@ -110,8 +110,10 @@ public final class SkillSystem {
         long now = player.serverLevel().getGameTime();
         Long ready = d.cooldowns.get(id);
         if (ready != null && ready > now) return; // клиент тоже показывает перезарядку — без спама уведомлениями
-        float cost = energyCost(d, def);
-        if (!player.isCreative() && d.energy < cost) {
+        // a spell skill is paid by Iron's Spells itself (mana, cooldown, cast time); casters pay other skills from Iron's mana
+        float cost = def.isSpell() ? 0 : energyCost(d, def);
+        boolean ironsMana = ManaPool.ironsMana(d);
+        if (!player.isCreative() && cost > 0 && ManaPool.current(player, d) < cost) {
             Notices.warn(player, StatFormulas.usesMana(d) ? "solostatus.error.no_mana" : "solostatus.error.no_stamina");
             return;
         }
@@ -129,11 +131,14 @@ public final class SkillSystem {
             d.castingSkill = null;
         }
         if (!ok) {
-            Notices.warn(player, "solostatus.error.no_target");
+            if (!def.isSpell()) Notices.warn(player, "solostatus.error.no_target"); // Iron's says itself why a spell failed
             return;
         }
-        if (!player.isCreative()) d.energy -= cost;
-        d.cooldowns.put(id, now + cooldownFor(d, def, rank));
+        if (!player.isCreative() && cost > 0) {
+            if (ironsMana) com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.spendMana(player, cost);
+            else d.energy -= cost;
+        }
+        d.cooldowns.put(id, now + cooldownFor(player, d, def, rank));
         d.addCounter("skills_used", 1);
         d.markDirty();
         Notices.syncEnergy(player, d);
@@ -143,7 +148,9 @@ public final class SkillSystem {
         return (float) (def.energyCost * (1 - d.skillRank("arcane_flow") * 0.06));
     }
 
-    public static int cooldownFor(PlayerData d, SkillDef def, int rank) {
+    public static int cooldownFor(ServerPlayer player, PlayerData d, SkillDef def, int rank) {
+        // a spell's cooldown is Iron's own (with its cooldown reduction), shown on the System's skill slot
+        if (def.isSpell()) return Math.max(10, com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.cooldownTicks(player, def.ironsSpell));
         return def.cooldownFor(rank);
     }
 

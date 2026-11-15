@@ -3,15 +3,12 @@ package com.vladosiwe.solostatus.client.hud;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.vladosiwe.solostatus.SoloStatus;
-import com.vladosiwe.solostatus.client.ui.SystemFonts;
 import com.vladosiwe.solostatus.config.SoloConfig;
 import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2FloatOpenHashMap;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.api.distmarker.Dist;
@@ -83,10 +80,6 @@ public final class MobHealthBars {
         quad(vc, m, x0, y0, x0 + W * f, y0 + H, 0.3f, argb(color, alpha), light);
         quad(vc, m, x0, y0, x0 + W * f, y0 + 1, 0.4f, argb(0x60FFFFFF, alpha), light);          // shine
 
-        Font font = mc.font;
-        Component text = SystemFonts.bold(Math.round(hp) + " / " + Math.round(max));
-        float tx = -font.width(text) / 2f;
-        font.drawInBatch(text, tx, y0 - 10, argb(0xFFE8F4FF, alpha), false, m, buffers, Font.DisplayMode.NORMAL, 0, light);
         ps.popPose();
 
         if (SHOWN_AT.size() > 512) SHOWN_AT.int2LongEntrySet().removeIf(e -> now - e.getLongValue() > SHOW_MS);

@@ -42,6 +42,7 @@ public final class ServerEvents {
     public static void onLogin(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer p) {
             PlayerData d = Hunter.get(p);
+            com.vladosiwe.solostatus.clazz.ClassSystem.migrate(p);
             AttributeSystem.apply(p);
             // give back health above 20 that vanilla clamped while loading (see PlayerData.savedHealth)
             if (!p.isDeadOrDying() && d.savedHealth > p.getHealth()) p.setHealth(Math.min(d.savedHealth, p.getMaxHealth()));

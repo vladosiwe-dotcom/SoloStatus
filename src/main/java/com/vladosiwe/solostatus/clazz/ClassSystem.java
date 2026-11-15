@@ -85,4 +85,38 @@ public final class ClassSystem {
         SkillDef ult = Skills.ultimate(d.hunterClass);
         if (ult != null) SkillUnlockSystem.awaken(player, d, ult);
     }
+
+    /** Mage skills replaced by the Iron's Spells school branches; those learned before are refunded. */
+    private static final java.util.Map<String, Boolean> RETIRED = java.util.Map.of(
+            "mana_bolt", true, "frost_nova", false, "flame_burst", false, "chain_lightning", false, "mana_shield", false);
+
+    /**
+     * Brings an older profile up to date at login: skills that no longer exist are taken away with their skill points
+     * given back (a starting skill was free at rank 1), and starting skills the class got since are granted.
+     */
+    public static void migrate(ServerPlayer player) {
+        PlayerData d = Hunter.get(player);
+        if (!d.hasClass()) return;
+        boolean changed = false;
+        for (var e : RETIRED.entrySet()) {
+            Integer rank = d.skills.remove(e.getKey());
+            if (rank == null) continue;
+            int refund = 0;
+            for (int r = 1; r <= rank; r++) refund += r == 1 ? (e.getValue() ? 0 : 1) : r <= 3 ? 1 : 2;
+            d.skillPoints += refund;
+            for (int i = 0; i < d.slots.length; i++) if (e.getKey().equals(d.slots[i])) d.slots[i] = null;
+            d.cooldowns.remove(e.getKey());
+            changed = true;
+        }
+        for (SkillDef def : Skills.forClass(d.hunterClass)) {
+            if (def.source == SkillSource.CLASS_START && !d.hasSkill(def.id)) {
+                SkillSystem.grant(player, d, def);
+                changed = true;
+            }
+        }
+        if (changed) {
+            d.markDirty();
+            Notices.send(player, Notices.INFO, Component.translatable("solostatus.notice.skills_updated"), Component.translatable("solostatus.notice.skills_updated.desc"));
+        }
+    }
 }

@@ -106,10 +106,13 @@ public final class SoloHud {
             g.pose().popPose();
         }
         // энергия
-        float max = (float) StatFormulas.maxEnergy(d);
+        // casters show Iron's Spells mana: the same pool their spells and skills spend
+        var local = Minecraft.getInstance().player;
+        float max = local != null ? com.vladosiwe.solostatus.skill.ManaPool.max(local, d) : (float) StatFormulas.maxEnergy(d);
+        float cur = com.vladosiwe.solostatus.skill.ManaPool.clientCurrent(d);
         int bw = PlayerData.SKILL_SLOTS * 22 - 2;
         if (baseX + bw <= sw) {
-            Holo.bar(g, baseX, y - 13, bw, 3, d.energy / Math.max(1, max), StatFormulas.usesMana(d) ? 0xFF3FB4FF : 0xFF7BD86A);
+            Holo.bar(g, baseX, y - 13, bw, 3, cur / Math.max(1, max), StatFormulas.usesMana(d) ? 0xFF3FB4FF : 0xFF7BD86A);
         }
         // Блок охотника слева от хотбара: уровень, ранг и СВОЯ полоска опыта системы.
         // Ванильная зелёная полоска остаётся для зачарования и не связана с уровнем охотника.

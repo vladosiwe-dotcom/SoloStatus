@@ -32,7 +32,22 @@ public final class Req {
         return new Requirement() {
             public double progress(PlayerData d) { return ratio(d.skillRank(id), rank); }
             public Component describe(PlayerData d) {
-                return Component.translatable("solostatus.req.skill", Component.translatable("solostatus.skill." + id), rank);
+                SkillDef def = Skills.get(id); // spell skills are named by Iron's Spells
+                return Component.translatable("solostatus.req.skill", def != null ? def.name() : Component.translatable("solostatus.skill." + id), rank);
+            }
+        };
+    }
+
+    /** Met when any one of the requirements is met; progress is the best of them. */
+    public static Requirement anyOf(java.util.List<Requirement> options) {
+        return new Requirement() {
+            public double progress(PlayerData d) {
+                double best = 0;
+                for (Requirement r : options) best = Math.max(best, r.progress(d));
+                return best;
+            }
+            public Component describe(PlayerData d) {
+                return Component.translatable("solostatus.req.any_capstone");
             }
         };
     }
