@@ -27,6 +27,7 @@ public final class ModItems {
     static {
         SystemWeapons.init(); // the System's weapons and armour register into ITEMS too
         SystemArmor.init();
+        SystemRanged.init();
     }
 
     public static void addToCreativeTabs(BuildCreativeModeTabContentsEvent event) {
@@ -35,6 +36,7 @@ public final class ModItems {
         }
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
             for (Item weapon : SystemWeapons.all()) event.accept(weapon);
+            for (Item ranged : SystemRanged.all()) event.accept(ranged);
             for (Item armor : SystemArmor.all()) event.accept(armor);
             // one of each rarity, so creative players and admins can try them
             for (var kind : com.vladosiwe.solostatus.accessory.AccessoryKind.values()) {

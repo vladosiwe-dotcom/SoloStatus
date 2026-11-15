@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/bow",
+  "textures": {
+    "layer0": "solostatus:item/ranged/shadow_longbow_pulling_1"
+  }
+}

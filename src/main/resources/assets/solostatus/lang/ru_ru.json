@@ -911,5 +911,13 @@
   "item.solostatus.arcanist_helmet": "Капюшон арканиста",
   "item.solostatus.arcanist_chestplate": "Мантия арканиста",
   "item.solostatus.arcanist_leggings": "Одеяние арканиста",
-  "item.solostatus.arcanist_boots": "Сапоги арканиста"
+  "item.solostatus.arcanist_boots": "Сапоги арканиста",
+  "item.solostatus.hunter_longbow": "Длинный лук охотника",
+  "item.solostatus.shadow_longbow": "Длинный лук Тени",
+  "item.solostatus.hunter_recurve_bow": "Рекурсивный лук охотника",
+  "item.solostatus.shadow_recurve_bow": "Рекурсивный лук Тени",
+  "item.solostatus.hunter_heavy_crossbow": "Тяжёлый арбалет охотника",
+  "item.solostatus.shadow_heavy_crossbow": "Тяжёлый арбалет Тени",
+  "item.solostatus.hunter_repeating_crossbow": "Скорострельный арбалет охотника",
+  "item.solostatus.shadow_repeating_crossbow": "Скорострельный арбалет Тени"
 }

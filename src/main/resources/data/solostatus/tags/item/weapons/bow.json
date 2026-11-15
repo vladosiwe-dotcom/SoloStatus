@@ -1,4 +1,9 @@
 {
   "replace": false,
-  "values": []
+  "values": [
+    "solostatus:hunter_longbow",
+    "solostatus:hunter_recurve_bow",
+    "solostatus:shadow_longbow",
+    "solostatus:shadow_recurve_bow"
+  ]
 }

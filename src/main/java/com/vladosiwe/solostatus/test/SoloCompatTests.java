@@ -151,6 +151,52 @@ public final class SoloCompatTests {
         h.succeed();
     }
 
+    /**
+     * The Archer's bows and crossbows: bow and crossbow types for the System and Epic Fight; a crossbow is not loaded
+     * before its own winding time and is loaded after it.
+     */
+    @GameTest(template = "empty")
+    public static void systemRanged(GameTestHelper h) {
+        List<String> wrong = new java.util.ArrayList<>();
+        java.lang.reflect.Method capability = null, category = null;
+        if (ModList.get().isLoaded("epicfight")) {
+            try {
+                capability = Class.forName("yesman.epicfight.world.capabilities.EpicFightCapabilities").getMethod("getItemStackCapability", ItemStack.class);
+                category = Class.forName("yesman.epicfight.world.capabilities.item.CapabilityItem").getMethod("getWeaponCategory");
+            } catch (Exception e) {
+                SoloStatus.LOGGER.warn("Epic Fight capability API not found: {}", e.toString());
+            }
+        }
+        for (var g : com.vladosiwe.solostatus.registry.SystemWeapons.Grade.values()) {
+            for (var k : com.vladosiwe.solostatus.registry.SystemRanged.Kind.values()) {
+                ItemStack st = new ItemStack(com.vladosiwe.solostatus.registry.SystemRanged.get(g, k));
+                var want = k.bow ? com.vladosiwe.solostatus.combat.WeaponType.BOW : com.vladosiwe.solostatus.combat.WeaponType.CROSSBOW;
+                var type = com.vladosiwe.solostatus.combat.WeaponClassifier.classify(st);
+                if (type != want) wrong.add(g + " " + k + " is " + type);
+                if (capability != null) {
+                    try {
+                        String cat = String.valueOf(category.invoke(capability.invoke(null, st)));
+                        if (!cat.equalsIgnoreCase(k.bow ? "BOW" : "CROSSBOW")) wrong.add(g + " " + k + " has Epic Fight category " + cat);
+                    } catch (Exception e) {
+                        wrong.add(g + " " + k + ": " + e);
+                    }
+                }
+            }
+        }
+        h.assertTrue(wrong.isEmpty(), "Archer weapons: " + wrong);
+        ServerPlayer p = hunter(h, HunterClass.ARCHER);
+        var heavy = new ItemStack(com.vladosiwe.solostatus.registry.SystemRanged.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.HUNTER,
+                com.vladosiwe.solostatus.registry.SystemRanged.Kind.HEAVY_CROSSBOW));
+        p.setItemInHand(InteractionHand.MAIN_HAND, heavy);
+        p.getInventory().add(new ItemStack(Items.ARROW, 4));
+        int dur = heavy.getUseDuration(p);
+        heavy.releaseUsing(p.level(), p, dur - 25); // 25 ticks: enough for vanilla, not for the heavy crossbow (40)
+        h.assertFalse(net.minecraft.world.item.CrossbowItem.isCharged(heavy), "the heavy crossbow loaded too early");
+        heavy.releaseUsing(p.level(), p, dur - 41);
+        h.assertTrue(net.minecraft.world.item.CrossbowItem.isCharged(heavy), "the heavy crossbow did not load after winding");
+        h.succeed();
+    }
+
     /** Armour sets: defence by weight, Stalker adds speed, Arcanist robes add Iron's mana. */
     @GameTest(template = "empty")
     public static void systemArmor(GameTestHelper h) {

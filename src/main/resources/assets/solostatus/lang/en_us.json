@@ -911,5 +911,13 @@
   "item.solostatus.arcanist_helmet": "Arcanist Helmet",
   "item.solostatus.arcanist_chestplate": "Arcanist Chestplate",
   "item.solostatus.arcanist_leggings": "Arcanist Leggings",
-  "item.solostatus.arcanist_boots": "Arcanist Boots"
+  "item.solostatus.arcanist_boots": "Arcanist Boots",
+  "item.solostatus.hunter_longbow": "Hunter's Longbow",
+  "item.solostatus.shadow_longbow": "Shadow Longbow",
+  "item.solostatus.hunter_recurve_bow": "Hunter's Recurve Bow",
+  "item.solostatus.shadow_recurve_bow": "Shadow Recurve Bow",
+  "item.solostatus.hunter_heavy_crossbow": "Hunter's Heavy Crossbow",
+  "item.solostatus.shadow_heavy_crossbow": "Shadow Heavy Crossbow",
+  "item.solostatus.hunter_repeating_crossbow": "Hunter's Repeating Crossbow",
+  "item.solostatus.shadow_repeating_crossbow": "Shadow Repeating Crossbow"
 }

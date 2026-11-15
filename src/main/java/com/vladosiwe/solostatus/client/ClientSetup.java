@@ -22,6 +22,26 @@ public final class ClientSetup {
         for (KeyMapping k : Keys.SKILLS) event.register(k);
     }
 
+    /**
+     * Model states of the Archer's bows and crossbows: drawn (pull, pulling) by each weapon's own draw time, and
+     * loaded (charged) for crossbows, under vanilla's predicate names so the item models read like vanilla's.
+     */
+    @SubscribeEvent
+    public static void clientSetup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            for (var item : com.vladosiwe.solostatus.registry.SystemRanged.all()) {
+                net.minecraft.client.renderer.item.ItemProperties.register(item, net.minecraft.resources.ResourceLocation.withDefaultNamespace("pull"),
+                        (stack, level, entity, seed) -> net.minecraft.world.item.CrossbowItem.isCharged(stack) ? 0f
+                                : com.vladosiwe.solostatus.registry.SystemRanged.pull(stack, entity));
+                net.minecraft.client.renderer.item.ItemProperties.register(item, net.minecraft.resources.ResourceLocation.withDefaultNamespace("pulling"),
+                        (stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack
+                                && !net.minecraft.world.item.CrossbowItem.isCharged(stack) ? 1f : 0f);
+                net.minecraft.client.renderer.item.ItemProperties.register(item, net.minecraft.resources.ResourceLocation.withDefaultNamespace("charged"),
+                        (stack, level, entity, seed) -> net.minecraft.world.item.CrossbowItem.isCharged(stack) ? 1f : 0f);
+            }
+        });
+    }
+
     /** The gem of a ring/amulet (layer 1) takes the colour of its rarity. */
     @SubscribeEvent
     public static void itemColors(net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Item event) {
