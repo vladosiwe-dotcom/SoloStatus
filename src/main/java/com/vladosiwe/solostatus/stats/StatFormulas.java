@@ -14,7 +14,7 @@ public final class StatFormulas {
     private StatFormulas() {}
 
     public static final double CAP_PHYS = 0.60, CAP_MOVE = 0.25, CAP_ATK_SPEED = 0.30, CAP_DODGE = 0.15,
-            CAP_PROJ = 0.60, CAP_CRIT = 0.20, CAP_HEALTH = 40, CAP_REDUCTION = 0.15, CAP_DEBUFF = 0.25,
+            CAP_PROJ = 0.60, CAP_CRIT = 0.20, CAP_HEALTH = 30, CAP_REDUCTION = 0.15, CAP_DEBUFF = 0.25,
             CAP_MAGIC = 0.50, CAP_DROP = 0.20, CAP_LUCK_ATTR = 4.0, CAP_QUALITY = 0.25;
 
     /** Эффективные очки характеристики с мягким ограничением. */
@@ -63,7 +63,7 @@ public final class StatFormulas {
     }
 
     public static double bonusHealth(PlayerData d) {
-        return Math.min(CAP_HEALTH, eff(d, Stat.VIT) * safe(SoloConfig.VIT_HEALTH_PER_POINT, 0.4));
+        return Math.min(CAP_HEALTH, eff(d, Stat.VIT) * safe(SoloConfig.VIT_HEALTH_PER_POINT, 0.3));
     }
 
     public static double damageReduction(PlayerData d) {

@@ -539,4 +539,65 @@ public final class SoloGameTests {
         h.assertTrue(copy.loadout == 1 && "power_strike".equals(copy.otherSlots[0]), "the sets were not saved");
         h.succeed();
     }
+
+    /**
+     * Six stat builds at levels 10 to 100, compared by melee offence, magic and effective health (the same as
+     * tools/balance/builds.py): none is best at everything, each specialised one wins its own column, and the gap
+     * to an even spread stays in a corridor.
+     */
+    @GameTest(template = "empty")
+    public static void statBuildsBalance(GameTestHelper h) {
+        String[] names = {"balanced", "physical", "defence", "mobility", "crits", "magic"};
+        com.vladosiwe.solostatus.stats.Stat[][] orders = {
+                null,
+                {com.vladosiwe.solostatus.stats.Stat.STR, com.vladosiwe.solostatus.stats.Stat.VIT},
+                {com.vladosiwe.solostatus.stats.Stat.VIT, com.vladosiwe.solostatus.stats.Stat.STR},
+                {com.vladosiwe.solostatus.stats.Stat.AGI, com.vladosiwe.solostatus.stats.Stat.STR},
+                {com.vladosiwe.solostatus.stats.Stat.PER, com.vladosiwe.solostatus.stats.Stat.STR},
+                {com.vladosiwe.solostatus.stats.Stat.INT, com.vladosiwe.solostatus.stats.Stat.VIT}};
+        java.util.List<String> wrong = new java.util.ArrayList<>();
+        for (int level : new int[]{10, 40, 70, 100}) {
+            double[][] v = new double[names.length][];
+            for (int b = 0; b < names.length; b++) {
+                PlayerData d = new PlayerData();
+                d.level = level;
+                int points = 3 * (level - 1), max = 150;
+                if (orders[b] == null) {
+                    for (int i = 0; points > 0; i++) {
+                        int k = i % d.stats.length;
+                        if (d.stats[k] < max) { d.stats[k]++; points--; }
+                    }
+                } else {
+                    for (var st : orders[b]) {
+                        int add = Math.min(points, max - d.stats[st.ordinal()]);
+                        d.stats[st.ordinal()] += add;
+                        points -= add;
+                    }
+                }
+                double offence = (1 + com.vladosiwe.solostatus.stats.StatFormulas.physicalDamage(d)) * (1 + com.vladosiwe.solostatus.stats.StatFormulas.attackSpeed(d))
+                        * (1 + com.vladosiwe.solostatus.stats.StatFormulas.critChance(d) * com.vladosiwe.solostatus.stats.StatFormulas.critDamage(d));
+                double magic = 1 + com.vladosiwe.solostatus.stats.StatFormulas.magicPower(d);
+                double health = (20 + com.vladosiwe.solostatus.stats.StatFormulas.bonusHealth(d)) / (1 - com.vladosiwe.solostatus.stats.StatFormulas.damageReduction(d))
+                        / (1 - com.vladosiwe.solostatus.stats.StatFormulas.dodgeChance(d));
+                v[b] = new double[]{offence, magic, health};
+            }
+            for (int b = 1; b < names.length; b++) {
+                boolean dominates = true;
+                for (int o = 0; o < names.length && dominates; o++) {
+                    if (o == b) continue;
+                    if (v[o][0] > v[b][0] || v[o][1] > v[b][1] || v[o][2] > v[b][2]) dominates = false;
+                }
+                if (dominates) wrong.add("lv" + level + ": " + names[b] + " is best at everything");
+            }
+            if (v[2][2] / v[0][2] > 2.0) wrong.add("lv" + level + ": defence health ×" + String.format("%.2f", v[2][2] / v[0][2]));
+            double bestOff = 0;
+            for (double[] x : v) bestOff = Math.max(bestOff, x[0]);
+            if (bestOff / v[0][0] > 1.4) wrong.add("lv" + level + ": offence ×" + String.format("%.2f", bestOff / v[0][0]));
+            if (v[5][1] / v[0][1] > 1.4) wrong.add("lv" + level + ": magic ×" + String.format("%.2f", v[5][1] / v[0][1]));
+            for (int b = 0; b < names.length; b++) if (v[b][1] > v[5][1] + 1e-9) wrong.add("lv" + level + ": " + names[b] + " out-casts the magic build");
+            for (int b = 0; b < names.length; b++) if (v[b][2] > v[2][2] + 1e-9) wrong.add("lv" + level + ": " + names[b] + " outlives the defence build");
+        }
+        h.assertTrue(wrong.isEmpty(), String.join("; ", wrong));
+        h.succeed();
+    }
 }

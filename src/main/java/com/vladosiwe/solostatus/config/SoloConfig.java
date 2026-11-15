@@ -72,7 +72,7 @@ public final class SoloConfig {
         AGI_DODGE_PER_POINT = b.defineInRange("agiDodgeChancePerPoint", 0.0015, 0, 1);
         PER_PROJECTILE_PER_POINT = b.defineInRange("perProjectileDamagePerPoint", 0.006, 0, 1);
         PER_CRIT_PER_POINT = b.defineInRange("perCritChancePerPoint", 0.002, 0, 1);
-        VIT_HEALTH_PER_POINT = b.defineInRange("vitHealthPerPoint", 0.4, 0, 10);
+        VIT_HEALTH_PER_POINT = b.defineInRange("vitHealthPerPoint", 0.3, 0, 10);
         VIT_REDUCTION_PER_POINT = b.defineInRange("vitDamageReductionPerPoint", 0.0015, 0, 1);
         INT_MAGIC_PER_POINT = b.defineInRange("intMagicPowerPerPoint", 0.005, 0, 1);
         LUCK_DROP_PER_POINT = b.defineInRange("luckExtraDropPerPoint", 0.002, 0, 1);
