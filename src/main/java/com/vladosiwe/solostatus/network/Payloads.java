@@ -39,6 +39,14 @@ public final class Payloads {
         @Override public Type<EnergySync> type() { return TYPE; }
     }
 
+    /** A skill of this player just worked: the client plays its first-person motion. */
+    public record SkillCast(String skill) implements CustomPacketPayload {
+        public static final Type<SkillCast> TYPE = Payloads.typeOf("skill_cast");
+        public static final StreamCodec<ByteBuf, SkillCast> CODEC =
+                StreamCodec.composite(ByteBufCodecs.STRING_UTF8, SkillCast::skill, SkillCast::new);
+        @Override public Type<SkillCast> type() { return TYPE; }
+    }
+
     /** Системное уведомление (повышение уровня, пробуждение навыка, достижение...). */
     /** icon — картинка уведомления (иконка достижения, навыка и т.п.), может быть пустой. */
     public record Notice(int kind, Component title, Component body, net.minecraft.world.item.ItemStack icon) implements CustomPacketPayload {

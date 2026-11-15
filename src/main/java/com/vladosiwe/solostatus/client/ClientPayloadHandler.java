@@ -27,6 +27,10 @@ public final class ClientPayloadHandler {
         }
     }
 
+    public static void skillCast(Payloads.SkillCast msg) {
+        com.vladosiwe.solostatus.client.fp.FirstPersonAnimations.playSkill(msg.skill());
+    }
+
     public static void energy(Payloads.EnergySync msg) {
         ClientState.data.energy = msg.energy();
     }

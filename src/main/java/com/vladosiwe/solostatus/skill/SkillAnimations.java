@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * Анимации Epic Fight для активных навыков (имена полей yesman.epicfight.gameasset.Animations,
  * сверены с Epic Fight 21.17.3.1). Анимации только визуальные: урон считает навык системы.
- * Магические навыки и выстрелы без подходящей двуногой анимации не указаны — у них ванильный взмах.
+ * У каждого активного навыка своя анимация; заклинания Мага анимирует сам Iron's Spells.
  */
 public final class SkillAnimations {
     private static final Map<String, String> MAP = Map.ofEntries(
@@ -43,7 +43,46 @@ public final class SkillAnimations {
             Map.entry("ground_pound", "METEOR_SLAM"),
             Map.entry("frost_arrow", "BIPED_BOW_SHOT"),
             Map.entry("explosive_bolt", "BIPED_CROSSBOW_SHOT"),
-            Map.entry("vital_strike", "SHARP_STAB"));
+            Map.entry("vital_strike", "SHARP_STAB"),
+            // Воин, Убийца, Защитник, Лучник, Поддержка — без своей анимации раньше. Только разовые анимации:
+            // стойки защиты и прицеливание в Epic Fight зациклены и оставили бы героя в позе.
+            Map.entry("war_cry", "EVERLASTING_ALLEGIANCE_CALL"),
+            Map.entry("vanish", "BIPED_STEP_BACKWARD"),
+            Map.entry("poison_blade", "DAGGER_AUTO3"),
+            Map.entry("taunt", "BIPED_WAVE_HAND"),
+            Map.entry("defensive_stance", "SWORD_GUARD_ACTIVE_HIT1"),
+            Map.entry("counter_attack", "SWORD_GUARD_ACTIVE_HIT2"),
+            Map.entry("fortress", "SWORD_GUARD_ACTIVE_HIT3"),
+            Map.entry("rain_of_arrows", "BIPED_BOW_SHOT"),
+            Map.entry("hunters_mark", "BIPED_WAVE_HAND"),
+            Map.entry("mend", "EVERLASTING_ALLEGIANCE_CALL"),
+            Map.entry("blessing", "BIPED_SALUTE"),
+            Map.entry("barrier", "LONGSWORD_GUARD_ACTIVE_HIT1"),
+            Map.entry("purify", "EVERLASTING_ALLEGIANCE_CALL"),
+            Map.entry("sanctuary", "WRATHFUL_LIGHTING"),
+            // Общие навыки и пробуждения
+            Map.entry("sprint", "BIPED_STEP_FORWARD"),
+            Map.entry("bloodlust", "BIPED_FRUSTRATED"),
+            Map.entry("arcane_blast", "BIPED_JAVELIN_THROW"),
+            Map.entry("mana_blade", "SWEEPING_EDGE"),
+            Map.entry("parry", "SWORD_GUARD_ACTIVE_HIT1"),
+            Map.entry("body_reinforcement", "BIPED_FRUSTRATED"),
+            Map.entry("air_step", "BIPED_PHANTOM_ASCENT_FORWARD"),
+            Map.entry("focus", "BIPED_SALUTE"),
+            Map.entry("thought_acceleration", "BIPED_STEP_LEFT"),
+            Map.entry("overwhelming_presence", "WRATHFUL_LIGHTING"),
+            Map.entry("shadow_legion", "EVERLASTING_ALLEGIANCE_CALL"),
+            Map.entry("ruler_grip", "EVERLASTING_ALLEGIANCE_CATCH"),
+            // Специализации и высшие умения
+            Map.entry("meteor", "WRATHFUL_LIGHTING"),
+            Map.entry("gravity_well", "EVERLASTING_ALLEGIANCE_CALL"),
+            Map.entry("aegis", "GREATSWORD_GUARD_HIT"),
+            Map.entry("holy_light", "WRATHFUL_LIGHTING"),
+            Map.entry("hex", "BIPED_JAVELIN_THROW"),
+            Map.entry("arcane_cataclysm", "WRATHFUL_LIGHTING"),
+            Map.entry("unbreakable", "LONGSWORD_GUARD_ACTIVE_HIT2"),
+            Map.entry("storm_of_arrows", "BIPED_BOW_SHOT"),
+            Map.entry("divine_intervention", "WRATHFUL_LIGHTING"));
 
     private SkillAnimations() {}
 

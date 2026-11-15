@@ -53,6 +53,10 @@ public final class FirstPersonAnimations {
     private static float attackTicks = 10;
     private static WeaponType attackType = WeaponType.NONE;
 
+    private static long skillStart = -1;
+    private static float skillTicks = 12;
+    private static com.vladosiwe.solostatus.skill.SkillCategory skillCategory = com.vladosiwe.solostatus.skill.SkillCategory.ATTACK;
+
     private static int bowUseTicks;
     private static long recoilStart = -1;
     private static float sprintBlend;
@@ -148,16 +152,19 @@ public final class FirstPersonAnimations {
 
         // melee attack: replace the game's swing with the weapon's own
         if (!main) return;
+        // a skill's motion takes over the hand; otherwise a running attack swing
+        float skillProgress = skillStart < 0 ? 1f : (t - skillStart) / skillTicks;
+        if (skillProgress >= 1f) skillStart = -1;
         float progress = attackStart < 0 ? 1f : (t - attackStart) / attackTicks;
-        if (progress >= 1f || progress < 0f) {
-            attackStart = progress >= 1f ? -1 : attackStart;
-            return;
-        }
+        if (progress >= 1f || progress < 0f) attackStart = progress >= 1f ? -1 : attackStart;
+        boolean skill = skillStart >= 0 && skillProgress >= 0f;
+        if (!skill && (attackStart < 0 || progress < 0f)) return;
         MethodHandle draw = handle();
         if (draw == null) return;
         event.setCanceled(true);
         ps.pushPose();
-        swing(ps, attackType, progress, side);
+        if (skill) skillPose(ps, skillCategory, skillProgress, side, t);
+        else swing(ps, attackType, progress, side);
         drawing = true;
         try {
             ItemInHandRenderer renderer = mc.getEntityRenderDispatcher().getItemInHandRenderer();
@@ -170,6 +177,62 @@ public final class FirstPersonAnimations {
             drawing = false;
             ps.popPose();
         }
+    }
+
+    /**
+     * A System skill of the player worked (the server says so): its first-person motion by the kind of skill.
+     * Mage spells are left to Iron's Spells, which animates its own casts.
+     */
+    public static void playSkill(String id) {
+        var def = com.vladosiwe.solostatus.skill.Skills.get(id);
+        if (def == null || def.isSpell() || !SoloConfig.FIRST_PERSON_ANIMATIONS.get()) return;
+        skillCategory = def.category;
+        skillTicks = switch (def.category) {
+            case ULTIMATE -> 30;
+            case ATTACK -> 16;
+            case DEFENSE, SUPPORT -> 18;
+            case MOVEMENT -> 10;
+            default -> 13;
+        };
+        skillStart = (long) now(0);
+        attackStart = -1;
+    }
+
+    /**
+     * Motion of a skill by its kind, as keys over the skill's time (x, y, z, raise, swing out, roll), blended smoothly:
+     * a strike is raised high and brought down across, a dash thrusts low and forward, a guard holds the weapon across
+     * the body, a support skill lifts the hand up, magic pushes forward with a tremble, an ultimate winds up long and
+     * slams.
+     */
+    private static void skillPose(PoseStack ps, com.vladosiwe.solostatus.skill.SkillCategory cat, float p, int side, float t) {
+        float[][] keys; // each: time, x, y, z, raise, swing out, roll
+        switch (cat) {
+            case ULTIMATE -> keys = new float[][]{{0, 0, 0, 0, 0, 0, 0}, {0.45f, 0.06f, 0.26f, 0.08f, 75, 15, 20},
+                    {0.6f, 0.06f, 0.28f, 0.08f, 80, 15, 22}, {0.75f, -0.2f, -0.36f, -0.22f, -55, -30, -25}, {1, 0, 0, 0, 0, 0, 0}};
+            case MOVEMENT -> keys = new float[][]{{0, 0, 0, 0, 0, 0, 0}, {0.25f, 0.04f, -0.04f, 0.16f, -10, 8, 0},
+                    {0.55f, -0.06f, -0.08f, -0.5f, -18, -6, 0}, {1, 0, 0, 0, 0, 0, 0}};
+            case DEFENSE -> keys = new float[][]{{0, 0, 0, 0, 0, 0, 0}, {0.25f, -0.22f, 0.1f, -0.06f, 20, -20, 70},
+                    {0.75f, -0.22f, 0.1f, -0.06f, 20, -20, 70}, {1, 0, 0, 0, 0, 0, 0}};
+            case SUPPORT -> keys = new float[][]{{0, 0, 0, 0, 0, 0, 0}, {0.3f, -0.08f, 0.32f, -0.1f, 40, -10, 10},
+                    {0.75f, -0.08f, 0.34f, -0.1f, 42, -10, 10}, {1, 0, 0, 0, 0, 0, 0}};
+            case MAGIC -> keys = new float[][]{{0, 0, 0, 0, 0, 0, 0}, {0.25f, 0.02f, 0.02f, 0.1f, 10, 5, 0},
+                    {0.5f, -0.1f, 0.1f, -0.32f, 18, -12, 0}, {1, 0, 0, 0, 0, 0, 0}};
+            default -> keys = new float[][]{{0, 0, 0, 0, 0, 0, 0}, {0.35f, 0.06f, 0.24f, 0.06f, 60, 12, 18},
+                    {0.6f, -0.22f, -0.3f, -0.2f, -50, -32, -22}, {1, 0, 0, 0, 0, 0, 0}};
+        }
+        int k = 0;
+        while (k < keys.length - 2 && p > keys[k + 1][0]) k++;
+        float[] a = keys[k], b = keys[k + 1];
+        float f = (p - a[0]) / Math.max(1e-4f, b[0] - a[0]);
+        f = b[4] < a[4] ? fast(f) : smooth(f); // the downward part of a key is the hit: fast start, soft stop
+        float[] pose = new float[6];
+        for (int i = 0; i < 6; i++) pose[i] = a[i + 1] + (b[i + 1] - a[i + 1]) * f;
+        if (cat == com.vladosiwe.solostatus.skill.SkillCategory.MAGIC || cat == com.vladosiwe.solostatus.skill.SkillCategory.SUPPORT) {
+            float hold = (float) Math.sin(Math.min(1f, p) * Math.PI);
+            pose[0] += Mth.sin(t * 2.3f) * 0.004f * hold;
+            pose[1] += Mth.cos(t * 2.9f) * 0.004f * hold;
+        }
+        applyPose(ps, pose, side);
     }
 
     /** Breathing when standing and a lowered weapon when sprinting. */
@@ -229,6 +292,11 @@ public final class FirstPersonAnimations {
         else if (p < strikeEnd) lerp(pose, wind, strike, fast((p - windEnd) / (strikeEnd - windEnd)));
         else lerp(pose, strike, null, smooth((p - strikeEnd) / (1 - strikeEnd)));
 
+        applyPose(ps, pose, side);
+    }
+
+    /** Puts the hand into a pose (x, y, z, raise, swing out, roll), turning around a point near the shoulder. */
+    private static void applyPose(PoseStack ps, float[] pose, int side) {
         float px = 0.38f * side, py = -0.5f, pz = -0.42f; // pivot near the shoulder
         ps.translate(pose[0] * side, pose[1], pose[2]);
         ps.translate(px, py, pz);

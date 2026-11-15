@@ -139,7 +139,18 @@ public final class DevShots {
         if (tick == bowAt + 20) shot(mc, "bow-drawing");
         if (tick == bowAt + 38) shot(mc, "bow-full");
         if (tick == bowAt + 40) { mc.options.keyUse.setDown(false); frames("bow-release", 8); }
-        if (tick == bowAt + 80) {
+        // first-person motions of skills, one of each kind
+        String[] skills = {"power_strike", "charge", "defensive_stance", "war_cry", "arcane_blast", "titan_slash"};
+        int skillAt = bowAt + 70;
+        for (int i = 0; i < skills.length; i++) {
+            int at = skillAt + i * 45;
+            if (tick == at) server.execute(() -> sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_SWORD)));
+            if (tick == at + 8) {
+                FirstPersonAnimations.playSkill(skills[i]);
+                frames("skill-" + skills[i], 16);
+            }
+        }
+        if (tick == skillAt + skills.length * 45 + 20) {
             SoloStatus.LOGGER.info("DevShots: done");
             mc.stop();
         }

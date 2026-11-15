@@ -142,6 +142,7 @@ public final class SkillSystem {
         d.addCounter("skills_used", 1);
         d.markDirty();
         Notices.syncEnergy(player, d);
+        com.vladosiwe.solostatus.network.ModNetwork.toPlayer(player, new com.vladosiwe.solostatus.network.Payloads.SkillCast(id));
     }
 
     public static float energyCost(PlayerData d, SkillDef def) {
