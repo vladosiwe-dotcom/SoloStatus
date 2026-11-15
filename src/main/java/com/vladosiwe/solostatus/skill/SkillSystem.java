@@ -189,6 +189,7 @@ public final class SkillSystem {
             for (int i = 0; i < d.slots.length; i++) if (d.slots[i] != null && !d.hasSkill(d.slots[i])) d.slots[i] = null;
             d.skillPoints += refund;
             d.cooldowns.clear();
+            d.skillMods.clear(); // ranks start over, so do the modifications
         } else {
             int invested = 0;
             for (Stat s : Stat.VALUES) invested += d.stats[s.ordinal()] - Stat.BASE_VALUE;

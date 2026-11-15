@@ -853,6 +853,7 @@ public class SystemScreen extends Screen {
         }
 
         y = skillPath(g, mx, my, def, x, y, w, alpha);
+        if (com.vladosiwe.solostatus.skill.SkillMods.has(def.id) && y + 26 <= bottom - 16) y = skillMods(g, mx, my, d, def, rank, x, y, w, alpha);
 
         // что нужно: только невыполненные условия, не больше двух
         int by = bottom - 14;
@@ -910,6 +911,34 @@ public class SystemScreen extends Screen {
         } else if (learned && rank >= def.maxRank) {
             textRight(g, font, trBold("solostatus.ui.max_rank"), x + w, by + 3, GOLD, alpha);
         }
+    }
+
+    /** The two modifications of a key skill: open at rank 3, the first pick is free, a change costs a Rebirth Orb. */
+    private int skillMods(GuiGraphics g, int mx, int my, PlayerData d, SkillDef def, int rank, int x, int y, int w, float alpha) {
+        int need = com.vladosiwe.solostatus.skill.SkillMods.RANK;
+        boolean open = rank >= need;
+        int chosen = com.vladosiwe.solostatus.skill.SkillMods.of(d, def.id);
+        text(g, font, open ? trBold("solostatus.ui.mods") : tr("solostatus.ui.mod_from_rank", need), x, y, open ? GOLD : DIM, alpha);
+        y += 11;
+        int bw = (w - 4) / 2;
+        for (int i = 1; i <= 2; i++) {
+            int choice = i;
+            int bx = x + (i - 1) * (bw + 4);
+            Component name = Component.translatable("solostatus.mod." + def.id + "." + i);
+            Component label = chosen == i ? Component.literal("» ").append(name).withStyle(net.minecraft.ChatFormatting.GOLD) : name;
+            button(g, font, bold(label), bx, y, bw, 13, mx, my, open, alpha);
+            List<Component> tip = new ArrayList<>();
+            tip.add(name.copy().withStyle(net.minecraft.ChatFormatting.GOLD));
+            tip.add(Component.translatable("solostatus.mod." + def.id + "." + i + ".desc"));
+            if (chosen != 0 && chosen != i) tip.add(Component.translatable("solostatus.ui.mod_change").withStyle(net.minecraft.ChatFormatting.GRAY));
+            if (!open) tip.add(Component.translatable("solostatus.ui.mod_from_rank", need).withStyle(net.minecraft.ChatFormatting.GRAY));
+            hover(mx, my, bx, y, bw, 13, tip);
+            if (open && chosen != i) hots.add(new Hot(bx, y, bw, 13, () -> {
+                PacketDistributor.sendToServer(new Payloads.ChooseMod(def.id, choice));
+                play(ModSounds.CLICK.get(), 1.2f);
+            }, null));
+        }
+        return y + 16;
     }
 
     /** Путь развития: предки навыка, сам навык и следующие за ним. Клик по иконке выбирает навык. */

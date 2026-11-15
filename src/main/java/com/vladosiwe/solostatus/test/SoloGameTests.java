@@ -54,6 +54,12 @@ public final class SoloGameTests {
                 if (!json.has("solostatus.skill." + s.id) || !json.has("solostatus.skill." + s.id + ".desc")) missing.add(lang + ": " + s.id);
             });
         }
+        for (String id : com.vladosiwe.solostatus.skill.SkillMods.SKILLS) {
+            for (int i = 1; i <= 2; i++) {
+                String k = "solostatus.mod." + id + "." + i;
+                langs.forEach((lang, json) -> { if (!json.has(k) || !json.has(k + ".desc")) missing.add(lang + ": " + k); });
+            }
+        }
         for (var t : com.vladosiwe.solostatus.combat.WeaponType.VALUES) {
             if (!t.hasMastery()) continue;
             langs.forEach((lang, json) -> {
@@ -411,6 +417,36 @@ public final class SoloGameTests {
         h.assertFalse(com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(d, dagger), "mastered before 50");
         d.mastery.put(dagger.key, com.vladosiwe.solostatus.mastery.MasteryMath.xpForLevel(50));
         h.assertTrue(com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(d, dagger), "not mastered at 50");
+        h.succeed();
+    }
+
+    /** Skill modifications: open at rank 3, the first pick is free, a change needs a Rebirth Orb, a skill reset clears them. */
+    @GameTest(template = "empty")
+    public static void skillModifications(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.WARRIOR);
+        PlayerData d = Hunter.get(p);
+        d.skills.put("whirlwind", 2);
+        com.vladosiwe.solostatus.skill.SkillMods.choose(p, "whirlwind", 1);
+        h.assertTrue(com.vladosiwe.solostatus.skill.SkillMods.of(d, "whirlwind") == 0, "a modification was chosen below rank 3");
+        d.skills.put("whirlwind", 3);
+        com.vladosiwe.solostatus.skill.SkillMods.choose(p, "whirlwind", 1);
+        h.assertTrue(com.vladosiwe.solostatus.skill.SkillMods.of(d, "whirlwind") == 1, "the first pick must be free");
+        com.vladosiwe.solostatus.skill.SkillMods.choose(p, "whirlwind", 2);
+        h.assertTrue(com.vladosiwe.solostatus.skill.SkillMods.of(d, "whirlwind") == 1, "changed without a Rebirth Orb");
+        p.getInventory().add(new net.minecraft.world.item.ItemStack(com.vladosiwe.solostatus.registry.ModItems.RESET_ORB.get()));
+        com.vladosiwe.solostatus.skill.SkillMods.choose(p, "whirlwind", 2);
+        h.assertTrue(com.vladosiwe.solostatus.skill.SkillMods.of(d, "whirlwind") == 2, "the orb did not allow the change");
+        h.assertTrue(p.getInventory().countItem(com.vladosiwe.solostatus.registry.ModItems.RESET_ORB.get()) == 0, "the orb was not spent");
+        com.vladosiwe.solostatus.skill.SkillMods.choose(p, "power_strike", 1);
+        h.assertFalse(d.skillMods.containsKey("power_strike"), "a skill without modifications got one");
+        PlayerData copy = new PlayerData();
+        copy.read(d.write());
+        h.assertTrue(copy.skillMods.getOrDefault("whirlwind", 0) == 2, "the modification was not saved");
+        for (String id : com.vladosiwe.solostatus.skill.SkillMods.SKILLS) {
+            h.assertTrue(Skills.get(id) != null && Skills.get(id).isActive() && Skills.get(id).maxRank >= com.vladosiwe.solostatus.skill.SkillMods.RANK,
+                    id + " cannot carry a modification");
+        }
         h.succeed();
     }
 }

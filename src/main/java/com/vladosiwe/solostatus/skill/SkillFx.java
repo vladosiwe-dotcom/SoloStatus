@@ -307,13 +307,14 @@ public final class SkillFx {
     }
 
     /** Стрела, падающая с неба в точку (Дождь стрел). */
-    public static void skyArrow(ServerPlayer p, Vec3 at, double damage) {
+    public static Arrow skyArrow(ServerPlayer p, Vec3 at, double damage) {
         Arrow arrow = new Arrow(p.level(), p, new ItemStack(Items.ARROW), null);
         arrow.setPos(at.x, at.y + 12, at.z);
         arrow.shoot(0, -1, 0, 2.2f, 1.5f);
         arrow.setBaseDamage(damage / 2.2);
         arrow.pickup = AbstractArrow.Pickup.CREATIVE_ONLY;
         p.level().addFreshEntity(arrow);
+        return arrow;
     }
 
     // ========================= Визуал =========================

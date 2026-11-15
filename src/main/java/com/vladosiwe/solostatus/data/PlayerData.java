@@ -53,6 +53,8 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
     public final Map<String, Integer> skills = new LinkedHashMap<>();
     /** Ранги, за которые были потрачены очки навыков (для корректного сброса). */
     public final Map<String, Integer> paidRanks = new HashMap<>();
+    /** Chosen skill modifications: skill id -> 1 or 2 (SkillMods). */
+    public final Map<String, Integer> skillMods = new HashMap<>();
     public final String[] slots = new String[SKILL_SLOTS];
     /** id навыка -> игровое время (gameTime), когда перезарядка закончится. */
     public final Map<String, Long> cooldowns = new HashMap<>();
@@ -198,6 +200,7 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
         t.putInt("sp", skillPoints);
         t.put("skills", writeIntMap(skills));
         t.put("paid", writeIntMap(paidRanks));
+        t.put("mods", writeIntMap(skillMods));
         ListTag slotList = new ListTag();
         for (String s : slots) slotList.add(StringTag.valueOf(s == null ? "" : s));
         t.put("slots", slotList);
@@ -258,6 +261,7 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
             readIntMap(t.getCompound("skills"), skills);
             skills.replaceAll((k, v) -> Math.max(1, v));
             readIntMap(t.getCompound("paid"), paidRanks);
+            readIntMap(t.getCompound("mods"), skillMods);
             Arrays.fill(slots, null);
             ListTag slotList = t.getList("slots", Tag.TAG_STRING);
             for (int i = 0; i < Math.min(slotList.size(), SKILL_SLOTS); i++) {

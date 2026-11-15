@@ -64,6 +64,7 @@ public final class ModNetwork {
         r.playToServer(Payloads.EquipSkill.TYPE, Payloads.EquipSkill.CODEC, ServerPayloadHandler::equipSkill);
         r.playToServer(Payloads.CastSkill.TYPE, Payloads.CastSkill.CODEC, ServerPayloadHandler::castSkill);
         r.playToServer(Payloads.Respec.TYPE, Payloads.Respec.CODEC, ServerPayloadHandler::respec);
+        r.playToServer(Payloads.ChooseMod.TYPE, Payloads.ChooseMod.CODEC, ServerPayloadHandler::chooseMod);
         r.playToServer(Payloads.InspectRequest.TYPE, Payloads.InspectRequest.CODEC, ServerPayloadHandler::inspect);
         r.playToServer(Payloads.MarkSeen.TYPE, Payloads.MarkSeen.CODEC, ServerPayloadHandler::markSeen);
         r.playToServer(Payloads.SystemOpen.TYPE, Payloads.SystemOpen.CODEC, ServerPayloadHandler::systemOpen);

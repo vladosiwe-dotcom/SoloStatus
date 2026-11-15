@@ -64,6 +64,11 @@ public final class ServerPayloadHandler {
         run(ctx, p -> SkillSystem.cast(p, msg.slot()));
     }
 
+    public static void chooseMod(Payloads.ChooseMod msg, IPayloadContext ctx) {
+        if (msg.skill().length() > 64) return;
+        run(ctx, p -> com.vladosiwe.solostatus.skill.SkillMods.choose(p, msg.skill(), msg.choice()));
+    }
+
     public static void respec(Payloads.Respec msg, IPayloadContext ctx) {
         if (msg.mode() != 0 && msg.mode() != 1) return;
         run(ctx, p -> SkillSystem.respec(p, msg.mode()));

@@ -165,6 +165,16 @@ public final class Payloads {
         @Override public Type<CastSkill> type() { return TYPE; }
     }
 
+    /** Выбрать модификацию навыка (1 или 2). */
+    public record ChooseMod(String skill, int choice) implements CustomPacketPayload {
+        public static final Type<ChooseMod> TYPE = Payloads.typeOf("choose_mod");
+        public static final StreamCodec<ByteBuf, ChooseMod> CODEC = StreamCodec.composite(
+                ByteBufCodecs.STRING_UTF8, ChooseMod::skill,
+                ByteBufCodecs.VAR_INT, ChooseMod::choice,
+                ChooseMod::new);
+        @Override public Type<ChooseMod> type() { return TYPE; }
+    }
+
     /** Сброс: 0 — навыки, 1 — характеристики. Требует Сферу перерождения. */
     public record Respec(int mode) implements CustomPacketPayload {
         public static final Type<Respec> TYPE = Payloads.typeOf("respec");

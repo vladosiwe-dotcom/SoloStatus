@@ -122,6 +122,11 @@ public final class CombatEvents {
                 SkillFx.sound(shooter.serverLevel(), at, SoundEvents.DRAGON_FIREBALL_EXPLODE, 0.7f, 1.3f);
             });
         }
+        if (direct != null && direct.getPersistentData().contains("solostatus_stun") && source.getEntity() instanceof ServerPlayer stunner) {
+            int ticks = direct.getPersistentData().getInt("solostatus_stun");
+            direct.getPersistentData().remove("solostatus_stun");
+            if (!Threat.isBoss(target)) SkillFx.stun(stunner, target, ticks);
+        }
         if (direct != null && direct.getPersistentData().contains("solostatus_knock")) {
             double k = direct.getPersistentData().getDouble("solostatus_knock");
             Vec3 from = target.position().subtract(direct.getDeltaMovement().normalize());
@@ -150,13 +155,18 @@ public final class CombatEvents {
         }
 
         // Парирование (общая техника): ближний удар отведён, атакующий потерял равновесие
-        if (!bypass && byEntity && source.getDirectEntity() == attackerEntity && d.stateActive("parry", now)) {
+        int parryMod = com.vladosiwe.solostatus.skill.SkillMods.of(d, "parry"); // 1 Deflection: arrows too; 2 Crushing Parry
+        boolean parriable = source.getDirectEntity() == attackerEntity || (parryMod == 1 && source.getDirectEntity() instanceof Projectile);
+        if (!bypass && byEntity && parriable && d.stateActive("parry", now)) {
             event.setCanceled(true);
             d.timedStates.remove("parry");
             LivingEntity attacker = (LivingEntity) attackerEntity;
             int rank = d.skillRank("parry");
-            if (!Threat.isBoss(attacker)) SkillFx.stun(p, attacker, 20 + 5 * rank);
-            SkillFx.knockback(attacker, p.position(), 0.4);
+            if (source.getDirectEntity() instanceof Projectile arrow) arrow.discard(); // deflected
+            else {
+                if (!Threat.isBoss(attacker)) SkillFx.stun(p, attacker, 20 + 5 * rank + (parryMod == 2 ? 20 : 0));
+                SkillFx.knockback(attacker, p.position(), 0.4);
+            }
             SkillFx.particles(level, ParticleTypes.ENCHANTED_HIT, p.getEyePosition().add(p.getLookAngle()), 14, 0.2, 0.2);
             SkillFx.sound(level, p.position(), SoundEvents.ANVIL_PLACE, 0.5f, 1.9f);
             if (now - d.lastBlockTick > 10 && Threat.fairness(attacker, p) > 0.2) d.addCounter("parries", 1);
@@ -340,9 +350,11 @@ public final class CombatEvents {
             target.addEffect(new MobEffectInstance(MobEffects.POISON, 40 + 10 * venom, 0), p);
         }
         if (melee && d.stateActive("arcane_strike", now)) {
-            add += 0.35 + 0.08 * Math.max(0, d.skillRank("arcane_strike") - 1);
+            int strikeMod = com.vladosiwe.solostatus.skill.SkillMods.of(d, "arcane_strike"); // 1 Mana Edge: twice the mana; 2 Overload: harder, no mana
+            add += 0.35 + 0.08 * Math.max(0, d.skillRank("arcane_strike") - 1) + (strikeMod == 2 ? 0.20 : 0);
             if (!skill) com.vladosiwe.solostatus.skill.StyleSkills.onArcaneStrikeHit(p, d, target, event.getAmount());
-            com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.spendMana(p, -4f * d.skillRank("arcane_strike")); // gives mana back
+            if (strikeMod != 2) com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.spendMana(p,
+                    -4f * d.skillRank("arcane_strike") * (strikeMod == 1 ? 2 : 1)); // gives mana back
         }
         int battleMagic = d.skillRank("battle_magic");
         if (melee && battleMagic > 0) com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.spendMana(p, -1.5f * battleMagic);

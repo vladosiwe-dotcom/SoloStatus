@@ -30,7 +30,9 @@ public final class GeneralSkills {
     /** Parry: a short window in which the next melee blow is turned aside and the attacker is staggered. */
     public static boolean parry(SkillContext c) {
         ServerPlayer p = c.player();
-        state(c.data(), c.level(), "parry", parryWindow(c.rank()) + 2 * c.data().skillRank("en_garde")); // Duelist: En Garde
+        // Duelist: En Garde; mod 2 Crushing Parry trades 2 ticks of the window for a longer stun (CombatEvents)
+        int window = parryWindow(c.rank()) + 2 * c.data().skillRank("en_garde") - (SkillMods.of(c.data(), "parry") == 2 ? 2 : 0);
+        state(c.data(), c.level(), "parry", window);
         swing(p);
         sound(c.level(), p.position(), SoundEvents.ARMOR_EQUIP_IRON.value(), 0.8f, 1.6f);
         return true;
@@ -50,7 +52,15 @@ public final class GeneralSkills {
         d.timedStates.remove("riposte_ready");
         dash(p, t.position().subtract(p.position()).normalize(), 0.6, 0.05);
         swing(p);
-        hitPhysical(p, t, melee(p) * c.scale(2.2, 0.3) * (1 + 0.15 * d.skillRank("en_garde")));
+        int mod = SkillMods.of(d, "riposte"); // 1 Double Answer: two blows; 2 Bloodletting: heals from the blow
+        double dmg = melee(p) * c.scale(2.2, 0.3) * (1 + 0.15 * d.skillRank("en_garde"));
+        if (mod == 1) {
+            hitPhysical(p, t, dmg * 0.6);
+            Scheduler.later(5, () -> { if (p.isAlive() && t.isAlive()) { swing(p); hitPhysical(p, t, dmg * 0.6); } });
+        } else {
+            hitPhysical(p, t, dmg);
+            if (mod == 2) heal(p, p, dmg * 0.3);
+        }
         stun(p, t, 30 + 5 * c.rank());
         particles(c.level(), ParticleTypes.CRIT, t.getBoundingBox().getCenter(), 20, 0.3, 0.3);
         sound(c.level(), t.position(), SoundEvents.PLAYER_ATTACK_CRIT, 1f, 0.9f);

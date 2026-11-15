@@ -55,11 +55,16 @@ public final class SkillEffects {
     public static boolean whirlwind(SkillContext c) {
         ServerPlayer p = c.player();
         swing(p);
-        double dmg = melee(p) * c.scale(1.0, 0.15);
+        int mod = SkillMods.of(c.data(), "whirlwind"); // 1 Vortex: draws in, harder; 2 Blood Whirl: heals per enemy hit
+        double dmg = melee(p) * c.scale(1.0, 0.15) * (mod == 1 ? 1.15 : 1.0);
+        int hit = 0;
         for (LivingEntity t : enemiesAround(p, p.position(), 3.5)) {
             hitPhysical(p, t, dmg);
-            knockback(t, p.position(), 0.5);
+            if (mod == 1) pull(t, p.position(), 0.5);
+            else knockback(t, p.position(), 0.5);
+            hit++;
         }
+        if (mod == 2 && hit > 0) p.heal(p.getMaxHealth() * 0.02f * Math.min(5, hit));
         ring(c.level(), ParticleTypes.SWEEP_ATTACK, p.position().add(0, 1, 0), 2.5, 10);
         sound(c.level(), p.position(), SoundEvents.PLAYER_ATTACK_SWEEP, 1.2f, 0.7f);
         return true;
@@ -99,8 +104,15 @@ public final class SkillEffects {
         LivingEntity t = closestInCone(p, 4, 70);
         if (t == null) return false;
         swing(p);
-        hitPhysical(p, t, melee(p) * c.scale(3.0, 0.4));
-        stun(p, t, 30);
+        int mod = SkillMods.of(c.data(), "devastating_blow"); // 1 Earthquake: hits around the target; 2 Execution: crushes the wounded
+        double dmg = melee(p) * c.scale(3.0, 0.4);
+        if (mod == 2 && t.getHealth() < t.getMaxHealth() * 0.3f) dmg *= 2;
+        hitPhysical(p, t, dmg);
+        if (mod != 2) stun(p, t, 30);
+        if (mod == 1) {
+            for (LivingEntity e : enemiesAround(p, t.position(), 2.5)) if (e != t) hitPhysical(p, e, dmg * 0.5);
+            ring(c.level(), ParticleTypes.CLOUD, t.position().add(0, 0.1, 0), 2.5, 24);
+        }
         particles(c.level(), ParticleTypes.EXPLOSION, t.position(), 2, 0.2, 0);
         sound(c.level(), t.position(), SoundEvents.ANVIL_LAND, 0.8f, 0.6f);
         return true;
@@ -144,12 +156,17 @@ public final class SkillEffects {
         ServerPlayer p = c.player();
         LivingEntity t = closestInCone(p, 3.5, 70);
         if (t == null) return false;
-        int hits = 4 + c.rank() / 2;
-        double dmg = melee(p) * c.scale(0.45, 0.05);
+        int mod = SkillMods.of(c.data(), "flurry"); // 1 Hailstorm: more, lighter blows; 2 Venomed Blades: every blow poisons
+        int hits = 4 + c.rank() / 2 + (mod == 1 ? 2 : 0);
+        double dmg = melee(p) * c.scale(0.45, 0.05) * (mod == 1 ? 0.8 : 1.0);
         Scheduler.repeat(3, hits, i -> {
             if (!alive(p) || !t.isAlive() || t.distanceToSqr(p) > 25) return;
             swing(p);
             hitPhysical(p, t, dmg);
+            if (mod == 2) {
+                debuff(p, t, MobEffects.POISON, 40, 0);
+                if (i == hits - 1) debuff(p, t, MobEffects.WEAKNESS, 80, 0);
+            }
             particles(p.serverLevel(), ParticleTypes.CRIT, t.getBoundingBox().getCenter(), 6, 0.3, 0.2);
             sound(p.serverLevel(), t.position(), SoundEvents.PLAYER_ATTACK_SWEEP, 0.5f, 1.4f + i * 0.08f);
         });
@@ -189,8 +206,22 @@ public final class SkillEffects {
         if (t == null) return false;
         double mult = c.scale(2.0, 0.3);
         if (t.getHealth() <= t.getMaxHealth() * 0.3f) mult *= 3;
+        int mod = SkillMods.of(c.data(), "assassinate"); // 1 Silent Death: a kill hides and half-resets; 2 Open Wound: the target withers
         swing(p);
         hitPhysical(p, t, melee(p) * mult);
+        if (mod == 1 && !t.isAlive()) {
+            buff(p, p, MobEffects.INVISIBILITY, 60, 0);
+            com.vladosiwe.solostatus.data.PlayerData d = c.data();
+            Long ready = d.cooldowns.get("assassinate");
+            long now = c.level().getGameTime();
+            // the cooldown is set after the effect, so it is halved one tick later
+            Scheduler.later(1, () -> {
+                Long r = d.cooldowns.get("assassinate");
+                if (r != null && r > now) d.cooldowns.put("assassinate", now + (r - now) / 2);
+                d.markDirty();
+            });
+        }
+        if (mod == 2 && t.isAlive()) debuff(p, t, MobEffects.WITHER, 80, 1);
         particles(c.level(), BLOOD_DUST, t.getBoundingBox().getCenter(), 20, 0.3, 0.1);
         sound(c.level(), t.position(), SoundEvents.PLAYER_ATTACK_CRIT, 1f, 0.6f);
         return true;
@@ -250,14 +281,24 @@ public final class SkillEffects {
 
     public static boolean shieldBash(SkillContext c) {
         ServerPlayer p = c.player();
-        LivingEntity t = closestInCone(p, 3.5, 70);
+        int mod = SkillMods.of(c.data(), "shield_bash"); // 1 Ram: reaches farther with a lunge; 2 Concussion: dazes everyone around, weaker
+        LivingEntity t = closestInCone(p, mod == 1 ? 6 : 3.5, 70);
         if (t == null) return false;
+        if (mod == 1 && t.distanceTo(p) > 2.5) dash(p, t.position().subtract(p.position()), 1.5, 0.05);
         boolean shield = p.getOffhandItem().is(net.minecraft.world.item.Items.SHIELD) || p.getMainHandItem().is(net.minecraft.world.item.Items.SHIELD)
                 || p.getOffhandItem().getItem() instanceof net.minecraft.world.item.ShieldItem;
         swing(p);
-        hitPhysical(p, t, melee(p) * c.scale(1.0, 0.15) * (shield ? 1.3 : 1.0));
+        double bash = melee(p) * c.scale(1.0, 0.15) * (shield ? 1.3 : 1.0) * (mod == 2 ? 0.7 : 1.0);
+        hitPhysical(p, t, bash);
         knockback(t, p.position(), 1.4);
         stun(p, t, 30);
+        if (mod == 2) {
+            for (LivingEntity e : enemiesAround(p, t.position(), 2.5)) {
+                if (e == t) continue;
+                hitPhysical(p, e, bash);
+                if (!com.vladosiwe.solostatus.combat.Threat.isBoss(e)) stun(p, e, 20);
+            }
+        }
         sound(c.level(), t.position(), SoundEvents.SHIELD_BLOCK, 1f, 0.7f);
         particles(c.level(), ParticleTypes.CRIT, t.getBoundingBox().getCenter(), 12, 0.3, 0.2);
         return true;
@@ -295,9 +336,14 @@ public final class SkillEffects {
 
     public static boolean fortress(SkillContext c) {
         ServerPlayer p = c.player();
+        int mod = SkillMods.of(c.data(), "fortress"); // 1 Living Wall: enemies turn on you; 2 Healing Keep: allies regenerate
         for (LivingEntity a : alliesAround(p, p.position(), 8)) {
             buff(p, a, MobEffects.DAMAGE_RESISTANCE, 160, c.rank() >= 4 ? 1 : 0);
             buff(p, a, MobEffects.ABSORPTION, 160, 0);
+            if (mod == 2) buff(p, a, MobEffects.REGENERATION, 120, 0);
+        }
+        if (mod == 1) {
+            for (LivingEntity e : enemiesAround(p, p.position(), 8)) if (e instanceof Mob m) m.setTarget(p);
         }
         ring(c.level(), HOLY_DUST, p.position().add(0, 0.2, 0), 8, 60);
         sound(c.level(), p.position(), SoundEvents.BEACON_ACTIVATE, 1f, 0.9f);
@@ -324,7 +370,15 @@ public final class SkillEffects {
 
     public static boolean powerShot(SkillContext c) {
         ServerPlayer p = c.player();
-        arrow(p, 0, 0, 3.5f, 6.0 * c.scale(1.2, 0.15), true);
+        int mod = SkillMods.of(c.data(), "power_shot"); // 1 Stunning Shot; 2 Double Shot: two lighter arrows
+        double dmg = 6.0 * c.scale(1.2, 0.15);
+        if (mod == 2) {
+            arrow(p, -2.5f, 0, 3.5f, dmg * 0.7, true);
+            arrow(p, 2.5f, 0, 3.5f, dmg * 0.7, true);
+        } else {
+            var a = arrow(p, 0, 0, 3.5f, dmg, true);
+            if (mod == 1) a.getPersistentData().putInt("solostatus_stun", 20);
+        }
         sound(c.level(), p.position(), SoundEvents.ARROW_SHOOT, 1f, 0.6f);
         particles(c.level(), ParticleTypes.CRIT, p.getEyePosition().add(p.getLookAngle()), 10, 0.1, 0.1);
         return true;
@@ -354,12 +408,15 @@ public final class SkillEffects {
         ServerPlayer p = c.player();
         Vec3 at = lookPoint(p, 30);
         int n = (int) c.scale(10, 2);
-        double dmg = 4.0 * c.scale(1.0, 0.1);
+        int mod = SkillMods.of(c.data(), "rain_of_arrows"); // 1 Fire Rain: burning arrows; 2 Focused Rain: a tighter, harder rain
+        double dmg = 4.0 * c.scale(1.0, 0.1) * (mod == 2 ? 1.4 : 1.0);
+        double spread = mod == 2 ? 1.5 : 3;
         Scheduler.repeat(2, n, i -> {
             if (!alive(p)) return;
             double a = p.getRandom().nextDouble() * Math.PI * 2;
-            double r = p.getRandom().nextDouble() * 3;
-            skyArrow(p, at.add(Math.cos(a) * r, 0, Math.sin(a) * r), dmg);
+            double r = p.getRandom().nextDouble() * spread;
+            var arrow = skyArrow(p, at.add(Math.cos(a) * r, 0, Math.sin(a) * r), dmg);
+            if (mod == 1 && arrow != null) arrow.igniteForSeconds(100);
         });
         ring(c.level(), ParticleTypes.CRIT, at.add(0, 0.2, 0), 3, 30);
         sound(c.level(), p.position(), SoundEvents.ARROW_SHOOT, 1f, 0.5f);
@@ -402,7 +459,19 @@ public final class SkillEffects {
         ServerPlayer p = c.player();
         LivingEntity t = raycast(p, 16, true);
         if (t == null) t = p;
-        heal(p, t, c.scale(4.0, 1.5) * (1 + StatFormulas.magicPower(c.data())));
+        int mod = SkillMods.of(c.data(), "mend"); // 1 Chain Mend: one more ally; 2 Renewal: part now, the rest over time
+        double amount = c.scale(4.0, 1.5) * (1 + StatFormulas.magicPower(c.data()));
+        heal(p, t, mod == 2 ? amount * 0.7 : amount);
+        if (mod == 2) buff(p, t, MobEffects.REGENERATION, 80, 1);
+        if (mod == 1) {
+            LivingEntity target = t;
+            for (LivingEntity a : alliesAround(p, t.position(), 6)) {
+                if (a == target || a.getHealth() >= a.getMaxHealth()) continue;
+                heal(p, a, amount * 0.5);
+                line(c.level(), ParticleTypes.HAPPY_VILLAGER, target.getBoundingBox().getCenter(), a.getBoundingBox().getCenter(), 0.5);
+                break;
+            }
+        }
         particles(c.level(), ParticleTypes.HAPPY_VILLAGER, t.getBoundingBox().getCenter(), 12, 0.4, 0.05);
         sound(c.level(), t.position(), SoundEvents.AMETHYST_BLOCK_CHIME, 1f, 1.5f);
         return true;
@@ -449,11 +518,19 @@ public final class SkillEffects {
         ServerPlayer p = c.player();
         Vec3 at = p.position();
         double heal = c.scale(1.0, 0.5);
+        int mod = SkillMods.of(c.data(), "sanctuary"); // 1 Hallowed Ground: burns enemies inside; 2 Refuge: allies inside are shielded
+        double holy = spell(c) * 0.3;
         Scheduler.repeat(20, 8, i -> {
             if (!alive(p)) return;
             ServerLevel level = p.serverLevel();
-            for (LivingEntity a : alliesAround(p, at, 6)) heal(p, a, heal);
-            for (LivingEntity e : enemiesAround(p, at, 6)) debuff(p, e, MobEffects.MOVEMENT_SLOWDOWN, 30, 0);
+            for (LivingEntity a : alliesAround(p, at, 6)) {
+                heal(p, a, heal);
+                if (mod == 2) buff(p, a, MobEffects.DAMAGE_RESISTANCE, 30, 0);
+            }
+            for (LivingEntity e : enemiesAround(p, at, 6)) {
+                debuff(p, e, MobEffects.MOVEMENT_SLOWDOWN, 30, 0);
+                if (mod == 1) hitMagic(p, e, holy);
+            }
             ring(level, HOLY_DUST, at.add(0, 0.1, 0), 6, 50);
         });
         sound(c.level(), at, SoundEvents.BELL_RESONATE, 1f, 1.2f);
@@ -566,15 +643,21 @@ public final class SkillEffects {
     public static boolean meteor(SkillContext c) {
         ServerPlayer p = c.player();
         Vec3 at = lookPoint(p, 30);
-        double dmg = spell(c) * c.scale(2.5, 0.4) * attunement(c);
+        int mod = SkillMods.of(c.data(), "meteor"); // 1 Ice Comet: freezes instead of burning; 2 Starfall: later and heavier
+        double dmg = spell(c) * c.scale(2.5, 0.4) * attunement(c) * (mod == 2 ? 1.5 : 1.0);
         particles(c.level(), ParticleTypes.FLAME, at.add(0, 8, 0), 40, 0.5, 0.05);
         ring(c.level(), ParticleTypes.FLAME, at.add(0, 0.2, 0), 4, 40);
         sound(c.level(), at, SoundEvents.BLAZE_SHOOT, 1.2f, 0.5f);
-        Scheduler.later(15, () -> {
+        Scheduler.later(mod == 2 ? 30 : 15, () -> {
             if (!alive(p)) return;
             for (LivingEntity t : enemiesAround(p, at, 4)) {
                 hitMagic(p, t, dmg);
-                t.igniteForSeconds(5);
+                if (mod == 1) {
+                    debuff(p, t, MobEffects.MOVEMENT_SLOWDOWN, 80, 2);
+                    t.setTicksFrozen(Math.max(t.getTicksFrozen(), 160));
+                } else {
+                    t.igniteForSeconds(5);
+                }
                 knockback(t, at, 0.8);
             }
             particles(p.serverLevel(), ParticleTypes.EXPLOSION_EMITTER, at, 1, 0, 0);
@@ -602,17 +685,19 @@ public final class SkillEffects {
     public static boolean gravityWell(SkillContext c) {
         ServerPlayer p = c.player();
         Vec3 at = lookPoint(p, 24);
-        double dmg = spell(c) * c.scale(0.5, 0.08);
-        Scheduler.repeat(10, 4, i -> {
+        int mod = SkillMods.of(c.data(), "gravity_well"); // 1 Collapse: shorter, stronger pull and damage; 2 Stasis: holds and weakens, less damage
+        double dmg = spell(c) * c.scale(0.5, 0.08) * (mod == 1 ? 1.5 : mod == 2 ? 0.5 : 1.0);
+        Scheduler.repeat(mod == 1 ? 5 : 10, 4, i -> {
             if (!alive(p)) return;
             for (LivingEntity t : enemiesAround(p, at, 6)) {
                 Vec3 pull = at.subtract(t.position());
                 if (pull.lengthSqr() > 0.5) {
-                    t.setDeltaMovement(t.getDeltaMovement().add(pull.normalize().scale(0.5)));
+                    t.setDeltaMovement(t.getDeltaMovement().add(pull.normalize().scale(mod == 1 ? 0.8 : 0.5)));
                     t.hurtMarked = true;
                 }
                 hitMagic(p, t, dmg);
-                debuff(p, t, MobEffects.MOVEMENT_SLOWDOWN, 30, 2);
+                debuff(p, t, MobEffects.MOVEMENT_SLOWDOWN, 30, mod == 2 ? 4 : 2);
+                if (mod == 2) debuff(p, t, MobEffects.WEAKNESS, 30, 0);
             }
             particles(p.serverLevel(), ParticleTypes.REVERSE_PORTAL, at, 50, 2, 0.1);
             sound(p.serverLevel(), at, SoundEvents.ENDERMAN_TELEPORT, 0.5f, 0.5f);
