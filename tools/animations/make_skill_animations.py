@@ -6,7 +6,8 @@ The file is in the Blockbench / Bedrock animation format that playerAnimator rea
 brings and animates its own casts with), so every animation can also be opened and polished in Blockbench.
 Bones: head, torso, body (the whole player), right_arm, left_arm, right_leg, left_leg. Rotations in degrees: an arm
 at x = -90 points forward, near -180 it is raised overhead; for the left arm +y turns it towards the body's middle
-(the right arm mirrors it); +z of the right arm lifts it out to the side. Positions in pixels.
+(the right arm mirrors it); +z of the right arm lifts it out to the side (for a raised arm the
+sign is flipped in key(), so poses are written the same way). Positions in pixels.
 
 Each skill gets its own animation: a motion (swing, overhead blow, spin, thrust, shot, throw, cry, guard, cast,
 leap, ground blow...) tuned by the skill (speed, weight, which arm, how many strikes). Every animation starts and ends
@@ -28,6 +29,10 @@ class Anim:
         """bones: name=(rx, ry, rz) or name=((rx, ry, rz), (px, py, pz))."""
         for bone, v in bones.items():
             rot, pos = (v if isinstance(v[0], (tuple, list)) else (v, None))
+            if bone.endswith('_arm') and rot[0] < -95:
+                # an arm raised past level: its side turn reverses (seen in the game's frames), so "out to the side"
+                # keeps meaning out to the side
+                rot = (rot[0], rot[1], -rot[2])
             self.keys.setdefault(bone, {}).setdefault('rotation', {})[t] = (rot, ease)
             if pos is not None:
                 self.keys[bone].setdefault('position', {})[t] = (pos, ease)
