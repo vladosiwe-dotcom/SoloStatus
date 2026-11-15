@@ -48,6 +48,7 @@ public final class SoloConfig {
     public static final ModConfigSpec.BooleanValue SHOW_HUD;
     public static final ModConfigSpec.BooleanValue EPIC_FIGHT_FIRST_PERSON_BODY;
     public static final ModConfigSpec.BooleanValue MOB_HEALTH_BARS;
+    public static final ModConfigSpec.BooleanValue FIRST_PERSON_ANIMATIONS;
     public static final ModConfigSpec.EnumValue<com.vladosiwe.solostatus.voice.VoiceMode> VOICE_MODE;
     public static final ModConfigSpec.ConfigValue<String> VOICE_LANGUAGE;
     public static final ModConfigSpec.ConfigValue<String> VOICE_MODEL_PATH;
@@ -102,6 +103,8 @@ public final class SoloConfig {
                 .define("epicFightFirstPersonBody", false);
         MOB_HEALTH_BARS = c.comment("Полоска здоровья Системы над мобами (после удара или под прицелом). Полоска Epic Fight при этом выключается.")
                 .define("mobHealthBars", true);
+        FIRST_PERSON_ANIMATIONS = c.comment("Анимации от первого лица: удары своим движением для каждого типа оружия, натяжение и отдача лука, взвод арбалета.")
+                .define("firstPersonAnimations", true);
         c.push("voice");
         VOICE_MODE = c.comment("Голосовые команды (Vosk, распознавание локально на вашем ПК, звук никуда не отправляется).",
                 "OFF — выключено, PUSH_TO_TALK — только пока зажата клавиша голоса, ALWAYS — постоянно слушать командные фразы.")

@@ -68,6 +68,7 @@ public final class MobHealthBars {
         ps.translate(0, mob.getBbHeight() + 0.45, 0);
         ps.mulPose(mc.getEntityRenderDispatcher().cameraOrientation());
         ps.scale(0.025f, -0.025f, 0.025f);
+        // each layer sits a little nearer the camera (+z here) than the one behind it
         Matrix4f m = ps.last().pose();
         MultiBufferSource buffers = event.getMultiBufferSource();
         VertexConsumer vc = buffers.getBuffer(RenderType.textBackground());
@@ -75,12 +76,12 @@ public final class MobHealthBars {
 
         float x0 = -W / 2f, y0 = 0;
         quad(vc, m, x0 - 1, y0 - 1, x0 + W + 1, y0 + H + 1, 0f, argb(0xC0081020, alpha), light);   // frame
-        quad(vc, m, x0, y0, x0 + W, y0 + H, -0.01f, argb(0xE0141E2C, alpha), light);              // empty
-        quad(vc, m, x0, y0, x0 + W * trail / max, y0 + H, -0.02f, argb(0xD0E8E0D0, alpha), light); // just lost
+        quad(vc, m, x0, y0, x0 + W, y0 + H, 0.1f, argb(0xE0141E2C, alpha), light);              // empty
+        quad(vc, m, x0, y0, x0 + W * trail / max, y0 + H, 0.2f, argb(0xD0E8E0D0, alpha), light); // just lost
         float f = hp / max;
         int color = f > 0.5f ? 0xFF4FD08A : f > 0.25f ? 0xFFE8C860 : 0xFFE8604A;
-        quad(vc, m, x0, y0, x0 + W * f, y0 + H, -0.03f, argb(color, alpha), light);
-        quad(vc, m, x0, y0, x0 + W * f, y0 + 1, -0.04f, argb(0x60FFFFFF, alpha), light);          // shine
+        quad(vc, m, x0, y0, x0 + W * f, y0 + H, 0.3f, argb(color, alpha), light);
+        quad(vc, m, x0, y0, x0 + W * f, y0 + 1, 0.4f, argb(0x60FFFFFF, alpha), light);          // shine
 
         Font font = mc.font;
         Component text = SystemFonts.bold(Math.round(hp) + " / " + Math.round(max));

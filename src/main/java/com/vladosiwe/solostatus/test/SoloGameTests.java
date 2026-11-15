@@ -94,4 +94,23 @@ public final class SoloGameTests {
                 == com.vladosiwe.solostatus.clazz.Proficiency.MAIN, "a dagger must be the Thief's main weapon");
         h.succeed();
     }
+
+    /** Slayer titles: kills of one kind are counted, the title opens, and while worn it hits that kind harder. */
+    @GameTest(template = "empty")
+    public static void slayerTitles(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.WARRIOR);
+        PlayerData d = Hunter.get(p);
+        var zombie = h.spawn(net.minecraft.world.entity.EntityType.ZOMBIE, net.minecraft.core.BlockPos.ZERO.above());
+        var spider = h.spawn(net.minecraft.world.entity.EntityType.SPIDER, net.minecraft.core.BlockPos.ZERO.above());
+        com.vladosiwe.solostatus.achievement.SlayerTitles.onKill(d, zombie);
+        h.assertTrue(d.counter("slay_zombie_slayer") == 1, "a zombie kill is not counted for the Corpse Slayer title");
+        h.assertTrue(com.vladosiwe.solostatus.achievement.Achievements.get("zombie_slayer") != null, "zombie_slayer is not a title");
+        d.achievements.add("zombie_slayer");
+        com.vladosiwe.solostatus.achievement.TitleSystem.equip(p, "zombie_slayer");
+        h.assertTrue(d.titleIs("zombie_slayer"), "the title was not equipped");
+        h.assertTrue(Math.abs(com.vladosiwe.solostatus.achievement.SlayerTitles.damageBonus(d, zombie) - 0.12) < 1e-9, "no damage bonus against zombies");
+        h.assertTrue(com.vladosiwe.solostatus.achievement.SlayerTitles.damageBonus(d, spider) == 0, "the zombie title must not help against spiders");
+        h.succeed();
+    }
 }

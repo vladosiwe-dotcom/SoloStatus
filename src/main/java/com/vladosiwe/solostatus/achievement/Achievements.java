@@ -107,6 +107,11 @@ public final class Achievements {
         title("shadow_of_death", true, Items.WITHER_ROSE, 4000, Req.counter("backstab_kills", 300));
         title("giant_killer", true, Items.IRON_GOLEM_SPAWN_EGG, 4000, Req.counter("giant_kills", 50));
         title("frenzy", true, Items.FIRE_CHARGE, 3000, Req.counter("rampages", 50));
+
+        // ---------------- Истребители: титулы за охоту на один вид мобов ----------------
+        for (SlayerTitles.Slayer slayer : SlayerTitles.ALL) {
+            title(slayer.id(), false, slayer.icon(), 1500 + slayer.kills() * 5, Req.counter(slayer.counter(), slayer.kills()));
+        }
         reg("solo_raid", true, Items.TOTEM_OF_UNDYING, 4000, 0, 1, Req.counter("solo_boss", 1));
         reg("marathon", true, Items.LEATHER_BOOTS, 2000, 0, 0, Req.counter("sprint_m", 50000));
         skill("legion", true, Items.BONE_BLOCK, 8000, "shadow_legion", Req.bosses(3), Req.counter("kills", 2000));

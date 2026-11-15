@@ -194,6 +194,7 @@ public final class CombatEvents {
         if (d.titleIs("dragon_slayer") && attackerEntity instanceof LivingEntity bossAttacker && Threat.isBoss(bossAttacker)) {
             mult *= 0.90; // титул «Драконоборец»
         }
+        if (attackerEntity instanceof LivingEntity slayerTarget) mult *= 1 - com.vladosiwe.solostatus.achievement.SlayerTitles.defense(d, slayerTarget);
         event.setAmount((float) Math.max(0, amount * mult));
 
         // Шипы Колосса
@@ -344,6 +345,7 @@ public final class CombatEvents {
         if (d.titleIs("bone_lord") && target.getType().is(EntityTypeTags.UNDEAD)) add += 0.10;
         if (d.titleIs("night_hunter") && level.isNight()) add += 0.08;
         if (d.titleIs("dragon_slayer") && Threat.isBoss(target)) add += 0.10;
+        add += com.vladosiwe.solostatus.achievement.SlayerTitles.damageBonus(d, target); // slayer titles
 
         // --- Контратака после блока/уклонения ---
         if (melee && !skill && now - d.lastBlockTick <= 40 && d.lastBlockTick > 0) {
@@ -635,6 +637,7 @@ public final class CombatEvents {
         else if (melee) d.addCounter("melee_kills", 1);
         if (threat >= Threat.STRONG || boss) d.addCounter("strong_kills", 1);
         if (dead.getType().is(EntityTypeTags.SKELETONS)) d.addCounter("skeleton_kills", 1);
+        com.vladosiwe.solostatus.achievement.SlayerTitles.onKill(d, dead);
         if (dead.getType() == EntityType.SPIDER || dead.getType() == EntityType.CAVE_SPIDER) d.addCounter("spider_kills", 1);
         if (level.isNight()) d.addCounter("night_kills", 1);
         if (p.getHealth() <= p.getMaxHealth() * 0.3f) d.addCounter("low_hp_kills", 1);

@@ -294,7 +294,9 @@ public class SystemScreen extends Screen {
 
     private void renderHints(GuiGraphics g) {
         float a = Mth.clamp((since(openAt) - 700) / 300f, 0f, 1f);
-        Component hint = tr("solostatus.ui.hints", Keys.OPEN_STATUS.getTranslatedKeyMessage());
+        // the window key is unbound by default (the System is called by voice): then Esc is the way to close it
+        Component key = Keys.OPEN_STATUS.isUnbound() ? Component.literal("Esc") : Keys.OPEN_STATUS.getTranslatedKeyMessage();
+        Component hint = tr("solostatus.ui.hints", key);
         textRight(g, font, hint, width - 10, height - 14, 0xFF4F6F8F, a);
     }
 
