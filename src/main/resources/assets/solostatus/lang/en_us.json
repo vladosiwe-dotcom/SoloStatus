@@ -899,5 +899,17 @@
   "item.solostatus.hunter_spear": "Hunter's Spear",
   "item.solostatus.shadow_spear": "Shadow Spear",
   "item.solostatus.hunter_staff": "Hunter's Staff",
-  "item.solostatus.shadow_staff": "Shadow Staff"
+  "item.solostatus.shadow_staff": "Shadow Staff",
+  "item.solostatus.vanguard_helmet": "Vanguard Helmet",
+  "item.solostatus.vanguard_chestplate": "Vanguard Chestplate",
+  "item.solostatus.vanguard_leggings": "Vanguard Leggings",
+  "item.solostatus.vanguard_boots": "Vanguard Boots",
+  "item.solostatus.stalker_helmet": "Stalker Helmet",
+  "item.solostatus.stalker_chestplate": "Stalker Chestplate",
+  "item.solostatus.stalker_leggings": "Stalker Leggings",
+  "item.solostatus.stalker_boots": "Stalker Boots",
+  "item.solostatus.arcanist_helmet": "Arcanist Helmet",
+  "item.solostatus.arcanist_chestplate": "Arcanist Chestplate",
+  "item.solostatus.arcanist_leggings": "Arcanist Leggings",
+  "item.solostatus.arcanist_boots": "Arcanist Boots"
 }

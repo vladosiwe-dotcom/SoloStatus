@@ -157,7 +157,26 @@ public final class DevShots {
                 frames("skill-" + skills[i], 16);
             }
         }
-        if (tick == skillAt + skills.length * 45 + 20) {
+        // the armour sets, seen from the front in third person
+        int armorAt = skillAt + skills.length * 45 + 10;
+        var sets = com.vladosiwe.solostatus.registry.SystemArmor.Set.values();
+        for (int i = 0; i < sets.length; i++) {
+            int at = armorAt + i * 30;
+            var set = sets[i];
+            if (tick == at) {
+                mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT);
+                server.execute(() -> {
+                    for (var t : new net.minecraft.world.item.ArmorItem.Type[]{net.minecraft.world.item.ArmorItem.Type.HELMET,
+                            net.minecraft.world.item.ArmorItem.Type.CHESTPLATE, net.minecraft.world.item.ArmorItem.Type.LEGGINGS,
+                            net.minecraft.world.item.ArmorItem.Type.BOOTS}) {
+                        sp.setItemSlot(t.getSlot(), new ItemStack(com.vladosiwe.solostatus.registry.SystemArmor.get(set, t)));
+                    }
+                });
+            }
+            if (tick == at + 20) shot(mc, "armor-" + set.key);
+        }
+        if (tick == armorAt + sets.length * 30 + 10) mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+        if (tick == skillAt + skills.length * 45 + 20 + sets.length * 30 + 20) {
             SoloStatus.LOGGER.info("DevShots: done");
             mc.stop();
         }

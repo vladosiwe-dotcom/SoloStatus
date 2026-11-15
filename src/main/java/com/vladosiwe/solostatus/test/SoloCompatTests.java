@@ -151,6 +151,25 @@ public final class SoloCompatTests {
         h.succeed();
     }
 
+    /** Armour sets: defence by weight, Stalker adds speed, Arcanist robes add Iron's mana. */
+    @GameTest(template = "empty")
+    public static void systemArmor(GameTestHelper h) {
+        var chest = net.minecraft.world.item.ArmorItem.Type.CHESTPLATE;
+        int heavy = com.vladosiwe.solostatus.registry.SystemArmor.get(com.vladosiwe.solostatus.registry.SystemArmor.Set.VANGUARD, chest).getDefense();
+        int light = com.vladosiwe.solostatus.registry.SystemArmor.get(com.vladosiwe.solostatus.registry.SystemArmor.Set.STALKER, chest).getDefense();
+        h.assertTrue(heavy > light, "Vanguard must protect more than Stalker: " + heavy + " vs " + light);
+        var stalker = com.vladosiwe.solostatus.registry.SystemArmor.get(com.vladosiwe.solostatus.registry.SystemArmor.Set.STALKER, chest)
+                .getDefaultAttributeModifiers().modifiers();
+        h.assertTrue(stalker.stream().anyMatch(e -> e.attribute().equals(Attributes.MOVEMENT_SPEED)), "Stalker armour adds no speed");
+        if (ModList.get().isLoaded("irons_spellbooks")) {
+            var robe = com.vladosiwe.solostatus.registry.SystemArmor.get(com.vladosiwe.solostatus.registry.SystemArmor.Set.ARCANIST, chest)
+                    .getDefaultAttributeModifiers().modifiers();
+            h.assertTrue(robe.stream().anyMatch(e -> e.attribute().unwrapKey().map(k -> k.location().toString()).orElse("")
+                    .equals("irons_spellbooks:max_mana")), "Arcanist robes add no Iron's mana");
+        }
+        h.succeed();
+    }
+
     /** Every Mage skill is a real Iron's spell that is cast with one press (no held spells on a skill key). */
     @GameTest(template = "empty")
     public static void mageSchoolsAreIronsSpells(GameTestHelper h) {

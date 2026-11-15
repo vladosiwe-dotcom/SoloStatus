@@ -25,7 +25,8 @@ public final class ModItems {
     public static final DeferredItem<Item> SYSTEM_ICON = ITEMS.registerSimpleItem("system_icon", new Item.Properties().stacksTo(1));
 
     static {
-        SystemWeapons.init(); // the System's weapons register into ITEMS too
+        SystemWeapons.init(); // the System's weapons and armour register into ITEMS too
+        SystemArmor.init();
     }
 
     public static void addToCreativeTabs(BuildCreativeModeTabContentsEvent event) {
@@ -34,6 +35,7 @@ public final class ModItems {
         }
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
             for (Item weapon : SystemWeapons.all()) event.accept(weapon);
+            for (Item armor : SystemArmor.all()) event.accept(armor);
             // one of each rarity, so creative players and admins can try them
             for (var kind : com.vladosiwe.solostatus.accessory.AccessoryKind.values()) {
                 for (var rarity : com.vladosiwe.solostatus.quality.QualityRarity.VALUES) {
