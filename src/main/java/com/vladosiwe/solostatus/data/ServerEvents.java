@@ -36,6 +36,12 @@ public final class ServerEvents {
         if (event.getSlot() == net.minecraft.world.entity.EquipmentSlot.MAINHAND && event.getEntity() instanceof ServerPlayer p) {
             AttributeSystem.applyWeaponSpeed(p);
         }
+        // armour: the set bonuses (some of them are attributes) follow what is worn
+        if (event.getSlot().getType() == net.minecraft.world.entity.EquipmentSlot.Type.HUMANOID_ARMOR && event.getEntity() instanceof ServerPlayer p
+                && (event.getFrom().getItem() instanceof com.vladosiwe.solostatus.registry.SystemArmor.Piece
+                || event.getTo().getItem() instanceof com.vladosiwe.solostatus.registry.SystemArmor.Piece)) {
+            AttributeSystem.apply(p);
+        }
     }
 
     @SubscribeEvent

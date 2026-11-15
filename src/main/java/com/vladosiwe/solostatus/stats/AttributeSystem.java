@@ -64,6 +64,7 @@ public final class AttributeSystem {
         set(player, Attributes.SAFE_FALL_DISTANCE, SAFE_FALL, StatFormulas.safeFall(d), AttributeModifier.Operation.ADD_VALUE);
 
         applyWeaponSpeed(player);
+        com.vladosiwe.solostatus.registry.SetBonuses.applyAttributes(player);
         CompatManager.applyMagicAttributes(player, d);
         com.vladosiwe.solostatus.accessory.AccessorySystem.applyAttributes(player, d);
 

@@ -1123,5 +1123,20 @@
   "solostatus.history.mastery": "Мастерство «%s»: веха %s",
   "solostatus.history.rank": "Новый ранг охотника: %s",
   "solostatus.history.boss": "Впервые побеждён босс: %s",
-  "solostatus.history.mod": "Модификация «%s» для «%s»"
+  "solostatus.history.mod": "Модификация «%s» для «%s»",
+  "solostatus.tooltip.set": "Комплект «%s»: надето %s / 4",
+  "solostatus.set.vanguard": "Авангард",
+  "solostatus.set.stalker": "Ловчий",
+  "solostatus.set.arcanist": "Мантия арканиста",
+  "solostatus.set.vanguard.2": "получаемый урон −8%",
+  "solostatus.set.vanguard.4": "устойчивость к отбрасыванию +50%, удары в ближнем бою возвращают выносливость",
+  "solostatus.set.stalker.2": "уклонение +5%",
+  "solostatus.set.stalker.4": "удар сразу после уклонения — гарантированный крит",
+  "solostatus.set.arcanist.2": "восстановление маны +10%",
+  "solostatus.set.arcanist.4": "перезарядка заклинаний −8%",
+  "solostatus.tooltip.cmp": "По сравнению с «%s»:",
+  "solostatus.tooltip.cmp.damage": "урон %s",
+  "solostatus.tooltip.cmp.speed": "скорость атаки %s",
+  "solostatus.tooltip.cmp.armor": "броня %s",
+  "solostatus.tooltip.cmp.toughness": "прочность брони %s"
 }

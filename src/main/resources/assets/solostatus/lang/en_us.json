@@ -1123,5 +1123,20 @@
   "solostatus.history.mastery": "%s mastery: milestone %s",
   "solostatus.history.rank": "New hunter rank: %s",
   "solostatus.history.boss": "First victory over %s",
-  "solostatus.history.mod": "Modification %s for %s"
+  "solostatus.history.mod": "Modification %s for %s",
+  "solostatus.tooltip.set": "%s set: %s / 4 worn",
+  "solostatus.set.vanguard": "Vanguard",
+  "solostatus.set.stalker": "Stalker",
+  "solostatus.set.arcanist": "Arcanist Robes",
+  "solostatus.set.vanguard.2": "8% less damage taken",
+  "solostatus.set.vanguard.4": "+50% knockback resistance, melee blows give stamina back",
+  "solostatus.set.stalker.2": "+5% dodge",
+  "solostatus.set.stalker.4": "the blow right after a dodge is a sure crit",
+  "solostatus.set.arcanist.2": "+10% mana regeneration",
+  "solostatus.set.arcanist.4": "-8% spell cooldowns",
+  "solostatus.tooltip.cmp": "Compared with %s:",
+  "solostatus.tooltip.cmp.damage": "damage %s",
+  "solostatus.tooltip.cmp.speed": "attack speed %s",
+  "solostatus.tooltip.cmp.armor": "armour %s",
+  "solostatus.tooltip.cmp.toughness": "armour toughness %s"
 }

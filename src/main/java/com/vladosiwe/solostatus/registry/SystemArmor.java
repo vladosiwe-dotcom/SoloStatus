@@ -102,6 +102,10 @@ public final class SystemArmor {
             this.set = set;
         }
 
+        public Set set() {
+            return set;
+        }
+
         @Override
         public ItemAttributeModifiers getDefaultAttributeModifiers() {
             if (modifiers != null) return modifiers;

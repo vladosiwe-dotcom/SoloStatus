@@ -76,8 +76,12 @@ public final class IronsSpellsCompat {
             regen += d.skillRank("breathing_technique") * 0.08 + d.gear(Affix.ENERGY_REGEN);
         }
         set(p, "max_mana", maxMana, AttributeModifier.Operation.ADD_VALUE);
+        // Arcanist robes: 2 pieces regenerate mana faster, 4 shorten spell cooldowns (SetBonuses)
+        if (com.vladosiwe.solostatus.registry.SetBonuses.has(p, com.vladosiwe.solostatus.registry.SystemArmor.Set.ARCANIST, 2)) regen += 0.10;
         set(p, "mana_regen", regen, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-        set(p, "cooldown_reduction", d.skillRank("arcane_flow") * 0.02 + d.skillRank("arcane_overflow") * 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        set(p, "cooldown_reduction", d.skillRank("arcane_flow") * 0.02 + d.skillRank("arcane_overflow") * 0.02
+                + (com.vladosiwe.solostatus.registry.SetBonuses.has(p, com.vladosiwe.solostatus.registry.SystemArmor.Set.ARCANIST, 4) ? 0.08 : 0),
+                AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 
         int att = d.skillRank("elemental_attunement");
         int flow = d.skillRank("arcane_flow");

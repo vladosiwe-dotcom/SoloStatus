@@ -123,6 +123,60 @@ public final class ClientEvents {
         tip.addAll(at, lines);
     }
 
+    /** Armour sets: the set, how many pieces are worn and its bonuses; any gear: the difference with what is worn. */
+    @SubscribeEvent
+    public static void onGearTooltip(ItemTooltipEvent event) {
+        var player = event.getEntity();
+        if (player == null) return;
+        net.minecraft.world.item.ItemStack stack = event.getItemStack();
+        List<Component> tip = event.getToolTip();
+        if (stack.getItem() instanceof com.vladosiwe.solostatus.registry.SystemArmor.Piece piece) {
+            var set = piece.set();
+            int worn = com.vladosiwe.solostatus.registry.SetBonuses.pieces(player, set);
+            tip.add(Component.translatable("solostatus.tooltip.set", Component.translatable("solostatus.set." + set.key), worn).withStyle(ChatFormatting.GOLD));
+            for (int need : new int[]{2, 4}) {
+                tip.add(Component.literal(" " + need + ": ").append(Component.translatable("solostatus.set." + set.key + "." + need))
+                        .withStyle(worn >= need ? ChatFormatting.AQUA : ChatFormatting.DARK_GRAY));
+            }
+        }
+        // comparison with what is worn in the same slot (not for the worn item itself)
+        net.minecraft.world.entity.EquipmentSlot slot = stack.getItem() instanceof net.minecraft.world.item.ArmorItem armor ? armor.getEquipmentSlot()
+                : hasAttack(stack) ? net.minecraft.world.entity.EquipmentSlot.MAINHAND : null;
+        if (slot == null) return;
+        net.minecraft.world.item.ItemStack worn = player.getItemBySlot(slot);
+        if (worn.isEmpty() || worn == stack || net.minecraft.world.item.ItemStack.matches(worn, stack)) return;
+        java.util.ArrayList<Component> diff = new java.util.ArrayList<>();
+        var attrs = new java.util.LinkedHashMap<net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute>, String>();
+        attrs.put(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE, "solostatus.tooltip.cmp.damage");
+        attrs.put(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED, "solostatus.tooltip.cmp.speed");
+        attrs.put(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR, "solostatus.tooltip.cmp.armor");
+        attrs.put(net.minecraft.world.entity.ai.attributes.Attributes.ARMOR_TOUGHNESS, "solostatus.tooltip.cmp.toughness");
+        attrs.forEach((attr, key) -> {
+            double d = flat(stack, slot, attr) - flat(worn, slot, attr);
+            if (Math.abs(d) < 0.01) return;
+            String v = (d > 0 ? "+" : "") + Math.round(d * 100) / 100.0;
+            diff.add(Component.literal("  ").append(Component.translatable(key, v)).withStyle(d > 0 ? ChatFormatting.GREEN : ChatFormatting.RED));
+        });
+        if (!diff.isEmpty()) {
+            tip.add(Component.translatable("solostatus.tooltip.cmp", worn.getHoverName()).withStyle(ChatFormatting.GRAY));
+            tip.addAll(diff);
+        }
+    }
+
+    private static boolean hasAttack(net.minecraft.world.item.ItemStack stack) {
+        return flat(stack, net.minecraft.world.entity.EquipmentSlot.MAINHAND, net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE) != 0;
+    }
+
+    /** The flat (ADD_VALUE) amount an item gives to an attribute in a slot. */
+    private static double flat(net.minecraft.world.item.ItemStack stack, net.minecraft.world.entity.EquipmentSlot slot,
+                               net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> attr) {
+        double[] sum = {0};
+        stack.forEachModifier(slot, (a, m) -> {
+            if (a.equals(attr) && m.operation() == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE) sum[0] += m.amount();
+        });
+        return sum[0];
+    }
+
     private static Component stat(String key, float value) {
         String sign = value >= 0 ? "+" : "";
         return Component.translatable(key, sign + Math.round(value * 1000) / 10f + "%")
