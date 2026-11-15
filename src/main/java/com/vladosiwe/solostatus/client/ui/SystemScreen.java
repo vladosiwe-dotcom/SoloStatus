@@ -1095,7 +1095,11 @@ public class SystemScreen extends Screen {
                 int bx = cx0 + cw - (4 - m) * 15 + 2;
                 boolean on = lvl >= marks[m];
                 g.fill(bx, y + 11, bx + 12, y + 17, a(on ? 0xFF2A6FA8 : 0x40102030, ra));
-                hover(mx, my, bx, y + 10, 12, 8, List.of(Component.translatable("solostatus.notice.mastery_milestone." + marks[m])));
+                List<Component> tip = new ArrayList<>();
+                tip.add(Component.translatable("solostatus.notice.mastery_milestone." + marks[m]));
+                if (!magic && marks[m] == 40) tip.add(Component.translatable("solostatus.mastery.technique." + key).withStyle(on ? net.minecraft.ChatFormatting.AQUA : net.minecraft.ChatFormatting.GRAY));
+                if (!magic && marks[m] == 50) tip.add(Component.translatable("solostatus.mastery.mastered." + key).withStyle(on ? net.minecraft.ChatFormatting.AQUA : net.minecraft.ChatFormatting.GRAY));
+                hover(mx, my, bx, y + 10, 12, 8, tip);
             }
             y += rowH;
         }

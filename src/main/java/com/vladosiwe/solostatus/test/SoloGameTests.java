@@ -54,6 +54,12 @@ public final class SoloGameTests {
                 if (!json.has("solostatus.skill." + s.id) || !json.has("solostatus.skill." + s.id + ".desc")) missing.add(lang + ": " + s.id);
             });
         }
+        for (var t : com.vladosiwe.solostatus.combat.WeaponType.VALUES) {
+            if (!t.hasMastery()) continue;
+            langs.forEach((lang, json) -> {
+                if (!json.has("solostatus.mastery.technique." + t.key) || !json.has("solostatus.mastery.mastered." + t.key)) missing.add(lang + ": mastery " + t.key);
+            });
+        }
         h.assertTrue(missing.isEmpty(), "missing: " + missing);
         h.succeed();
     }
@@ -386,6 +392,25 @@ public final class SoloGameTests {
         parry.effect.execute(new com.vladosiwe.solostatus.skill.SkillContext(p, p.serverLevel(), d, parry, 1));
         long window = d.timedStates.get("parry") - p.serverLevel().getGameTime();
         h.assertTrue(window == com.vladosiwe.solostatus.skill.GeneralSkills.parryWindow(1) + 6, "En Garde 3: parry window " + window);
+        h.succeed();
+    }
+
+    /** Mastery 40 gives each weapon its technique and 50 develops its skill; both are described for every weapon. */
+    @GameTest(template = "empty")
+    public static void masteryTechniques(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.THIEF);
+        PlayerData d = Hunter.get(p);
+        var zombie = h.spawn(net.minecraft.world.entity.EntityType.ZOMBIE, new net.minecraft.core.BlockPos(1, 1, 3));
+        zombie.setHealth(zombie.getMaxHealth() * 0.2f);
+        var dagger = com.vladosiwe.solostatus.combat.WeaponType.DAGGER;
+        h.assertTrue(com.vladosiwe.solostatus.mastery.MasteryTechniques.offense(p, d, zombie, dagger, p, 1) == 0, "a technique before mastery 40");
+        d.mastery.put(dagger.key, com.vladosiwe.solostatus.mastery.MasteryMath.xpForLevel(40));
+        h.assertTrue(Math.abs(com.vladosiwe.solostatus.mastery.MasteryTechniques.offense(p, d, zombie, dagger, p, 1) - 0.25) < 1e-9,
+                "the dagger technique must add 25% against a wounded target");
+        h.assertFalse(com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(d, dagger), "mastered before 50");
+        d.mastery.put(dagger.key, com.vladosiwe.solostatus.mastery.MasteryMath.xpForLevel(50));
+        h.assertTrue(com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(d, dagger), "not mastered at 50");
         h.succeed();
     }
 }

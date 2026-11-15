@@ -876,6 +876,15 @@ public final class SkillEffects {
             particles(p.serverLevel(), ParticleTypes.SWEEP_ATTACK, p.getEyePosition().add(p.getLookAngle().scale(2)), 2, 0.4, 0);
             sound(p.serverLevel(), p.position(), SoundEvents.PLAYER_ATTACK_SWEEP, 1f, 1.1f + i * 0.2f);
         });
+        if (com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(c.data(), com.vladosiwe.solostatus.combat.WeaponType.SWORD)) { // sword mastery 50: a wide finishing slash closes the cross
+            Scheduler.later(8, () -> {
+                if (!alive(p)) return;
+                swing(p);
+                for (LivingEntity t : enemiesInCone(p, 4.5, 140)) hitPhysical(p, t, dmg * 1.5);
+                particles(p.serverLevel(), ParticleTypes.SWEEP_ATTACK, p.getEyePosition().add(p.getLookAngle().scale(2)), 5, 1.2, 0);
+                sound(p.serverLevel(), p.position(), SoundEvents.PLAYER_ATTACK_STRONG, 1f, 0.8f);
+            });
+        }
         return true;
     }
 
@@ -894,6 +903,10 @@ public final class SkillEffects {
         swing(p);
         hitPhysical(p, t, melee(p) * c.scale(1.2, 0.15));
         mark(t, "sunder", p, 160);
+        if (com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(c.data(), com.vladosiwe.solostatus.combat.WeaponType.AXE)) { // axe mastery 50: the split spreads to those around
+            for (LivingEntity e : enemiesAround(p, t.position(), 3)) if (e != t) mark(e, "sunder", p, 160);
+            ring(c.level(), ParticleTypes.DAMAGE_INDICATOR, t.position().add(0, 0.5, 0), 3, 16);
+        }
         particles(c.level(), ParticleTypes.DAMAGE_INDICATOR, t.getBoundingBox().getCenter(), 8, 0.3, 0.1);
         sound(c.level(), t.position(), SoundEvents.ANVIL_LAND, 0.5f, 1.3f);
         return true;
@@ -901,11 +914,16 @@ public final class SkillEffects {
 
     public static boolean piercingThrust(SkillContext c) {
         ServerPlayer p = c.player();
-        List<LivingEntity> line = enemiesInLine(p, 6, 0.8);
+        boolean mastered = com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(c.data(), com.vladosiwe.solostatus.combat.WeaponType.SPEAR); // spear mastery 50: a longer thrust that pins
+        double reach = mastered ? 9 : 6;
+        List<LivingEntity> line = enemiesInLine(p, reach, 0.8);
         swing(p);
         double dmg = melee(p) * c.scale(1.3, 0.15);
-        for (LivingEntity t : line) hitPhysical(p, t, dmg);
-        line(c.level(), ParticleTypes.CRIT, p.getEyePosition(), p.getEyePosition().add(p.getLookAngle().scale(6)), 0.3);
+        for (LivingEntity t : line) {
+            hitPhysical(p, t, dmg);
+            if (mastered) debuff(p, t, MobEffects.MOVEMENT_SLOWDOWN, 60, 3);
+        }
+        line(c.level(), ParticleTypes.CRIT, p.getEyePosition(), p.getEyePosition().add(p.getLookAngle().scale(reach)), 0.3);
         sound(c.level(), p.position(), SoundEvents.PLAYER_ATTACK_STRONG, 1f, 1.3f);
         return !line.isEmpty();
     }
@@ -914,9 +932,14 @@ public final class SkillEffects {
         ServerPlayer p = c.player();
         swing(p);
         double dmg = melee(p) * c.scale(1.2, 0.2);
+        boolean mastered = com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(c.data(), com.vladosiwe.solostatus.combat.WeaponType.MACE); // mace mastery 50: the blow throws up and dazes
         for (LivingEntity t : enemiesAround(p, p.position(), 3)) {
             hitPhysical(p, t, dmg);
             debuff(p, t, MobEffects.MOVEMENT_SLOWDOWN, 60, 1);
+            if (mastered && !com.vladosiwe.solostatus.combat.Threat.isBoss(t)) {
+                launch(t, 0.5);
+                stun(p, t, 20);
+            }
         }
         ring(c.level(), ParticleTypes.CLOUD, p.position().add(0, 0.1, 0), 3, 30);
         sound(c.level(), p.position(), SoundEvents.MACE_SMASH_GROUND, 1f, 1f);
@@ -946,6 +969,7 @@ public final class SkillEffects {
         ServerPlayer p = c.player();
         var arrow = arrow(p, 0, 0, 3.2f, 5.0 * c.scale(1.0, 0.1), false);
         arrow.getPersistentData().putInt("solostatus_freeze", c.rank());
+        if (com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(c.data(), com.vladosiwe.solostatus.combat.WeaponType.BOW)) arrow.getPersistentData().putBoolean("solostatus_freeze_area", true); // bow mastery 50
         particles(c.level(), ParticleTypes.SNOWFLAKE, p.getEyePosition().add(p.getLookAngle()), 10, 0.1, 0.02);
         sound(c.level(), p.position(), SoundEvents.ARROW_SHOOT, 1f, 1.5f);
         return true;
@@ -955,6 +979,7 @@ public final class SkillEffects {
         ServerPlayer p = c.player();
         var arrow = arrow(p, 0, 0, 3.5f, 4.0, false);
         arrow.getPersistentData().putDouble("solostatus_explode", 5.0 * c.scale(1.0, 0.15));
+        if (com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(c.data(), com.vladosiwe.solostatus.combat.WeaponType.CROSSBOW)) arrow.getPersistentData().putBoolean("solostatus_explode_big", true); // crossbow mastery 50
         sound(c.level(), p.position(), SoundEvents.CROSSBOW_SHOOT, 1f, 0.6f);
         return true;
     }
@@ -963,9 +988,20 @@ public final class SkillEffects {
     public static boolean arcaneBlast(SkillContext c) {
         ServerPlayer p = c.player();
         double dmg = spell(c) * c.scale(1.2, 0.2);
-        for (LivingEntity t : enemiesAround(p, p.position(), 4)) {
+        boolean mastered = com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(c.data(), com.vladosiwe.solostatus.combat.WeaponType.STAFF); // staff mastery 50: a wider blast that echoes
+        double r = mastered ? 6 : 4;
+        for (LivingEntity t : enemiesAround(p, p.position(), r)) {
             hitMagic(p, t, dmg);
             knockback(t, p.position(), 1.2);
+        }
+        if (mastered) {
+            Vec3 at = p.position();
+            Scheduler.later(20, () -> {
+                if (!alive(p)) return;
+                for (LivingEntity t : enemiesAround(p, at, r)) hitMagic(p, t, dmg * 0.5);
+                ring(p.serverLevel(), SYSTEM_DUST, at.add(0, 1, 0), r, 40);
+                sound(p.serverLevel(), at, SoundEvents.EVOKER_CAST_SPELL, 0.8f, 1.2f);
+            });
         }
         ring(c.level(), SYSTEM_DUST, p.position().add(0, 1, 0), 4, 40);
         particles(c.level(), ParticleTypes.ENCHANT, p.position().add(0, 1, 0), 60, 2, 0.5);

@@ -98,15 +98,26 @@ public final class CombatEvents {
             direct.getPersistentData().remove("solostatus_freeze");
             target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60 + 10 * rank, 2), shooter);
             target.setTicksFrozen(Math.max(target.getTicksFrozen(), 200));
+            if (direct.getPersistentData().getBoolean("solostatus_freeze_area")) { // bow mastery 50: the frost shatters around
+                direct.getPersistentData().remove("solostatus_freeze_area");
+                for (LivingEntity e : SkillFx.enemiesAround(shooter, target.position(), 3)) {
+                    if (e != target) e.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 1), shooter);
+                }
+                SkillFx.ring((ServerLevel) target.level(), ParticleTypes.SNOWFLAKE, target.position().add(0, 0.3, 0), 3, 30);
+            }
             SkillFx.particles((ServerLevel) target.level(), ParticleTypes.SNOWFLAKE, target.getBoundingBox().getCenter(), 25, 0.4, 0.05);
         }
         if (direct != null && direct.getPersistentData().contains("solostatus_explode") && source.getEntity() instanceof ServerPlayer shooter) {
             double dmg = direct.getPersistentData().getDouble("solostatus_explode");
             direct.getPersistentData().remove("solostatus_explode");
+            boolean big = direct.getPersistentData().getBoolean("solostatus_explode_big"); // crossbow mastery 50
             Vec3 at = target.position();
             Scheduler.later(1, () -> {
                 if (!shooter.isAlive()) return;
-                for (LivingEntity e : SkillFx.enemiesAround(shooter, at, 2.5)) SkillFx.hitPhysical(shooter, e, dmg);
+                for (LivingEntity e : SkillFx.enemiesAround(shooter, at, big ? 4 : 2.5)) {
+                    SkillFx.hitPhysical(shooter, e, dmg);
+                    if (big) e.igniteForSeconds(3);
+                }
                 SkillFx.particles(shooter.serverLevel(), ParticleTypes.EXPLOSION, at.add(0, 0.5, 0), 2, 0.3, 0);
                 SkillFx.sound(shooter.serverLevel(), at, SoundEvents.DRAGON_FIREBALL_EXPLODE, 0.7f, 1.3f);
             });
@@ -350,6 +361,10 @@ public final class CombatEvents {
             forceCrit = true;
             d.timedStates.remove("vital_strike");
             target.addEffect(new MobEffectInstance(MobEffects.POISON, 80, 0), p);
+            if (com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(d, WeaponType.DAGGER)) { // dagger mastery 50
+                target.addEffect(new MobEffectInstance(MobEffects.WITHER, 60, 0), p);
+                target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 100, 0), p);
+            }
         }
         if (melee && d.stateActive("poison_blade", now)) {
             target.addEffect(new MobEffectInstance(MobEffects.POISON, 80, d.skillRank("poison_blade") >= 4 ? 1 : 0), p);
@@ -404,6 +419,10 @@ public final class CombatEvents {
             if (rhythm > 0) add += Math.min(5, d.comboCount) * (0.03 + 0.01 * (rhythm - 1));
         }
 
+        // --- Техника оружия (мастерство 40) ---
+        add += com.vladosiwe.solostatus.mastery.MasteryTechniques.offense(p, d, target, type, direct, dist);
+        if (melee && !skill && com.vladosiwe.solostatus.mastery.MasteryTechniques.forceCrit(d, type, true)) forceCrit = true;
+
         float amount = (float) (event.getAmount() * Math.max(0.1, 1 + add));
 
         // --- Крит системы (отдельно от ванильного крита в прыжке) ---
@@ -413,9 +432,11 @@ public final class CombatEvents {
             if (Threat.fairness(target, p) > 0.2) d.addCounter("crits", 1);
         }
         event.setAmount(amount);
+        com.vladosiwe.solostatus.mastery.MasteryTechniques.afterHit(p, d, target, magic || type != WeaponType.STAFF ? type : null, amount, skill, now);
 
-        // --- Пассивки оружия второго круга ---
-        if (melee && !skill && type == WeaponType.GREATSWORD && p.getRandom().nextDouble() < 0.05 * d.skillRank("titan_grip")) {
+        // --- Пассивки оружия второго круга (мастерство 50 удваивает шанс Хватки титана) ---
+        double gripChance = 0.05 * d.skillRank("titan_grip") * (com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(d, WeaponType.GREATSWORD) ? 2 : 1);
+        if (melee && !skill && type == WeaponType.GREATSWORD && p.getRandom().nextDouble() < gripChance) {
             SkillFx.stun(p, target, 20);
             SkillFx.particles(level, ParticleTypes.CRIT, target.getBoundingBox().getCenter(), 10, 0.3, 0.2);
         }
@@ -557,14 +578,16 @@ public final class CombatEvents {
             SkillFx.particles(level, ParticleTypes.ENCHANTED_HIT, p.position().add(p.getLookAngle()).add(0, 1.2, 0), 15, 0.2, 0.2);
             SkillFx.sound(level, p.position(), SoundEvents.ANVIL_PLACE, 0.5f, 1.8f);
             if (perfect > 0 && attacker != null && event.getDamageSource().getDirectEntity() == attacker) {
-                float reflect = event.getBlockedDamage() * (0.3f + 0.1f * perfect);
-                SkillFx.stun(p, attacker, 20);
+                boolean shieldMastered = com.vladosiwe.solostatus.mastery.MasteryTechniques.mastered(d, WeaponType.SHIELD);
+                float reflect = event.getBlockedDamage() * (0.3f + 0.1f * perfect + (shieldMastered ? 0.2f : 0));
+                SkillFx.stun(p, attacker, shieldMastered ? 40 : 20);
                 Scheduler.later(1, () -> {
                     if (attacker.isAlive()) SkillFx.hitPhysical(p, attacker, reflect);
                 });
             }
         }
         if (counted) com.vladosiwe.solostatus.skill.StyleSkills.onBlock(p, d, now);
+        if (counted) com.vladosiwe.solostatus.mastery.MasteryTechniques.onBlock(p, d, attacker);
         // Бастион Стража: поглощение при блоке
         if (d.skillRank("bulwark") > 0 && !d.stateActive("bulwark_cd", now)) {
             p.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 60, 0, false, true));
