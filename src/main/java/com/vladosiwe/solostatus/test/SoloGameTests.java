@@ -37,6 +37,24 @@ public final class SoloGameTests {
         for (AchievementDef a : Achievements.all()) {
             if (a.rewardSkill() != null) h.assertTrue(Skills.get(a.rewardSkill()) != null, "достижение " + a.id() + ": нет навыка " + a.rewardSkill());
         }
+        // every System skill has its glyph and a name and description in both languages
+        java.util.List<String> missing = new java.util.ArrayList<>();
+        java.util.Map<String, com.google.gson.JsonObject> langs = new java.util.LinkedHashMap<>();
+        for (String lang : new String[]{"ru_ru", "en_us"}) {
+            try (var in = SoloGameTests.class.getResourceAsStream("/assets/solostatus/lang/" + lang + ".json")) {
+                langs.put(lang, com.google.gson.JsonParser.parseReader(new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8)).getAsJsonObject());
+            } catch (Exception e) {
+                missing.add(lang + ".json: " + e);
+            }
+        }
+        for (SkillDef s : Skills.all()) {
+            if (s.isSpell()) continue; // Iron's own icon and names
+            if (SoloGameTests.class.getResource("/assets/solostatus/textures/gui/skill/" + s.id + ".png") == null) missing.add(s.id + ".png");
+            langs.forEach((lang, json) -> {
+                if (!json.has("solostatus.skill." + s.id) || !json.has("solostatus.skill." + s.id + ".desc")) missing.add(lang + ": " + s.id);
+            });
+        }
+        h.assertTrue(missing.isEmpty(), "missing: " + missing);
         h.succeed();
     }
 
@@ -321,6 +339,53 @@ public final class SoloGameTests {
             }
         }
         h.assertTrue(wrong.isEmpty(), String.join("; ", wrong));
+        h.succeed();
+    }
+
+    /** Every specialization opens a development of its main skill at 30 and a style passive at 60, in one chain. */
+    @GameTest(template = "empty")
+    public static void specializationLaterSteps(GameTestHelper h) {
+        for (var spec : com.vladosiwe.solostatus.clazz.Specialization.values()) {
+            var defs = Skills.forSpec(spec);
+            SkillDef at30 = defs.stream().filter(x -> x.baseLevel == 30).findFirst().orElse(null);
+            SkillDef at60 = defs.stream().filter(x -> x.baseLevel == 60).findFirst().orElse(null);
+            h.assertTrue(at30 != null && at60 != null, spec.key + ": no level 30 / 60 step");
+            SkillDef main = Skills.get(at30.parent);
+            h.assertTrue(main != null && main.isActive() && main.spec == spec, spec.key + ": the level 30 step must grow from the main skill");
+            h.assertTrue(at30.id.equals(at60.parent), spec.key + ": the level 60 step must follow the level 30 one");
+        }
+        h.succeed();
+    }
+
+    /** A few of the later steps, checked through their numbers. */
+    @GameTest(template = "empty")
+    public static void styleSkillEffects(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.DEFENDER);
+        PlayerData d = Hunter.get(p);
+        long now = p.serverLevel().getGameTime();
+
+        float before = p.getMaxHealth();
+        d.skills.put("colossus", 2);
+        com.vladosiwe.solostatus.stats.AttributeSystem.apply(p);
+        h.assertTrue(Math.abs(p.getMaxHealth() - before * 1.10f) < 0.05f, "Colossus 2: max health " + before + " -> " + p.getMaxHealth());
+
+        d.skills.put("song_of_valor", 3);
+        h.assertTrue(Math.abs(com.vladosiwe.solostatus.skill.StyleSkills.defense(p, d, null, now) - 1.0) < 1e-6, "Song of Valor works without the hymn");
+        com.vladosiwe.solostatus.skill.SkillFx.state(d, p.serverLevel(), "battle_hymn", 100);
+        h.assertTrue(Math.abs(com.vladosiwe.solostatus.skill.StyleSkills.defense(p, d, null, now) - 0.85) < 1e-6, "Song of Valor 3 must cut damage by 15%");
+
+        d.skills.put("vengeance", 1);
+        d.skills.put("eye_for_eye", 2);
+        h.assertTrue(Math.abs(com.vladosiwe.solostatus.skill.StyleSkills.vengeanceShare(d, 1) - 0.45) < 1e-6
+                && com.vladosiwe.solostatus.skill.StyleSkills.vengeanceCap(d, 1) == 46, "Eye for an Eye numbers");
+
+        d.skills.put("parry", 1);
+        d.skills.put("en_garde", 3);
+        var parry = Skills.get("parry");
+        parry.effect.execute(new com.vladosiwe.solostatus.skill.SkillContext(p, p.serverLevel(), d, parry, 1));
+        long window = d.timedStates.get("parry") - p.serverLevel().getGameTime();
+        h.assertTrue(window == com.vladosiwe.solostatus.skill.GeneralSkills.parryWindow(1) + 6, "En Garde 3: parry window " + window);
         h.succeed();
     }
 }

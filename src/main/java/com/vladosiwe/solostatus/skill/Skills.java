@@ -150,6 +150,26 @@ public final class Skills {
         spec(Specialization.CROSSBOWMAN, "bolt_barrage", Items.CROSSBOW, SkillEffects::boltBarrage, 14, 0.8, 22, "auto_reload", Items.TRIPWIRE_HOOK);
         spec(Specialization.BARD, "battle_hymn", Items.NOTE_BLOCK, SkillEffects::battleHymn, 30, 2, 30, "melody_of_life", Items.MUSIC_DISC_OTHERSIDE);
 
+        // Later steps of each specialization (StyleSkills): at 30 the main skill grows a new property, at 60 the style
+        style(Specialization.BERSERKER, "berserk", "bloodbath", "undying_rage");
+        style(Specialization.WARLORD, "earthbreaker", "aftershock", "thick_of_battle");
+        style(Specialization.SHADOW, "shadow_step", "shadow_echo", "night_blade");
+        style(Specialization.BLADE_DANCER, "blade_storm", "storm_edge", "endless_dance");
+        style(Specialization.ELEMENTALIST, "meteor", "meteor_shower", "elemental_overload");
+        style(Specialization.ARCANIST, "gravity_well", "event_horizon", "arcane_overflow");
+        style(Specialization.GUARDIAN, "aegis", "mirror_aegis", "stalwart");
+        style(Specialization.JUGGERNAUT, "seismic_charge", "unstoppable", "colossus");
+        style(Specialization.SHARPSHOOTER, "sniper_shot", "killshot", "eagle_eye");
+        style(Specialization.RANGER, "evasive_roll", "volley_roll", "wind_runner");
+        style(Specialization.CLERIC, "holy_light", "radiance", "seraph_ward");
+        style(Specialization.ENCHANTER, "hex", "spreading_hex", "deep_curse");
+        style(Specialization.DUELIST, "duel_challenge", "decisive_duel", "en_garde");
+        style(Specialization.VENOMANCER, "toxic_cloud", "virulent_cloud", "toxic_burst");
+        style(Specialization.SPELLBLADE, "arcane_strike", "runic_edge", "mana_conduit");
+        style(Specialization.AVENGER, "retribution", "wrath_unleashed", "eye_for_eye");
+        style(Specialization.CROSSBOWMAN, "bolt_barrage", "explosive_finale", "heavy_bolts");
+        style(Specialization.BARD, "battle_hymn", "encore", "song_of_valor");
+
         // ============================== ULTIMATES (Испытание смены пути) ==============================
         ult(W, "titan_slash", Items.NETHERITE_SWORD, SkillEffects::titanSlash);
         ult(T, "thousand_cuts", Items.ECHO_SHARD, SkillEffects::thousandCuts);
@@ -274,6 +294,14 @@ public final class Skills {
         int column = java.util.Arrays.asList(s.parent.specializations()).indexOf(s) * 2;
         reg(b(activeId, SPEC, ATTACK, activeIcon).forSpec(s).level(10).cooldown(cd, cdPerRank).energy(energy).tree(column, 0).effect(effect).build());
         reg(b(passiveId, SPEC, PASSIVE, passiveIcon).forSpec(s).level(15).tree(column, 1).build());
+    }
+
+    /** Level 30: develops the specialization's main skill; level 60: the mastered style. Ranked passives (1..3). */
+    private static void style(Specialization s, String activeId, String developId, String styleId) {
+        SkillDef active = BY_ID.get(activeId);
+        int column = active.treeColumn;
+        reg(b(developId, SPEC, PASSIVE, active.icon).forSpec(s).ranks(3).level(30).rankStep(10).parent(activeId, 1).tree(column, 2).build());
+        reg(b(styleId, SPEC, PASSIVE, Items.NETHER_STAR).forSpec(s).ranks(3).level(60).rankStep(10).parent(developId, 1).tree(column, 3).build());
     }
 
     private static void ult(HunterClass c, String id, Item icon, SkillEffect effect) {

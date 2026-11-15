@@ -637,6 +637,9 @@ public class SystemScreen extends Screen {
         if (d.specialization != null) {
             List<SkillDef> spec = Skills.forSpec(d.specialization);
             if (!spec.isEmpty()) {
+                java.util.Set<String> specIds = new java.util.HashSet<>();
+                spec.forEach(x -> specIds.add(x.id));
+                spec.forEach(x -> branchDepth.put(x.id, depth(x, specIds))); // later steps grow from the main skill
                 rows.add(new SkillRow("spec", null, Component.translatable("solostatus.ui.sec_spec", d.specialization.displayName())));
                 spec.forEach(x -> rows.add(new SkillRow(null, x)));
             }

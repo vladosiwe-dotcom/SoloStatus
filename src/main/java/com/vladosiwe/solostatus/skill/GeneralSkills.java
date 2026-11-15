@@ -30,7 +30,7 @@ public final class GeneralSkills {
     /** Parry: a short window in which the next melee blow is turned aside and the attacker is staggered. */
     public static boolean parry(SkillContext c) {
         ServerPlayer p = c.player();
-        state(c.data(), c.level(), "parry", parryWindow(c.rank()));
+        state(c.data(), c.level(), "parry", parryWindow(c.rank()) + 2 * c.data().skillRank("en_garde")); // Duelist: En Garde
         swing(p);
         sound(c.level(), p.position(), SoundEvents.ARMOR_EQUIP_IRON.value(), 0.8f, 1.6f);
         return true;
@@ -50,7 +50,7 @@ public final class GeneralSkills {
         d.timedStates.remove("riposte_ready");
         dash(p, t.position().subtract(p.position()).normalize(), 0.6, 0.05);
         swing(p);
-        hitPhysical(p, t, melee(p) * c.scale(2.2, 0.3));
+        hitPhysical(p, t, melee(p) * c.scale(2.2, 0.3) * (1 + 0.15 * d.skillRank("en_garde")));
         stun(p, t, 30 + 5 * c.rank());
         particles(c.level(), ParticleTypes.CRIT, t.getBoundingBox().getCenter(), 20, 0.3, 0.3);
         sound(c.level(), t.position(), SoundEvents.PLAYER_ATTACK_CRIT, 1f, 0.9f);

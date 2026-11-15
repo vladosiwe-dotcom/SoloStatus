@@ -197,9 +197,13 @@ public final class CombatEvents {
         }
         if (attackerEntity instanceof LivingEntity slayerTarget) mult *= 1 - com.vladosiwe.solostatus.achievement.SlayerTitles.defense(d, slayerTarget);
         if (attackerEntity instanceof LivingEntity duelist && SkillFx.marked(duelist, "duel", p)) mult *= 0.8; // the challenged foe hits softer
+        mult *= com.vladosiwe.solostatus.skill.StyleSkills.defense(p, d, attackerEntity, now);
         event.setAmount((float) Math.max(0, amount * mult));
         int vengeance = d.skillRank("vengeance"); // Avenger: part of what is taken is stored for Retribution
-        if (vengeance > 0) d.vengeance = (float) Math.min(20 + 6 * vengeance, d.vengeance + amount * mult * (0.25 + 0.05 * (vengeance - 1)));
+        if (vengeance > 0) d.vengeance = (float) Math.min(com.vladosiwe.solostatus.skill.StyleSkills.vengeanceCap(d, vengeance),
+                d.vengeance + amount * mult * com.vladosiwe.solostatus.skill.StyleSkills.vengeanceShare(d, vengeance));
+        com.vladosiwe.solostatus.skill.StyleSkills.afterHit(p, d, attackerEntity, byEntity && source.getDirectEntity() == attackerEntity,
+                (float) (amount * mult), now);
 
         // Шипы Колосса
         int thorns = d.skillRank("thorns_body");
@@ -243,6 +247,7 @@ public final class CombatEvents {
             d.addCounter("dodges", 1);
         }
         d.lastBlockTick = now; // уклонение тоже открывает окно контратаки
+        if (d.skillRank("wind_runner") > 0) SkillFx.state(d, level, "wind_runner", 60); // Ranger at 60: arrows after a dodge
         int after = d.skillRank("afterimage");
         if (after > 0) {
             p.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 20 + after * 4, 1, false, false));
@@ -285,6 +290,9 @@ public final class CombatEvents {
                 + com.vladosiwe.solostatus.skill.GeneralSkills.focusCrit(d, now);
         boolean forceCrit = false;
         double dist = p.distanceTo(target);
+        boolean behind = melee && isBehind(p, target);
+        critChance += com.vladosiwe.solostatus.skill.StyleSkills.critChance(d, projectile);
+        add += com.vladosiwe.solostatus.skill.StyleSkills.offense(p, d, target, melee, projectile, behind, direct, type, now);
 
         if (melee || projectile) add += d.gear(com.vladosiwe.solostatus.accessory.Affix.DAMAGE); // украшения
         if (melee) {
@@ -322,6 +330,7 @@ public final class CombatEvents {
         }
         if (melee && d.stateActive("arcane_strike", now)) {
             add += 0.35 + 0.08 * Math.max(0, d.skillRank("arcane_strike") - 1);
+            if (!skill) com.vladosiwe.solostatus.skill.StyleSkills.onArcaneStrikeHit(p, d, target, event.getAmount());
             com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.spendMana(p, -4f * d.skillRank("arcane_strike")); // gives mana back
         }
         int battleMagic = d.skillRank("battle_magic");
@@ -347,7 +356,7 @@ public final class CombatEvents {
         }
 
         // --- Удар в спину ---
-        if (melee && isBehind(p, target)) {
+        if (behind) {
             add += 0.10 * d.skillRank("ambush");
             if (hc == HunterClass.THIEF) add += 0.15;
             if (d.titleIs("shadow_of_death")) add += 0.15;
@@ -389,6 +398,7 @@ public final class CombatEvents {
                 SkillFx.particles(level, ParticleTypes.ENCHANTED_HIT, target.getBoundingBox().getCenter(), 20, 0.4, 0.2);
                 SkillFx.sound(level, target.position(), SoundEvents.PLAYER_ATTACK_STRONG, 0.8f, 1.5f);
                 d.addCounter("combos", 1);
+                com.vladosiwe.solostatus.skill.StyleSkills.onCombo(d, now);
             }
             int rhythm = d.skillRank("blade_rhythm");
             if (rhythm > 0) add += Math.min(5, d.comboCount) * (0.03 + 0.01 * (rhythm - 1));
@@ -554,6 +564,7 @@ public final class CombatEvents {
                 });
             }
         }
+        if (counted) com.vladosiwe.solostatus.skill.StyleSkills.onBlock(p, d, now);
         // Бастион Стража: поглощение при блоке
         if (d.skillRank("bulwark") > 0 && !d.stateActive("bulwark_cd", now)) {
             p.addEffect(new MobEffectInstance(MobEffects.ABSORPTION, 60, 0, false, true));
@@ -706,6 +717,7 @@ public final class CombatEvents {
         if (threat >= 8 && !boss) d.addCounter("giant_kills", 1);
 
         // --- Пассивки на убийство ---
+        com.vladosiwe.solostatus.skill.StyleSkills.onKill(p, d, dead, melee, now);
         int commander = d.skillRank("commander");
         if (commander > 0) {
             for (LivingEntity a : SkillFx.alliesAround(p, p.position(), 8)) {

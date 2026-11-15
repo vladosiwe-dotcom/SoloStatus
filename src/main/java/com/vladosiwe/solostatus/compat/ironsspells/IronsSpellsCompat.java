@@ -77,7 +77,7 @@ public final class IronsSpellsCompat {
         }
         set(p, "max_mana", maxMana, AttributeModifier.Operation.ADD_VALUE);
         set(p, "mana_regen", regen, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-        set(p, "cooldown_reduction", d.skillRank("arcane_flow") * 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        set(p, "cooldown_reduction", d.skillRank("arcane_flow") * 0.02 + d.skillRank("arcane_overflow") * 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 
         int att = d.skillRank("elemental_attunement");
         int flow = d.skillRank("arcane_flow");
@@ -87,6 +87,10 @@ public final class IronsSpellsCompat {
             if (att > 0 && (school.equals("fire") || school.equals("ice") || school.equals("lightning"))) v += 0.03 * att;
             if (flow > 0 && (school.equals("ender") || school.equals("evocation") || school.equals("eldritch"))) v += 0.02 * flow;
             if (grace > 0 && (school.equals("holy") || school.equals("nature"))) v += 0.04 * grace;
+            boolean elemental = school.equals("fire") || school.equals("ice") || school.equals("lightning");
+            boolean arcane = school.equals("ender") || school.equals("evocation") || school.equals("eldritch");
+            if (elemental) v += 0.04 * d.skillRank("elemental_overload"); // Elementalist at 60
+            if (arcane) v += 0.04 * d.skillRank("arcane_overflow");      // Arcanist at 60
             v += 0.05 * d.skillRank(school + "_affinity"); // the Mage's school passive: +5% of that school's power per rank
             set(p, school + "_spell_power", v, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         }

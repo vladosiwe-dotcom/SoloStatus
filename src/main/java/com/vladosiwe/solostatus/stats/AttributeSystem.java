@@ -24,6 +24,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
  */
 public final class AttributeSystem {
     private static final ResourceLocation HEALTH = SoloStatus.id("health");
+    private static final ResourceLocation COLOSSUS = SoloStatus.id("colossus_health");
     private static final ResourceLocation SPEED = SoloStatus.id("move_speed");
     private static final ResourceLocation ATK_SPEED = SoloStatus.id("attack_speed");
     private static final ResourceLocation LUCK = SoloStatus.id("luck");
@@ -52,6 +53,7 @@ public final class AttributeSystem {
         if (hc == HunterClass.DEFENDER) knockback += 0.1;
 
         set(player, Attributes.MAX_HEALTH, HEALTH, health, AttributeModifier.Operation.ADD_VALUE);
+        set(player, Attributes.MAX_HEALTH, COLOSSUS, d.skillRank("colossus") * 0.05, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL); // Juggernaut at 60
         set(player, Attributes.MOVEMENT_SPEED, SPEED, speed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         // a share of the weapon's own speed: of the player's base (4.0) it would speed a greatsword up 2.5 times as much
         set(player, Attributes.ATTACK_SPEED, ATK_SPEED, StatFormulas.attackSpeed(d) + (d.titleIs("frenzy") ? 0.05 : 0),

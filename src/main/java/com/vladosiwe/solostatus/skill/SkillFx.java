@@ -250,6 +250,14 @@ public final class SkillFx {
         t.hurtMarked = true;
     }
 
+    /** Draws an entity towards a point (the opposite of knockback). */
+    public static void pull(LivingEntity t, Vec3 to, double strength) {
+        Vec3 d = to.subtract(t.position());
+        if (d.lengthSqr() < 0.5) return;
+        t.setDeltaMovement(t.getDeltaMovement().add(d.normalize().scale(strength)));
+        t.hurtMarked = true;
+    }
+
     public static void launch(LivingEntity t, double up) {
         t.setDeltaMovement(t.getDeltaMovement().add(0, up, 0));
         t.hurtMarked = true;

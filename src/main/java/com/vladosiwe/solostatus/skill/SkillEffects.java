@@ -502,6 +502,17 @@ public final class SkillEffects {
             launch(t, 0.6);
         }
         for (LivingEntity a : alliesAround(p, p.position(), 8)) buff(p, a, MobEffects.DAMAGE_RESISTANCE, 100, 0);
+        int aftershock = c.data().skillRank("aftershock"); // the ground shakes once more a second later
+        if (aftershock > 0) {
+            Vec3 at = p.position();
+            double second = dmg * (0.2 + 0.2 * aftershock);
+            Scheduler.later(20, () -> {
+                if (!alive(p)) return;
+                for (LivingEntity t : enemiesAround(p, at, 4.5)) hitPhysical(p, t, second);
+                ring(p.serverLevel(), ParticleTypes.CLOUD, at.add(0, 0.1, 0), 4.5, 40);
+                sound(p.serverLevel(), at, SoundEvents.MACE_SMASH_GROUND, 1f, 0.6f);
+            });
+        }
         particles(c.level(), ParticleTypes.EXPLOSION, p.position(), 3, 1.5, 0);
         ring(c.level(), ParticleTypes.CLOUD, p.position().add(0, 0.1, 0), 4, 40);
         sound(c.level(), p.position(), SoundEvents.MACE_SMASH_GROUND_HEAVY, 1f, 0.8f);
@@ -519,6 +530,16 @@ public final class SkillEffects {
         p.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, t.getEyePosition());
         swing(p);
         hitPhysical(p, t, melee(p) * c.scale(1.4, 0.2) * 1.5);
+        int echo = c.data().skillRank("shadow_echo"); // a shadow strikes the same foe half a second later
+        if (echo > 0) {
+            double second = melee(p) * c.scale(1.4, 0.2) * (0.15 + 0.15 * echo);
+            Scheduler.later(10, () -> {
+                if (!alive(p) || !t.isAlive()) return;
+                hitPhysical(p, t, second);
+                particles(p.serverLevel(), SHADOW_DUST, t.getBoundingBox().getCenter(), 25, 0.4, 0.05);
+                sound(p.serverLevel(), t.position(), SoundEvents.PLAYER_ATTACK_SWEEP, 0.7f, 0.6f);
+            });
+        }
         particles(c.level(), SHADOW_DUST, behind.add(0, 1, 0), 20, 0.4, 0.02);
         sound(c.level(), behind, SoundEvents.ENDERMAN_TELEPORT, 0.6f, 1.6f);
         return true;
@@ -528,10 +549,14 @@ public final class SkillEffects {
         ServerPlayer p = c.player();
         double dmg = melee(p) * c.scale(0.6, 0.1);
         iframes(c, 18);
-        Scheduler.repeat(6, 3, i -> {
+        int edge = c.data().skillRank("storm_edge"); // more turns, and the storm draws enemies in
+        Scheduler.repeat(6 + edge, 3, i -> {
             if (!alive(p)) return;
             swing(p);
-            for (LivingEntity t : enemiesAround(p, p.position(), 3.5)) hitPhysical(p, t, dmg);
+            for (LivingEntity t : enemiesAround(p, p.position(), 3.5 + 0.5 * edge)) {
+                hitPhysical(p, t, dmg);
+                if (edge > 0) pull(t, p.position(), 0.25);
+            }
             ring(p.serverLevel(), ParticleTypes.SWEEP_ATTACK, p.position().add(0, 1, 0), 2.5, 8);
             sound(p.serverLevel(), p.position(), SoundEvents.PLAYER_ATTACK_SWEEP, 1f, 1.0f + i * 0.2f);
         });
@@ -556,6 +581,21 @@ public final class SkillEffects {
             particles(p.serverLevel(), ParticleTypes.LAVA, at, 30, 2, 0);
             sound(p.serverLevel(), at, SoundEvents.DRAGON_FIREBALL_EXPLODE, 1.5f, 0.6f);
         });
+        int shower = c.data().skillRank("meteor_shower"); // smaller meteors fall around the first one
+        for (int i = 0; i < shower; i++) {
+            double a = Math.PI * 2 * i / shower + p.getRandom().nextDouble();
+            Vec3 small = at.add(Math.cos(a) * 3.5, 0, Math.sin(a) * 3.5);
+            Scheduler.later(25 + 8 * i, () -> {
+                if (!alive(p)) return;
+                for (LivingEntity t : enemiesAround(p, small, 2.5)) {
+                    hitMagic(p, t, dmg * 0.4);
+                    t.igniteForSeconds(3);
+                }
+                particles(p.serverLevel(), ParticleTypes.EXPLOSION, small, 1, 0, 0);
+                particles(p.serverLevel(), ParticleTypes.FLAME, small, 20, 1, 0.05);
+                sound(p.serverLevel(), small, SoundEvents.GENERIC_EXPLODE.value(), 0.7f, 1.2f);
+            });
+        }
         return true;
     }
 
@@ -577,6 +617,20 @@ public final class SkillEffects {
             particles(p.serverLevel(), ParticleTypes.REVERSE_PORTAL, at, 50, 2, 0.1);
             sound(p.serverLevel(), at, SoundEvents.ENDERMAN_TELEPORT, 0.5f, 0.5f);
         });
+        int horizon = c.data().skillRank("event_horizon"); // the well collapses with a burst at the end
+        if (horizon > 0) {
+            double burst = spell(c) * (0.5 + 0.3 * horizon);
+            Scheduler.later(42, () -> {
+                if (!alive(p)) return;
+                for (LivingEntity t : enemiesAround(p, at, 6)) {
+                    hitMagic(p, t, burst);
+                    knockback(t, at, 1.0);
+                }
+                particles(p.serverLevel(), ParticleTypes.PORTAL, at, 120, 0.5, 2.0);
+                particles(p.serverLevel(), ParticleTypes.EXPLOSION, at, 2, 0.5, 0);
+                sound(p.serverLevel(), at, SoundEvents.RESPAWN_ANCHOR_DEPLETE.value(), 1f, 0.6f);
+            });
+        }
         return true;
     }
 
@@ -586,6 +640,7 @@ public final class SkillEffects {
             buff(p, a, MobEffects.DAMAGE_RESISTANCE, 120, 1);
             buff(p, a, MobEffects.ABSORPTION, 200, Math.min(3, c.rank() / 2 + 1));
         }
+        if (c.data().skillRank("mirror_aegis") > 0) state(c.data(), c.level(), "mirror_aegis", 120); // read by CombatEvents
         ring(c.level(), HOLY_DUST, p.position().add(0, 1, 0), 8, 60);
         sound(c.level(), p.position(), SoundEvents.BEACON_ACTIVATE, 1f, 1.2f);
         return true;
@@ -604,9 +659,13 @@ public final class SkillEffects {
                 hitPhysical(p, t, dmg);
                 knockback(t, p.position(), 1.5);
                 launch(t, 0.3);
+                int unstoppable = c.data().skillRank("unstoppable");
+                if (unstoppable > 0 && !com.vladosiwe.solostatus.combat.Threat.isBoss(t)) stun(p, t, 10 * unstoppable);
             }
             particles(p.serverLevel(), ParticleTypes.CLOUD, p.position(), 5, 0.4, 0.02);
         });
+        int unstoppable = c.data().skillRank("unstoppable");
+        if (unstoppable > 0) buff(p, p, MobEffects.DAMAGE_RESISTANCE, 40 + 20 * unstoppable, 0);
         sound(c.level(), p.position(), SoundEvents.IRON_GOLEM_ATTACK, 1f, 0.5f);
         return true;
     }
@@ -615,6 +674,8 @@ public final class SkillEffects {
         ServerPlayer p = c.player();
         var arrow = arrow(p, 0, 0, 5.5f, 10.0 * c.scale(1.0, 0.2), true);
         arrow.setNoGravity(true);
+        int killshot = c.data().skillRank("killshot"); // more against wounded targets (CombatEvents)
+        if (killshot > 0) arrow.getPersistentData().putInt("solostatus_killshot", killshot);
         particles(c.level(), ParticleTypes.END_ROD, p.getEyePosition().add(p.getLookAngle()), 8, 0.05, 0.05);
         sound(c.level(), p.position(), SoundEvents.CROSSBOW_SHOOT, 1.2f, 0.5f);
         return true;
@@ -624,14 +685,26 @@ public final class SkillEffects {
         ServerPlayer p = c.player();
         dash(p, horizontalLook(p).scale(-1), c.scale(1.3, 0.1), 0.35);
         iframes(c, 10);
-        for (int i = -1; i <= 1; i++) arrow(p, i * 8f, 0, 3.0f, 4.0 * c.scale(1.0, 0.1), false);
+        int volley = c.data().skillRank("volley_roll");
+        for (int i = -1 - volley; i <= 1 + volley; i++) arrow(p, i * (8f - volley), 0, 3.0f, 4.0 * c.scale(1.0, 0.1), false);
+        if (volley > 0) buff(p, p, MobEffects.MOVEMENT_SPEED, 40, 1);
+        if (c.data().skillRank("wind_runner") > 0) state(c.data(), c.level(), "wind_runner", 60);
         sound(c.level(), p.position(), SoundEvents.ARROW_SHOOT, 1f, 1.4f);
         return true;
     }
 
     public static boolean holyLight(SkillContext c) {
         ServerPlayer p = c.player();
-        for (LivingEntity a : alliesAround(p, p.position(), 8)) heal(p, a, c.scale(6, 2));
+        int radiance = c.data().skillRank("radiance"); // the light also washes away harm
+        for (LivingEntity a : alliesAround(p, p.position(), 8)) {
+            heal(p, a, c.scale(6, 2));
+            if (radiance > 0) {
+                for (var e : new ArrayList<>(a.getActiveEffects())) {
+                    if (e.getEffect().value().getCategory() == MobEffectCategory.HARMFUL) a.removeEffect(e.getEffect());
+                }
+                if (radiance >= 2) buff(p, a, MobEffects.REGENERATION, 40 * radiance, 0);
+            }
+        }
         double dmg = spell(c) * c.scale(1.5, 0.2);
         for (LivingEntity e : enemiesAround(p, p.position(), 8)) {
             if (e.getType().is(EntityTypeTags.UNDEAD)) {
@@ -684,6 +757,19 @@ public final class SkillEffects {
             debuff(p, t, MobEffects.MOVEMENT_SLOWDOWN, 80, 0);
             mark(t, "venom", p, 160);
         }
+        int virulent = c.data().skillRank("virulent_cloud"); // the cloud stays where it was released
+        if (virulent > 0) {
+            Vec3 at = p.position();
+            int pulses = 1 + virulent;
+            Scheduler.repeat(pulses, 20, i -> {
+                if (!alive(p)) return;
+                for (LivingEntity t : enemiesAround(p, at, r)) {
+                    debuff(p, t, MobEffects.POISON, 60, amp);
+                    mark(t, "venom", p, 160);
+                }
+                particles(p.serverLevel(), ParticleTypes.ITEM_SLIME, at.add(0, 0.5, 0), 30, r * 0.6, 0.02);
+            });
+        }
         particles(c.level(), ParticleTypes.ITEM_SLIME, p.position().add(0, 0.5, 0), 60, r * 0.6, 0.02);
         particles(c.level(), ParticleTypes.SNEEZE, p.position().add(0, 0.6, 0), 40, r * 0.6, 0.01);
         sound(c.level(), p.position(), SoundEvents.BREWING_STAND_BREW, 1f, 0.6f);
@@ -705,10 +791,13 @@ public final class SkillEffects {
         if (d.vengeance < 2) return false; // nothing taken yet: nothing to give back
         double dmg = d.vengeance * c.scale(1.0, 0.2);
         d.vengeance = 0;
+        int wrath = d.skillRank("wrath_unleashed"); // the release stuns, and some of it comes back as health
         for (LivingEntity t : enemiesAround(p, p.position(), 5)) {
             hitPhysical(p, t, dmg);
             launch(t, 0.4);
+            if (wrath > 0 && !com.vladosiwe.solostatus.combat.Threat.isBoss(t)) stun(p, t, 10 * wrath);
         }
+        if (wrath > 0) heal(p, p, dmg * 0.15 * wrath);
         particles(c.level(), ParticleTypes.FLAME, p.position().add(0, 1, 0), 60, 2, 0.1);
         ring(c.level(), ParticleTypes.LAVA, p.position().add(0, 0.2, 0), 4, 30);
         sound(c.level(), p.position(), SoundEvents.BLAZE_SHOOT, 1f, 0.6f);
@@ -720,9 +809,11 @@ public final class SkillEffects {
         ServerPlayer p = c.player();
         int bolts = 3 + c.rank();
         double dmg = 4.0 * c.scale(1.0, 0.15);
+        int finale = c.data().skillRank("explosive_finale"); // the last bolt bursts on impact (CombatEvents)
         Scheduler.repeat(3, bolts, i -> {
             if (!p.isAlive()) return;
-            arrow(p, (i % 2 == 0 ? 1 : -1) * i * 1.2f, 0, 3.6f, dmg, false);
+            var bolt = arrow(p, (i % 2 == 0 ? 1 : -1) * i * 1.2f, 0, 3.6f, dmg, false);
+            if (finale > 0 && i == bolts - 1) bolt.getPersistentData().putDouble("solostatus_explode", dmg * (1.0 + 0.5 * finale));
             sound(c.level(), p.position(), SoundEvents.CROSSBOW_SHOOT, 0.8f, 1.2f + i * 0.05f);
         });
         return true;
@@ -731,8 +822,11 @@ public final class SkillEffects {
     /** Bard: a hymn that strengthens allies and weakens enemies around. */
     public static boolean battleHymn(SkillContext c) {
         ServerPlayer p = c.player();
-        int dur = (int) c.scale(200, 30);
+        int encore = c.data().skillRank("encore"); // a longer hymn that also steadies allies
+        int dur = (int) (c.scale(200, 30) * (1 + 0.25 * encore));
+        state(c.data(), c.level(), "battle_hymn", dur); // read by Song of Valor
         for (LivingEntity a : alliesAround(p, p.position(), 10)) {
+            if (encore > 0) buff(p, a, MobEffects.DAMAGE_RESISTANCE, dur, 0);
             buff(p, a, MobEffects.MOVEMENT_SPEED, dur, 0);
             buff(p, a, MobEffects.DAMAGE_BOOST, dur, c.rank() >= 3 ? 1 : 0);
             buff(p, a, MobEffects.REGENERATION, dur / 2, 0);
