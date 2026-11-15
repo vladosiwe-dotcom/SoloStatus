@@ -2,6 +2,7 @@
   "replace": false,
   "entries": [
     "solostatus:weapon_quality",
-    "solostatus:accessories"
+    "solostatus:accessories",
+    "solostatus:no_skill_books"
   ]
 }

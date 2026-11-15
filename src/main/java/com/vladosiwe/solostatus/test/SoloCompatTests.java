@@ -82,6 +82,23 @@ public final class SoloCompatTests {
     }
 
     /** Iron's Spells: spell cast event hooked, INT/class bonuses reach Iron's attributes, magic damage → school mastery. */
+    /** Epic Fight's skill books never drop: skills come from the System only. */
+    @GameTest(template = "empty")
+    public static void epicFightSkillBooksRemoved(GameTestHelper h) {
+        var book = BuiltInRegistries.ITEM.getOptional(ResourceLocation.fromNamespaceAndPath("epicfight", "skillbook"));
+        if (book.isEmpty()) {
+            if (ModList.get().isLoaded("epicfight")) SoloStatus.LOGGER.warn("Epic Fight is loaded but has no epicfight:skillbook item");
+            h.succeed();
+            return;
+        }
+        ItemStack stack = new ItemStack(book.get());
+        h.assertTrue(com.vladosiwe.solostatus.compat.epicfight.NoSkillBooks.isSkillBook(stack), "epicfight:skillbook is not recognised");
+        var drop = new net.minecraft.world.entity.item.ItemEntity(h.getLevel(), h.absolutePos(BlockPos.ZERO).getX() + 0.5,
+                h.absolutePos(BlockPos.ZERO).getY() + 1, h.absolutePos(BlockPos.ZERO).getZ() + 0.5, stack);
+        h.assertFalse(h.getLevel().addFreshEntity(drop), "a dropped Epic Fight skill book spawned");
+        h.succeed();
+    }
+
     @GameTest(template = "empty")
     public static void ironsSpellsIntegration(GameTestHelper h) {
         if (!ModList.get().isLoaded("irons_spellbooks")) {

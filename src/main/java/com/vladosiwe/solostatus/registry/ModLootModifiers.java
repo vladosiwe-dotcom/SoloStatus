@@ -17,5 +17,8 @@ public final class ModLootModifiers {
     public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<com.vladosiwe.solostatus.accessory.AccessoryLootModifier>> ACCESSORIES =
             SERIALIZERS.register("accessories", () -> com.vladosiwe.solostatus.accessory.AccessoryLootModifier.CODEC);
 
+    public static final net.neoforged.neoforge.registries.DeferredHolder<MapCodec<? extends IGlobalLootModifier>, MapCodec<com.vladosiwe.solostatus.compat.epicfight.NoSkillBooks>> NO_SKILL_BOOKS =
+            SERIALIZERS.register("no_skill_books", () -> com.vladosiwe.solostatus.compat.epicfight.NoSkillBooks.CODEC);
+
     private ModLootModifiers() {}
 }
