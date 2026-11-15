@@ -39,6 +39,8 @@ public final class ModNetwork {
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.sync(p)));
         r.playToClient(Payloads.ConcealSync.TYPE, Payloads.ConcealSync.CODEC,
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.conceal(p)));
+        r.playToClient(Payloads.SkillAnim.TYPE, Payloads.SkillAnim.CODEC,
+                (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.skillAnim(p)));
         r.playToClient(Payloads.SkillCast.TYPE, Payloads.SkillCast.CODEC,
                 (p, ctx) -> ctx.enqueueWork(() -> ClientPayloadHandler.skillCast(p)));
         r.playToClient(Payloads.EnergySync.TYPE, Payloads.EnergySync.CODEC,

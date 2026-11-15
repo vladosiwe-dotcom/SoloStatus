@@ -157,8 +157,23 @@ public final class DevShots {
                 frames("skill-" + skills[i], 16);
             }
         }
+        // the skills' body animations, seen from the front with an empty hand (Epic Fight's battle mode is off then)
+        String[] bodyAnims = {"war_cry", "whirlwind", "devastating_blow", "flurry", "concealment", "defensive_stance",
+                "arrow_volley", "sanctuary", "earthbreaker", "air_step", "battle_hymn", "riposte"};
+        int animAt = skillAt + skills.length * 45 + 10;
+        for (int i = 0; i < bodyAnims.length; i++) {
+            int at = animAt + i * 30;
+            if (tick == at) {
+                mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT);
+                server.execute(() -> sp.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY));
+            }
+            if (tick == at + 4) com.vladosiwe.solostatus.client.anim.SkillPlayerAnimations.play(mc.player, bodyAnims[i]);
+            if (tick == at + 9) shot(mc, "anim-" + bodyAnims[i] + "-a");
+            if (tick == at + 15) shot(mc, "anim-" + bodyAnims[i] + "-b");
+        }
+
         // the armour sets, seen from the front in third person
-        int armorAt = skillAt + skills.length * 45 + 10;
+        int armorAt = animAt + bodyAnims.length * 30 + 10;
         var sets = com.vladosiwe.solostatus.registry.SystemArmor.Set.values();
         for (int i = 0; i < sets.length; i++) {
             int at = armorAt + i * 30;
@@ -176,7 +191,7 @@ public final class DevShots {
             if (tick == at + 20) shot(mc, "armor-" + set.key);
         }
         if (tick == armorAt + sets.length * 30 + 10) mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
-        if (tick == skillAt + skills.length * 45 + 20 + sets.length * 30 + 20) {
+        if (tick == armorAt + sets.length * 30 + 20) {
             SoloStatus.LOGGER.info("DevShots: done");
             mc.stop();
         }

@@ -146,6 +146,10 @@ public final class SkillSystem {
         d.markDirty();
         Notices.syncEnergy(player, d);
         com.vladosiwe.solostatus.network.ModNetwork.toPlayer(player, new com.vladosiwe.solostatus.network.Payloads.SkillCast(id));
+        if (!def.isSpell()) { // the skill's own body animation, seen by everyone around (spells are animated by Iron's)
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayersTrackingEntityAndSelf(player,
+                    new com.vladosiwe.solostatus.network.Payloads.SkillAnim(player.getId(), id));
+        }
     }
 
     public static float energyCost(PlayerData d, SkillDef def) {

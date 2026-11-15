@@ -47,6 +47,14 @@ public final class Payloads {
         @Override public Type<ConcealSync> type() { return TYPE; }
     }
 
+    /** A player used a skill: every client around plays its animation on that player's model. */
+    public record SkillAnim(int entity, String skill) implements CustomPacketPayload {
+        public static final Type<SkillAnim> TYPE = Payloads.typeOf("skill_anim");
+        public static final StreamCodec<ByteBuf, SkillAnim> CODEC =
+                StreamCodec.composite(ByteBufCodecs.VAR_INT, SkillAnim::entity, ByteBufCodecs.STRING_UTF8, SkillAnim::skill, SkillAnim::new);
+        @Override public Type<SkillAnim> type() { return TYPE; }
+    }
+
     /** A skill of this player just worked: the client plays its first-person motion. */
     public record SkillCast(String skill) implements CustomPacketPayload {
         public static final Type<SkillCast> TYPE = Payloads.typeOf("skill_cast");

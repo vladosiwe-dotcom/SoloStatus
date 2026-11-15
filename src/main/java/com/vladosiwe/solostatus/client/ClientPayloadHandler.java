@@ -31,6 +31,13 @@ public final class ClientPayloadHandler {
         com.vladosiwe.solostatus.client.ConcealmentClient.set(msg.entity(), msg.ticks());
     }
 
+    public static void skillAnim(Payloads.SkillAnim msg) {
+        var level = net.minecraft.client.Minecraft.getInstance().level;
+        if (level != null && level.getEntity(msg.entity()) instanceof net.minecraft.client.player.AbstractClientPlayer p) {
+            com.vladosiwe.solostatus.client.anim.SkillPlayerAnimations.play(p, msg.skill());
+        }
+    }
+
     public static void skillCast(Payloads.SkillCast msg) {
         com.vladosiwe.solostatus.client.fp.FirstPersonAnimations.playSkill(msg.skill());
     }

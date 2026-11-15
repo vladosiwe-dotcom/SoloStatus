@@ -1,0 +1,47 @@
+name: Screenshots
+
+# Runs the game (client) with Iron's Spells and Epic Fight under a virtual display and the developer screenshot
+# script (SOLO_DEVSHOTS=1, client/dev/DevShots.java): the System window, health bars, swings, skill motions, the
+# skills' body animations and the armour. The frames are pushed to the dev-shots branch, to look at them.
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore: [dev-shots]
+
+jobs:
+  shots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+      - name: A virtual display and software OpenGL
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq xvfb mesa-utils libgl1-mesa-dri > /dev/null
+      - name: Mods the System needs
+        run: python3 tools/fetch_mods.py run/mods /tmp/client-mods "$GITHUB_STEP_SUMMARY" required:epic-fight required:irons-spells-n-spellbooks+irons-lib+curios+geckolib+playeranimator
+      - name: Run the client with the screenshot script
+        env:
+          SOLO_DEVSHOTS: '1'
+          LIBGL_ALWAYS_SOFTWARE: '1'
+        run: |
+          rm -f run/mods/*.jar && cp /tmp/client-mods/*.jar run/mods/
+          mkdir -p run/config && printf '[voice]\n\tmode = "OFF"\n' > run/config/solostatus-client.toml
+          printf 'guiScale:2\nonboardAccessibility:false\ntutorialStep:none\nskipMultiplayerWarning:true\njoinedFirstServer:true\n' > run/options.txt
+          timeout 1500 xvfb-run -a -s "-screen 0 1280x720x24" ./gradlew runClient --no-daemon > client.log 2>&1 || true
+          grep -E "DevShots|Skill body animations|ERROR|Exception" client.log | grep -v "authlib\|minecraftservices\|sessionserver\|OpenAL" | head -40 || true
+          ls run/screenshots | head -200
+      - name: Push the frames to the dev-shots branch
+        if: always()
+        run: |
+          [ -d run/screenshots ] || exit 0
+          mkdir /tmp/shots && cp run/screenshots/*.png /tmp/shots/ && cp client.log /tmp/shots/ 2>/dev/null || true
+          cd /tmp/shots && git init -q && git checkout -q -b dev-shots
+          git config user.name "github-actions" && git config user.email "github-actions@users.noreply.github.com"
+          git add -A && git commit -q -m "Screenshots of ${GITHUB_SHA}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" dev-shots
