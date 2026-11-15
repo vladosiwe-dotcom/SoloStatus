@@ -99,6 +99,15 @@ public final class Achievements {
         reg("multi_master", false, Items.CRAFTING_TABLE, 4000, 1, 0, masteries(3, 20));
         reg("treasure", false, Items.GOLD_BLOCK, 1500, 0, 1, Req.counter("legendary_found", 1));
 
+        // ---------------- Аванпосты (мод Lord's Outpost; без него счётчики просто не растут) ----------------
+        title(TitleSystem.LORD, false, Items.WHITE_BANNER, 3000, Req.counter(com.vladosiwe.solostatus.api.SoloStatusApi.LORD_COUNTER, 1));
+        reg("outpost_raider", false, Items.CROSSBOW, 800, 0, 0, Req.counter("outpost_marauders", 25));
+        reg("outpost_conqueror", false, Items.IRON_AXE, 2000, 0, 0, Req.counter("outposts_conquered", 1));
+        reg("outpost_warlord", false, Items.DIAMOND_AXE, 8000, 1, 0, Req.counter("outposts_conquered", 5));
+        reg("outpost_citadel", false, Items.LODESTONE, 10000, 1, 1, Req.counter("outpost_tier", 3));
+        reg("outpost_steward", false, Items.WRITABLE_BOOK, 1500, 0, 0, Req.counter("outpost_quests", 10));
+        reg("fortress_breaker", true, Items.NETHERITE_AXE, 12000, 1, 1, Req.counter("great_fortresses", 1));
+
         // ---------------- Скрытые ----------------
         title("bone_lord", true, Items.BONE, 3000, Req.counter("skeleton_kills", 500));
         title("night_hunter", true, Items.CLOCK, 3000, Req.counter("night_kills", 1000));

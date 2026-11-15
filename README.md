@@ -55,7 +55,7 @@ gradlew.bat runServer    # выделенный сервер (проверка, 
 
 - [docs/DESIGN.md](docs/DESIGN.md): игровой дизайн, формулы, баланс, классы, навыки, ранги, эндгейм.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): устройство кода, сеть, сохранение, безопасность.
-- [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md): Epic Fight, Iron's Spells, Legendary Tooltips, голос. Что подтверждено, а что требует проверки.
+- [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md): Epic Fight, Iron's Spells, Legendary Tooltips, голос, Lord's Outpost (титул «Лорд» и открытый API). Что подтверждено, а что требует проверки.
 - [docs/TESTING.md](docs/TESTING.md): чек-лист проверки в одиночной игре и на сервере.
 - [docs/UI_SPEC.md](docs/UI_SPEC.md): спецификация окна Системы (композиция, цвета, шрифты, анимации).
 - [docs/SOUNDS.md](docs/SOUNDS.md): звуки Системы и подключение своей озвучки ресурспаком.

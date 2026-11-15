@@ -19,8 +19,9 @@ public final class StatFormulas {
 
     /** Эффективные очки характеристики с мягким ограничением. */
     public static double eff(PlayerData d, Stat s) {
-        // Титул «Охотник национального уровня»: +3 к каждой характеристике
-        return effOf(d.stat(s) + (d.titleIs("rank_national") ? 3 : 0));
+        // Титул «Охотник национального уровня»: +3 к каждой характеристике; «Лорд»: +2 к Силе и Выносливости
+        int bonus = (d.titleIs("rank_national") ? 3 : 0) + (d.titleIs("lord") && (s == Stat.STR || s == Stat.VIT) ? 2 : 0);
+        return effOf(d.stat(s) + bonus);
     }
 
     public static double effOf(int value) {

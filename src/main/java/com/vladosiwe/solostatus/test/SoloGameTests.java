@@ -70,4 +70,28 @@ public final class SoloGameTests {
         h.assertTrue(Hunter.get(p).level > before, "уровень не вырос: " + before + " → " + Hunter.get(p).level);
         h.succeed();
     }
+
+    /**
+     * Открытый API для Lord's Outpost: став Лордом, игрок получает и надевает титул «Лорд» (+2 СИЛ и ВЫН),
+     * потеряв аванпост — снимает его и не может надеть снова, пока не станет Лордом опять.
+     */
+    @GameTest(template = "empty")
+    public static void lordTitleFollowsOwnership(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.WARRIOR);
+        PlayerData d = Hunter.get(p);
+        double str = com.vladosiwe.solostatus.stats.StatFormulas.eff(d, com.vladosiwe.solostatus.stats.Stat.STR);
+        com.vladosiwe.solostatus.api.SoloStatusApi.setCounter(p, com.vladosiwe.solostatus.api.SoloStatusApi.LORD_COUNTER, 1);
+        h.assertTrue(d.achievements.contains("lord"), "достижение «Лорд» не выдано");
+        h.assertTrue(d.titleIs("lord"), "титул «Лорд» не надет");
+        h.assertTrue(com.vladosiwe.solostatus.stats.StatFormulas.eff(d, com.vladosiwe.solostatus.stats.Stat.STR) > str, "титул не прибавил Силы");
+        com.vladosiwe.solostatus.api.SoloStatusApi.setCounter(p, com.vladosiwe.solostatus.api.SoloStatusApi.LORD_COUNTER, 0);
+        h.assertTrue(!d.titleIs("lord"), "титул остался после потери аванпоста");
+        com.vladosiwe.solostatus.achievement.TitleSystem.equip(p, "lord");
+        h.assertTrue(!d.titleIs("lord"), "титул «Лорд» надет без аванпоста");
+        com.vladosiwe.solostatus.api.SoloStatusApi.addCounter(p, "outposts_conquered", 1);
+        com.vladosiwe.solostatus.achievement.AchievementSystem.check(p, d);
+        h.assertTrue(d.achievements.contains("outpost_conqueror"), "нет достижения за захват аванпоста");
+        h.succeed();
+    }
 }
