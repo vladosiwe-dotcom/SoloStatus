@@ -449,4 +449,27 @@ public final class SoloGameTests {
         }
         h.succeed();
     }
+
+    /** Achievements have sections; slayer titles count 2 rank points; the rank gates list what is missing. */
+    @GameTest(template = "empty")
+    public static void achievementSectionsAndRank(GameTestHelper h) {
+        for (AchievementDef a : Achievements.all()) {
+            h.assertTrue(a.category() != null, a.id() + " has no section");
+            if (a.hidden() && a.category() != com.vladosiwe.solostatus.achievement.AchievementCategory.LEGENDARY)
+                h.assertTrue(a.category() == com.vladosiwe.solostatus.achievement.AchievementCategory.HIDDEN, a.id() + " is hidden but not in Hidden");
+        }
+        PlayerData d = new PlayerData();
+        String slayer = com.vladosiwe.solostatus.achievement.SlayerTitles.ALL.get(0).id();
+        d.achievements.add(slayer);
+        h.assertTrue(com.vladosiwe.solostatus.rank.HunterRankSystem.breakdown(d).achievements() == 2, "a slayer title must give 2 rank points");
+        d.achievements.add("first_blood");
+        h.assertTrue(com.vladosiwe.solostatus.rank.HunterRankSystem.breakdown(d).achievements() == 7, "an ordinary achievement must give 5");
+        d.level = 70;
+        var gates = com.vladosiwe.solostatus.rank.HunterRankSystem.gates(d, com.vladosiwe.solostatus.rank.HunterRank.S);
+        h.assertTrue(gates.size() == 3 && gates.stream().filter(com.vladosiwe.solostatus.rank.HunterRankSystem.Gate::met).count() == 1,
+                "S: only the level gate should be met");
+        h.assertTrue(com.vladosiwe.solostatus.rank.HunterRankSystem.compute(d, 10_000) == com.vladosiwe.solostatus.rank.HunterRank.B,
+                "without bosses a big score must stop at B");
+        h.succeed();
+    }
 }

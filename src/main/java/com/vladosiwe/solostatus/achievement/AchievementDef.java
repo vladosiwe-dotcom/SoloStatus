@@ -16,9 +16,10 @@ import java.util.List;
  * @param orbs        Сферы перерождения
  * @param title       открывает титул с тем же названием (эффект — solostatus.achievement.&lt;id&gt;.title)
  * @param rewardSkill редкий навык, который открывается этим достижением (сам навык требует это достижение)
+ * @param category    раздел списка достижений
  */
 public record AchievementDef(String id, boolean hidden, Item icon, List<Requirement> requirements, int xp, int sp, int orbs,
-                             boolean title, @Nullable String rewardSkill) {
+                             boolean title, @Nullable String rewardSkill, AchievementCategory category) {
     public Component name() {
         return Component.translatable("solostatus.achievement." + id);
     }

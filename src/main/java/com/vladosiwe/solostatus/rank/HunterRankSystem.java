@@ -29,24 +29,35 @@ public final class HunterRankSystem {
 
     private HunterRankSystem() {}
 
-    public static int score(PlayerData d) {
-        int score = d.level * 2;
+    /** The parts of the rank score, as the rank window shows them. */
+    public record Breakdown(int level, int mastery, int strong, int bosses, int achievements, int path) {
+        public int total() {
+            return level + mastery + strong + bosses + achievements + path;
+        }
+    }
+
+    /** One condition of a rank: a translation key with its arguments, and whether it is met. */
+    public record Gate(String key, Object[] args, boolean met) {}
+
+    public static Breakdown breakdown(PlayerData d) {
         int masterySum = 0;
         for (double xp : d.mastery.values()) masterySum += MasteryMath.level(xp);
-        score += Math.min(150, masterySum);
-        score += (int) Math.min(100, d.counter("strong_kills") / 5);
         int bosses = 0;
         for (String b : d.bossesKilled) bosses += BOSS_SCORE.getOrDefault(b, 15);
         bosses += (int) Math.min(40, d.counter("boss_kills") * 2);
-        score += Math.min(200, bosses);
         int ach = 0;
         for (String id : d.achievements) {
             var def = Achievements.get(id);
-            ach += def != null && def.hidden() ? 8 : 5;
+            if (def == null) continue;
+            // slayer titles are a grind of one kind of mob: they count for less
+            ach += def.category() == com.vladosiwe.solostatus.achievement.AchievementCategory.HUNT ? 2 : def.hidden() ? 8 : 5;
         }
-        score += Math.min(150, ach);
-        if (d.advanced) score += 30;
-        return score;
+        return new Breakdown(Math.min(200, d.level * 2), Math.min(150, masterySum), (int) Math.min(100, d.counter("strong_kills") / 5),
+                Math.min(200, bosses), Math.min(150, ach), d.advanced ? 30 : 0);
+    }
+
+    public static int score(PlayerData d) {
+        return breakdown(d).total();
     }
 
     public static HunterRank compute(PlayerData d, int score) {
@@ -57,14 +68,32 @@ public final class HunterRankSystem {
         return result;
     }
 
+    /** What a rank asks besides its score: bosses, level and the Path Change trial for the high ranks. */
+    public static java.util.List<Gate> gates(PlayerData d, HunterRank r) {
+        java.util.List<Gate> out = new java.util.ArrayList<>();
+        int bosses = d.bossesKilled.size();
+        switch (r) {
+            case A -> out.add(new Gate("solostatus.rank.gate.bosses", new Object[]{Math.min(bosses, 1), 1}, bosses >= 1));
+            case S -> {
+                out.add(new Gate("solostatus.rank.gate.bosses", new Object[]{Math.min(bosses, 2), 2}, bosses >= 2));
+                out.add(new Gate("solostatus.rank.gate.level", new Object[]{60}, d.level >= 60));
+                out.add(new Gate("solostatus.rank.gate.advanced", new Object[0], d.advanced));
+            }
+            case NATIONAL -> {
+                out.add(new Gate("solostatus.rank.gate.bosses", new Object[]{Math.min(bosses, 3), 3}, bosses >= 3));
+                out.add(new Gate("solostatus.rank.gate.level", new Object[]{90}, d.level >= 90));
+                out.add(new Gate("solostatus.rank.gate.advanced", new Object[0], d.advanced));
+                out.add(new Gate("solostatus.rank.gate.dragon", new Object[0], d.bossesKilled.contains("minecraft:ender_dragon")));
+                out.add(new Gate("solostatus.rank.gate.wither", new Object[0], d.bossesKilled.contains("minecraft:wither")));
+            }
+            default -> { }
+        }
+        return out;
+    }
+
     private static boolean gate(PlayerData d, HunterRank r) {
-        return switch (r) {
-            case A -> d.bossesKilled.size() >= 1;
-            case S -> d.bossesKilled.size() >= 2 && d.level >= 60 && d.advanced;
-            case NATIONAL -> d.bossesKilled.size() >= 3 && d.level >= 90
-                    && d.bossesKilled.contains("minecraft:ender_dragon") && d.bossesKilled.contains("minecraft:wither");
-            default -> true;
-        };
+        for (Gate g : gates(d, r)) if (!g.met()) return false;
+        return true;
     }
 
     public static void update(ServerPlayer player, PlayerData d) {

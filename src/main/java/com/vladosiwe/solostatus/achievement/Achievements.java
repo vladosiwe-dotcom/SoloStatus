@@ -29,18 +29,25 @@ public final class Achievements {
 
     private Achievements() {}
 
+    /** The section the next registrations go to (hidden ones always go to HIDDEN unless legendary). */
+    private static AchievementCategory section = AchievementCategory.PATH;
+
+    private static AchievementCategory categoryOf(boolean hidden) {
+        return hidden && section != AchievementCategory.LEGENDARY ? AchievementCategory.HIDDEN : section;
+    }
+
     private static void reg(String id, boolean hidden, Item icon, int xp, int sp, int orbs, Requirement... reqs) {
-        BY_ID.put(id, new AchievementDef(id, hidden, icon, List.of(reqs), xp, sp, orbs, false, null));
+        BY_ID.put(id, new AchievementDef(id, hidden, icon, List.of(reqs), xp, sp, orbs, false, null, categoryOf(hidden)));
     }
 
     /** Достижение, открывающее титул. */
     private static void title(String id, boolean hidden, Item icon, int xp, Requirement... reqs) {
-        BY_ID.put(id, new AchievementDef(id, hidden, icon, List.of(reqs), xp, 0, 0, true, null));
+        BY_ID.put(id, new AchievementDef(id, hidden, icon, List.of(reqs), xp, 0, 0, true, null, categoryOf(hidden)));
     }
 
     /** Достижение, открывающее редкий навык. */
     private static void skill(String id, boolean hidden, Item icon, int xp, String skillId, Requirement... reqs) {
-        BY_ID.put(id, new AchievementDef(id, hidden, icon, List.of(reqs), xp, 0, 0, false, skillId));
+        BY_ID.put(id, new AchievementDef(id, hidden, icon, List.of(reqs), xp, 0, 0, false, skillId, categoryOf(hidden)));
     }
 
     @Nullable
@@ -58,17 +65,24 @@ public final class Achievements {
 
     static {
         // ---------------- Путь охотника ----------------
+        section = AchievementCategory.PATH;
         reg("first_blood", false, Items.WOODEN_SWORD, 50, 0, 0, Req.counter("kills", 1));
         reg("first_awakening", false, Items.ENDER_EYE, 100, 0, 0, Req.awakenedCount(1));
+        section = AchievementCategory.CLASS;
         reg("path_chosen", false, Items.COMPASS, 200, 0, 0, specChosen());
+        section = AchievementCategory.PATH;
         reg("level_10", false, Items.EXPERIENCE_BOTTLE, 200, 0, 0, Req.level(10));
         reg("level_50", false, Items.EXPERIENCE_BOTTLE, 0, 1, 0, Req.level(50));
+        section = AchievementCategory.LEGENDARY;
         reg("level_100", false, Items.BEACON, 0, 1, 1, Req.level(100));
+        section = AchievementCategory.CLASS;
         reg("class_trial", false, Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 0, 0, 0, Req.advanced());
+        section = AchievementCategory.PATH;
         reg("awakened_10", false, Items.END_CRYSTAL, 2000, 1, 0, Req.awakenedCount(10));
         reg("rebirth", false, Items.RECOVERY_COMPASS, 100, 0, 0, Req.counter("respecs", 1));
 
         // ---------------- Бой ----------------
+        section = AchievementCategory.COMBAT;
         reg("hunter_100", false, Items.IRON_SWORD, 200, 0, 0, Req.counter("kills", 100));
         reg("hunter_1000", false, Items.DIAMOND_SWORD, 2000, 1, 0, Req.counter("kills", 1000));
         title("hunter_5000", false, Items.NETHERITE_SWORD, 6000, Req.counter("kills", 5000));
@@ -83,39 +97,47 @@ public final class Achievements {
         reg("healer_1000", false, Items.GLISTERING_MELON_SLICE, 600, 0, 0, Req.counter("healed", 1000));
 
         // ---------------- Боссы и ранги ----------------
+        section = AchievementCategory.BOSSES;
         reg("first_boss", false, Items.DRAGON_HEAD, 1200, 1, 0, Req.bosses(1));
         reg("boss_hunter", false, Items.NETHER_STAR, 4000, 1, 1, Req.bosses(3));
         title("dragon_slayer", false, Items.DRAGON_EGG, 2000, boss("minecraft:ender_dragon"));
         title("witherbane", false, Items.WITHER_SKELETON_SKULL, 2000, boss("minecraft:wither"));
         title("deep_dark", false, Items.SCULK_CATALYST, 2000, boss("minecraft:warden"));
+        section = AchievementCategory.PATH;
         reg("rank_c", false, Items.COPPER_INGOT, 800, 0, 0, rank(HunterRank.C));
         reg("rank_a", false, Items.GOLD_INGOT, 2400, 0, 0, rank(HunterRank.A));
         reg("rank_s", false, Items.DIAMOND, 4800, 0, 1, rank(HunterRank.S));
+        section = AchievementCategory.LEGENDARY;
         title("rank_national", false, Items.BEACON, 10000, rank(HunterRank.NATIONAL));
 
         // ---------------- Мастерство и снаряжение ----------------
+        section = AchievementCategory.MASTERY;
         reg("mastery_25", false, Items.IRON_INGOT, 800, 1, 0, anyMastery(25));
         title("mastery_50", false, Items.NETHERITE_INGOT, 2400, anyMastery(50));
         reg("multi_master", false, Items.CRAFTING_TABLE, 1600, 1, 0, masteries(3, 20));
         reg("treasure", false, Items.GOLD_BLOCK, 600, 0, 1, Req.counter("legendary_found", 1));
 
         // ---------------- Скрытые ----------------
-        title("bone_lord", true, Items.BONE, 3000, Req.counter("skeleton_kills", 500));
-        title("night_hunter", true, Items.CLOCK, 3000, Req.counter("night_kills", 1000));
-        title("undying", true, Items.TOTEM_OF_UNDYING, 3000, Req.counter("undying", 1));
-        title("untouchable", true, Items.PHANTOM_MEMBRANE, 4000, Req.counter("flawless_strong", 25));
-        title("shadow_of_death", true, Items.WITHER_ROSE, 4000, Req.counter("backstab_kills", 300));
-        title("giant_killer", true, Items.IRON_GOLEM_SPAWN_EGG, 4000, Req.counter("giant_kills", 50));
-        title("frenzy", true, Items.FIRE_CHARGE, 3000, Req.counter("rampages", 50));
+        section = AchievementCategory.HIDDEN;
+        title("bone_lord", true, Items.BONE, 1200, Req.counter("skeleton_kills", 500));
+        title("night_hunter", true, Items.CLOCK, 1200, Req.counter("night_kills", 1000));
+        title("undying", true, Items.TOTEM_OF_UNDYING, 1200, Req.counter("undying", 10)); // a title for a habit, not a lucky moment
+        title("untouchable", true, Items.PHANTOM_MEMBRANE, 1600, Req.counter("flawless_strong", 25));
+        title("shadow_of_death", true, Items.WITHER_ROSE, 1600, Req.counter("backstab_kills", 300));
+        title("giant_killer", true, Items.IRON_GOLEM_SPAWN_EGG, 1600, Req.counter("giant_kills", 50));
+        title("frenzy", true, Items.FIRE_CHARGE, 1200, Req.counter("rampages", 50));
 
         // ---------------- Истребители: титулы за охоту на один вид мобов ----------------
+        section = AchievementCategory.HUNT;
         for (SlayerTitles.Slayer slayer : SlayerTitles.ALL) {
-            title(slayer.id(), false, slayer.icon(), 1500 + slayer.kills() * 5, Req.counter(slayer.counter(), slayer.kills()));
+            title(slayer.id(), false, slayer.icon(), 600 + slayer.kills() * 2, Req.counter(slayer.counter(), slayer.kills()));
         }
-        reg("solo_raid", true, Items.TOTEM_OF_UNDYING, 4000, 0, 1, Req.counter("solo_boss", 1));
-        reg("marathon", true, Items.LEATHER_BOOTS, 2000, 0, 0, Req.counter("sprint_m", 50000));
-        skill("legion", true, Items.BONE_BLOCK, 8000, "shadow_legion", Req.bosses(3), Req.counter("kills", 2000));
-        skill("sovereign", true, Items.DRAGON_BREATH, 10000, "ruler_grip", boss("minecraft:ender_dragon"), boss("minecraft:wither"));
+        section = AchievementCategory.HIDDEN;
+        reg("solo_raid", true, Items.TOTEM_OF_UNDYING, 1600, 0, 1, Req.counter("solo_boss", 1));
+        reg("marathon", true, Items.LEATHER_BOOTS, 800, 0, 0, Req.counter("sprint_m", 50000));
+        section = AchievementCategory.LEGENDARY;
+        skill("legion", true, Items.BONE_BLOCK, 3200, "shadow_legion", Req.bosses(3), Req.counter("kills", 2000));
+        skill("sovereign", true, Items.DRAGON_BREATH, 4000, "ruler_grip", boss("minecraft:ender_dragon"), boss("minecraft:wither"));
     }
 
     private static Requirement specChosen() {

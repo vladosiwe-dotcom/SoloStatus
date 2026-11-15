@@ -59,7 +59,7 @@ import static com.vladosiwe.solostatus.client.ui.SystemFonts.*;
 public class SystemScreen extends Screen {
     public enum Win { CLASS, STATUS, SKILLS, MASTERY, ACHIEVEMENTS }
 
-    private enum Overlay { NONE, SKILL, TITLES, SOUNDS, CONFIRM }
+    private enum Overlay { NONE, SKILL, TITLES, SOUNDS, CONFIRM, RANK }
 
     private record Hot(int x, int y, int w, int h, Runnable left, @Nullable Runnable right) {}
 
@@ -323,6 +323,7 @@ public class SystemScreen extends Screen {
         textCenter(g, font, title(d.rank.letter), rx + 13, wy + 21, d.rank.color, ra);
         hover(mx, my, rx, wy + 16, 26, 26, List.of(d.rank.displayName(),
                 Component.translatable("solostatus.status.rank_score", d.rankScore), Component.translatable("solostatus.status.rank_hint")));
+        hots.add(new Hot(rx, wy + 16, 26, 26, () -> openOverlay(Overlay.RANK), null));
 
         label(g, "solostatus.ui.name", cx0, y, row(0));
         text(g, font, bold(name), cx0, y + 9, INK, row(0));
@@ -1142,11 +1143,22 @@ public class SystemScreen extends Screen {
 
     // ============================================================ ACHIEVEMENTS
 
+    @Nullable private com.vladosiwe.solostatus.achievement.AchievementCategory achCategory; // null: all
+
+    @Nullable
+    private com.vladosiwe.solostatus.achievement.AchievementCategory cycleCategory(int step) {
+        var all = com.vladosiwe.solostatus.achievement.AchievementCategory.VALUES;
+        int i = achCategory == null ? -1 : achCategory.ordinal(); // -1 stands for "all"
+        int n = Math.floorMod(i + 1 + step, all.length + 1) - 1;
+        return n < 0 ? null : all[n];
+    }
+
     private void renderAchievements(GuiGraphics g, int mx, int my) {
         PlayerData d = d();
         List<AchievementDef> rows = new ArrayList<>();
         int hiddenTotal = 0, hiddenDone = 0, total = 0;
         for (AchievementDef def : Achievements.all()) {
+            if (achCategory != null && def.category() != achCategory) continue;
             if (def.hidden()) {
                 hiddenTotal++;
                 if (d.achievements.contains(def.id())) { hiddenDone++; rows.add(def); }
@@ -1164,6 +1176,14 @@ public class SystemScreen extends Screen {
         button(g, font, tl, cx0 + cw - tw, y - 3, tw, 13, mx, my, true, row(0));
         hots.add(new Hot(cx0 + cw - tw, y - 3, tw, 13, () -> openOverlay(Overlay.TITLES), null));
         y += 14;
+        // the section switch: left click the next section, right click the previous one
+        Component cl = trBold("solostatus.achievements.category", achCategory == null ? Component.translatable("solostatus.achcat.all") : achCategory.displayName());
+        int clw = font.width(cl) + 12;
+        button(g, font, cl, cx0, y - 2, clw, 13, mx, my, true, row(0));
+        hover(mx, my, cx0, y - 2, clw, 13, List.of(Component.translatable("solostatus.achievements.category_hint")));
+        hots.add(new Hot(cx0, y - 2, clw, 13, () -> { achCategory = cycleCategory(1); scroll = 0; play(ModSounds.CLICK.get(), 1.2f); },
+                () -> { achCategory = cycleCategory(-1); scroll = 0; play(ModSounds.CLICK.get(), 1.2f); }));
+        y += 15;
         int rowH = 26;
         int count = rows.size() + (hiddenDone < hiddenTotal ? 1 : 0);
         int visible = (wy + wh - 8 - y) / rowH;
@@ -1247,6 +1267,12 @@ public class SystemScreen extends Screen {
                 ox = (width - ow) / 2 + 60;
                 oy = (height - oh) / 2;
                 if (window(g, ox, oy, ow, oh, u, 1f) >= oh - 1) renderSounds(g, mx, my, ox, oy, ow, oh);
+            }
+            case RANK -> {
+                oh = Math.min(200, height - 20);
+                ox = (width - ow) / 2 + 60;
+                oy = (height - oh) / 2;
+                if (window(g, ox, oy, ow, oh, u, 1f) >= oh - 1) renderRank(g, mx, my, ox, oy, ow, oh);
             }
             case CONFIRM -> {
                 oh = 96;
@@ -1351,6 +1377,45 @@ public class SystemScreen extends Screen {
             y += 23;
         }
         if (lockedHidden > 0 && y + 10 < oy + oh - 6) text(g, font, tr("solostatus.ui.titles_hidden", lockedHidden), x, y + 2, VIOLET, 1f);
+    }
+
+    /** Hunter Rank: the score by parts and what the next rank still asks. */
+    private void renderRank(GuiGraphics g, int mx, int my, int ox, int oy, int ow, int oh) {
+        PlayerData d = d();
+        int x = ox + 10, w = ow - 20, y = oy + 10;
+        text(g, font, trBold("solostatus.rank.title", d.rank.displayName()), x, y, d.rank.color, 1f);
+        y += 13;
+        var b = com.vladosiwe.solostatus.rank.HunterRankSystem.breakdown(d);
+        String[] keys = {"level", "mastery", "strong", "bosses", "achievements", "path"};
+        int[] vals = {b.level(), b.mastery(), b.strong(), b.bosses(), b.achievements(), b.path()};
+        for (int i = 0; i < keys.length; i++) {
+            text(g, font, tr("solostatus.rank.part." + keys[i]), x, y, DIM, 1f);
+            textRight(g, font, bold(String.valueOf(vals[i])), x + w, y, INK, 1f);
+            y += 10;
+        }
+        g.fill(x, y, x + w, y + 1, 0x4055C8FF);
+        y += 3;
+        text(g, font, trBold("solostatus.rank.score", b.total()), x, y, GOLD, 1f);
+        y += 13;
+        com.vladosiwe.solostatus.rank.HunterRank next = d.rank.ordinal() + 1 < com.vladosiwe.solostatus.rank.HunterRank.VALUES.length
+                ? com.vladosiwe.solostatus.rank.HunterRank.VALUES[d.rank.ordinal() + 1] : null;
+        if (next == null) {
+            text(g, font, trBold("solostatus.rank.max"), x, y, GOLD, 1f);
+            y += 12;
+        } else {
+            text(g, font, trBold("solostatus.rank.next", next.displayName(), Math.max(0, next.threshold - b.total())), x, y, next.color, 1f);
+            y += 11;
+            List<com.vladosiwe.solostatus.rank.HunterRankSystem.Gate> gates = new ArrayList<>();
+            gates.add(new com.vladosiwe.solostatus.rank.HunterRankSystem.Gate("solostatus.rank.gate.score",
+                    new Object[]{b.total(), next.threshold}, b.total() >= next.threshold));
+            gates.addAll(com.vladosiwe.solostatus.rank.HunterRankSystem.gates(d, next));
+            for (var gt : gates) {
+                text(g, font, bold(gt.met() ? "✔" : "✘"), x, y, gt.met() ? 0xFF7DDC8A : RED, 1f);
+                text(g, font, tr(gt.key(), gt.args()), x + 10, y, gt.met() ? INK : DIM, 1f);
+                y += 10;
+            }
+        }
+        wrap(g, tr("solostatus.rank.note"), x, Math.max(y + 4, oy + oh - 24), w, DIM, 1f);
     }
 
     private void renderSounds(GuiGraphics g, int mx, int my, int ox, int oy, int ow, int oh) {
