@@ -1306,7 +1306,7 @@ public class SystemScreen extends Screen {
                 if (window(g, ox, oy, ow, oh, u, 1f) >= oh - 1) renderHistory(g, mx, my, ox, oy, ow, oh);
             }
             case RANK -> {
-                oh = Math.min(200, height - 20);
+                oh = Math.min(210, height - 20);
                 ox = (width - ow) / 2 + 60;
                 oy = (height - oh) / 2;
                 if (window(g, ox, oy, ow, oh, u, 1f) >= oh - 1) renderRank(g, mx, my, ox, oy, ow, oh);
@@ -1489,7 +1489,9 @@ public class SystemScreen extends Screen {
                 y += 10;
             }
         }
-        wrap(g, tr("solostatus.rank.note"), x, Math.max(y + 4, oy + oh - 24), w, DIM, 1f);
+        // the note sits at the bottom, measured so that its last line stays inside the frame
+        int noteH = font.split(tr("solostatus.rank.note"), w).size() * 10; // wrap() steps 10 per line
+        wrap(g, tr("solostatus.rank.note"), x, Math.max(y + 4, oy + oh - 8 - noteH), w, DIM, 1f);
     }
 
     private void renderSounds(GuiGraphics g, int mx, int my, int ox, int oy, int ow, int oh) {
