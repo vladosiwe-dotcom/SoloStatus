@@ -1106,5 +1106,22 @@
   "solostatus.rank.gate.dragon": "Ender Dragon defeated",
   "solostatus.rank.gate.wither": "Wither defeated",
   "solostatus.rank.gate.score": "Rank score: %s / %s",
-  "solostatus.rank.note": "The rank never drops. Slayer titles give 2 points, other achievements 5, hidden ones 8."
+  "solostatus.rank.note": "The rank never drops. Slayer titles give 2 points, other achievements 5, hidden ones 8.",
+  "solostatus.ui.history": "History",
+  "solostatus.ui.history_title": "Hunter's history",
+  "solostatus.ui.history_empty": "Nothing recorded yet: the history is kept from this version on.",
+  "solostatus.ui.history_day": "Day %s",
+  "solostatus.history.level": "Reached level %s",
+  "solostatus.history.limit": "Limit break #%s",
+  "solostatus.history.class": "Awakening: the %s class",
+  "solostatus.history.spec": "Path chosen: %s",
+  "solostatus.history.advanced": "Path Change trial passed",
+  "solostatus.history.skill": "Learned %s",
+  "solostatus.history.skill.rank": "%s: rank %s",
+  "solostatus.history.awaken": "%s awakened",
+  "solostatus.history.achievement": "Achievement: %s",
+  "solostatus.history.mastery": "%s mastery: milestone %s",
+  "solostatus.history.rank": "New hunter rank: %s",
+  "solostatus.history.boss": "First victory over %s",
+  "solostatus.history.mod": "Modification %s for %s"
 }

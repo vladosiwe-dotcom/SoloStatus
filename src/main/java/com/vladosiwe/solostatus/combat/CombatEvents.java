@@ -675,6 +675,7 @@ public final class CombatEvents {
         if (boss && fairness > 0) { // a boss without AI (statue, command dummy) gives nothing
             boolean first = !d.bossesKilled.contains(type);
             if (first) dead.getPersistentData().putBoolean(FIRST_BOSS_TAG, true); // read by onDrops
+            if (first) com.vladosiwe.solostatus.data.History.add(p, d, "boss", type, 0);
             double bossXp = bossXp(type, dead) * (first ? 1.0 : 0.25);
             LevelSystem.grantXp(p, bossXp * Math.max(0.5, fairness), com.vladosiwe.solostatus.level.XpReason.BOSS);
             com.vladosiwe.solostatus.network.Notices.send(p, com.vladosiwe.solostatus.network.Notices.ACHIEVEMENT,

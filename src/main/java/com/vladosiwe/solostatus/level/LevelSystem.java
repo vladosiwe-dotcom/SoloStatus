@@ -80,6 +80,7 @@ public final class LevelSystem {
             levelsGained++;
             d.freeStatPoints += SoloConfig.STAT_POINTS_PER_LEVEL.get();
             d.skillPoints += skillPointsForLevel(d.level);
+            com.vladosiwe.solostatus.data.History.add(player, d, "level", null, d.level);
         }
         if (d.level >= PlayerData.MAX_LEVEL && d.xp > 0) {
             long rest = d.xp;
@@ -97,6 +98,7 @@ public final class LevelSystem {
             d.overflowXp -= overflowNeed(d.overflowAwakenings);
             d.overflowAwakenings++;
             d.skillPoints++;
+            com.vladosiwe.solostatus.data.History.add(player, d, "limit", null, d.overflowAwakenings);
             Notices.send(player, Notices.LEVEL_UP,
                     Component.translatable("solostatus.notice.limit_break"),
                     Component.translatable("solostatus.notice.limit_break.desc", d.overflowAwakenings, MAX_OVERFLOW_AWAKENINGS),

@@ -53,6 +53,10 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
     public final Map<String, Integer> skills = new LinkedHashMap<>();
     /** Ранги, за которые были потрачены очки навыков (для корректного сброса). */
     public final Map<String, Integer> paidRanks = new HashMap<>();
+    /** What the character reached and when (History). */
+    public final List<History.Entry> history = new ArrayList<>();
+    /** The history changed since it was last sent to the client: only then does a sync carry it (it can be long). */
+    public transient boolean historyChanged = true;
     /** Chosen skill modifications: skill id -> 1 or 2 (SkillMods). */
     public final Map<String, Integer> skillMods = new HashMap<>();
     public final String[] slots = new String[SKILL_SLOTS];
@@ -201,6 +205,7 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
         t.put("skills", writeIntMap(skills));
         t.put("paid", writeIntMap(paidRanks));
         t.put("mods", writeIntMap(skillMods));
+        t.put("history", History.write(history));
         ListTag slotList = new ListTag();
         for (String s : slots) slotList.add(StringTag.valueOf(s == null ? "" : s));
         t.put("slots", slotList);
@@ -262,6 +267,7 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
             skills.replaceAll((k, v) -> Math.max(1, v));
             readIntMap(t.getCompound("paid"), paidRanks);
             readIntMap(t.getCompound("mods"), skillMods);
+            if (t.contains("history")) History.read(History.readList(t), history); // a sync without it keeps the client's copy
             Arrays.fill(slots, null);
             ListTag slotList = t.getList("slots", Tag.TAG_STRING);
             for (int i = 0; i < Math.min(slotList.size(), SKILL_SLOTS); i++) {

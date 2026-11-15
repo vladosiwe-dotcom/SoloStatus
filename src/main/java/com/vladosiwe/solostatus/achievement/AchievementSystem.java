@@ -32,6 +32,7 @@ public final class AchievementSystem {
     public static void grant(ServerPlayer player, PlayerData d, AchievementDef def) {
         if (!d.achievements.add(def.id())) return;
         d.unseenAchievements.add(def.id());
+        com.vladosiwe.solostatus.data.History.add(player, d, "achievement", def.id(), 0);
         d.skillPoints += def.sp();
         if (def.orbs() > 0) {
             ItemStack orbs = new ItemStack(ModItems.RESET_ORB.get(), def.orbs());

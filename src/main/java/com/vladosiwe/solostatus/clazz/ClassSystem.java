@@ -24,6 +24,7 @@ public final class ClassSystem {
         PlayerData d = Hunter.get(player);
         if (d.hasClass() || hc == null) return; // смена класса не предусмотрена — защита от повторного выбора
         d.hunterClass = hc;
+        com.vladosiwe.solostatus.data.History.add(player, d, "class", hc.key, 0);
         d.stats[hc.primary.ordinal()] += 3;
         d.stats[hc.secondary.ordinal()] += 2;
         d.skillPoints += 1; // стартовое очко навыков
@@ -49,6 +50,7 @@ public final class ClassSystem {
             return;
         }
         d.specialization = spec;
+        com.vladosiwe.solostatus.data.History.add(player, d, "spec", spec.key, 0);
         AttributeSystem.apply(player);
         d.markDirty();
         player.serverLevel().sendParticles(SkillFx.SYSTEM_DUST, player.getX(), player.getY() + 1, player.getZ(), 100, 0.8, 1.2, 0.8, 0.05);
@@ -76,6 +78,7 @@ public final class ClassSystem {
         if (!trialAvailable(d) || d.hunterClass == null) return;
         for (Requirement r : trialRequirements(d.hunterClass)) if (!r.met(d)) return;
         d.advanced = true;
+        com.vladosiwe.solostatus.data.History.add(player, d, "advanced", null, 0);
         com.vladosiwe.solostatus.level.LevelSystem.grantXp(player, 3000, com.vladosiwe.solostatus.level.XpReason.TRIAL);
         d.achievements.add("class_trial");
         d.unseenAchievements.add("class_trial");

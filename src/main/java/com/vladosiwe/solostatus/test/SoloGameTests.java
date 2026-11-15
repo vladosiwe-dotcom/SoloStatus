@@ -66,6 +66,9 @@ public final class SoloGameTests {
                 if (!json.has("solostatus.mastery.technique." + t.key) || !json.has("solostatus.mastery.mastered." + t.key)) missing.add(lang + ": mastery " + t.key);
             });
         }
+        for (String type : new String[]{"level", "limit", "class", "spec", "advanced", "skill", "awaken", "achievement", "mastery", "rank", "boss", "mod"}) {
+            langs.forEach((lang, json) -> { if (!json.has("solostatus.history." + type)) missing.add(lang + ": history " + type); });
+        }
         h.assertTrue(missing.isEmpty(), "missing: " + missing);
         h.succeed();
     }
@@ -470,6 +473,24 @@ public final class SoloGameTests {
                 "S: only the level gate should be met");
         h.assertTrue(com.vladosiwe.solostatus.rank.HunterRankSystem.compute(d, 10_000) == com.vladosiwe.solostatus.rank.HunterRank.B,
                 "without bosses a big score must stop at B");
+        h.succeed();
+    }
+
+    /** The history records what happened, survives saving, keeps its limit and is left out of unchanged syncs. */
+    @GameTest(template = "empty")
+    public static void characterHistory(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.ARCHER);
+        PlayerData d = Hunter.get(p);
+        h.assertTrue(d.history.stream().anyMatch(e -> e.type().equals("class") && e.arg().equals("archer")), "the class choice is not in the history");
+        LevelSystem.grantXp(p, LevelSystem.xpToNext(1) + 1, XpReason.COMMAND);
+        h.assertTrue(d.history.stream().anyMatch(e -> e.type().equals("level") && e.n() == 2), "level 2 is not in the history");
+        PlayerData copy = new PlayerData();
+        copy.read(d.write());
+        h.assertTrue(copy.history.size() == d.history.size(), "the history was not saved");
+        for (int i = 0; i < com.vladosiwe.solostatus.data.History.LIMIT + 20; i++) com.vladosiwe.solostatus.data.History.add(d, "level", null, i, 1);
+        h.assertTrue(d.history.size() == com.vladosiwe.solostatus.data.History.LIMIT, "the history grew past its limit");
+        for (var e : d.history) h.assertTrue(!com.vladosiwe.solostatus.data.History.describe(e).getString().isEmpty(), "an entry has no text");
         h.succeed();
     }
 }

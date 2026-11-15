@@ -53,6 +53,7 @@ public final class SkillSystem {
         d.skillPoints -= cost;
         d.skills.put(id, next);
         d.paidRanks.merge(id, cost, Integer::sum);
+        com.vladosiwe.solostatus.data.History.add(player, d, "skill", id, next);
         if (next == 1) autoEquip(d, def);
         AttributeSystem.apply(player);
         d.markDirty();
@@ -65,6 +66,7 @@ public final class SkillSystem {
         if (d.hasSkill(def.id)) return;
         d.skills.put(def.id, 1);
         d.unseenSkills.add(def.id);
+        if (def.source != SkillSource.CLASS_START) com.vladosiwe.solostatus.data.History.add(player, d, "awaken", def.id, 1);
         autoEquip(d, def);
         AttributeSystem.apply(player);
         d.markDirty();

@@ -105,6 +105,7 @@ public final class HunterRankSystem {
         }
         if (rank.ordinal() > d.rank.ordinal()) {
             d.rank = rank;
+            com.vladosiwe.solostatus.data.History.add(player, d, "rank", rank.letter, 0);
             d.markDirty();
             com.vladosiwe.solostatus.level.LevelSystem.grantXp(player, 400L * rank.ordinal() * rank.ordinal(), com.vladosiwe.solostatus.level.XpReason.RANK);
             player.serverLevel().sendParticles(ParticleTypes.TOTEM_OF_UNDYING, player.getX(), player.getY() + 1, player.getZ(), 60, 0.5, 1, 0.5, 0.4);

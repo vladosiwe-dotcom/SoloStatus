@@ -14,6 +14,7 @@ public final class ClientPayloadHandler {
         PlayerData d = new PlayerData();
         d.read(msg.tag());
         d.gear.putAll(ClientState.data.gear); // jewellery bonuses come in their own packet
+        if (!msg.tag().contains("history")) d.history.addAll(ClientState.data.history); // sent only when it changes
         ClientState.data = d;
         ClientState.synced = true;
     }

@@ -35,7 +35,10 @@ public final class Notices {
         PlayerData d = Hunter.get(player);
         if (!d.dirty) return;
         d.dirty = false;
-        ModNetwork.toPlayer(player, new Payloads.SyncData(d.write()));
+        var tag = d.write();
+        if (d.historyChanged) d.historyChanged = false;
+        else tag.remove("history"); // unchanged: the client keeps what it has
+        ModNetwork.toPlayer(player, new Payloads.SyncData(tag));
     }
 
     public static void forceSync(ServerPlayer player) {

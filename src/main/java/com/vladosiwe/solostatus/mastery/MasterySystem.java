@@ -38,6 +38,7 @@ public final class MasterySystem {
                 int bonus = switch (l) { case 10 -> 150; case 25 -> 600; case 40 -> 1600; case 50 -> 3200; default -> 0; };
                 if (bonus > 0) {
                     milestone = true;
+                    com.vladosiwe.solostatus.data.History.add(player, d, "mastery", key, l);
                     com.vladosiwe.solostatus.level.LevelSystem.grantXp(player, bonus, com.vladosiwe.solostatus.level.XpReason.MASTERY);
                 }
             }

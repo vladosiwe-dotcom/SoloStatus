@@ -197,7 +197,16 @@ public final class DevShots {
             if (tick == at + 20) shot(mc, "armor-" + set.key);
         }
         if (tick == armorAt + sets.length * 30 + 10) mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
-        if (tick == armorAt + sets.length * 30 + 20) {
+        // the rank and history windows and an achievement section
+        int windowsAt = armorAt + sets.length * 30 + 20;
+        if (tick == windowsAt) mc.setScreen(new SystemScreen(SystemScreen.Win.STATUS).showOverlay("RANK"));
+        if (tick == windowsAt + 40) shot(mc, "rank");
+        if (tick == windowsAt + 45) mc.setScreen(new SystemScreen(SystemScreen.Win.STATUS).showOverlay("HISTORY"));
+        if (tick == windowsAt + 85) shot(mc, "history");
+        if (tick == windowsAt + 90) mc.setScreen(new SystemScreen(SystemScreen.Win.ACHIEVEMENTS));
+        if (tick == windowsAt + 130) shot(mc, "achievements");
+        if (tick == windowsAt + 135) mc.setScreen(null);
+        if (tick == windowsAt + 145) {
             SoloStatus.LOGGER.info("DevShots: done");
             mc.stop();
         }

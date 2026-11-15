@@ -1106,5 +1106,22 @@
   "solostatus.rank.gate.dragon": "Побеждён Эндер-дракон",
   "solostatus.rank.gate.wither": "Побеждён Иссушитель",
   "solostatus.rank.gate.score": "Очки ранга: %s / %s",
-  "solostatus.rank.note": "Ранг не понижается. Истребители дают 2 очка, остальные достижения 5, скрытые 8."
+  "solostatus.rank.note": "Ранг не понижается. Истребители дают 2 очка, остальные достижения 5, скрытые 8.",
+  "solostatus.ui.history": "История",
+  "solostatus.ui.history_title": "История охотника",
+  "solostatus.ui.history_empty": "Пока ничего не записано: история ведётся с этой версии.",
+  "solostatus.ui.history_day": "День %s",
+  "solostatus.history.level": "Достигнут уровень %s",
+  "solostatus.history.limit": "Преодоление предела №%s",
+  "solostatus.history.class": "Пробуждение: класс «%s»",
+  "solostatus.history.spec": "Выбран путь: %s",
+  "solostatus.history.advanced": "Пройдено Испытание смены пути",
+  "solostatus.history.skill": "Изучен навык «%s»",
+  "solostatus.history.skill.rank": "«%s»: ранг %s",
+  "solostatus.history.awaken": "Пробудился навык «%s»",
+  "solostatus.history.achievement": "Достижение: %s",
+  "solostatus.history.mastery": "Мастерство «%s»: веха %s",
+  "solostatus.history.rank": "Новый ранг охотника: %s",
+  "solostatus.history.boss": "Впервые побеждён босс: %s",
+  "solostatus.history.mod": "Модификация «%s» для «%s»"
 }

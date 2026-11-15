@@ -59,7 +59,8 @@ import static com.vladosiwe.solostatus.client.ui.SystemFonts.*;
 public class SystemScreen extends Screen {
     public enum Win { CLASS, STATUS, SKILLS, MASTERY, ACHIEVEMENTS }
 
-    private enum Overlay { NONE, SKILL, TITLES, SOUNDS, CONFIRM, RANK }
+    private enum Overlay { NONE, SKILL, TITLES, SOUNDS, CONFIRM, RANK, HISTORY }
+    private int historyScroll;
 
     private record Hot(int x, int y, int w, int h, Runnable left, @Nullable Runnable right) {}
 
@@ -88,6 +89,13 @@ public class SystemScreen extends Screen {
     private float dragStartYaw;
     // состояние
     @Nullable private String selectedSkill;
+
+    /** Opens with one of the inner windows shown (development screenshots): RANK, HISTORY, TITLES... */
+    public SystemScreen showOverlay(String name) {
+        overlay = Overlay.valueOf(name);
+        overlayAt = System.currentTimeMillis();
+        return this;
+    }
 
     /** Opens with this skill's card selected (development screenshots). */
     public SystemScreen select(String skill) {
@@ -420,6 +428,10 @@ public class SystemScreen extends Screen {
         int orbs = minecraft != null && minecraft.player != null ? minecraft.player.getInventory().countItem(ModItems.RESET_ORB.get()) : 0;
         boolean creative = minecraft != null && minecraft.player != null && minecraft.player.isCreative();
         footerLink(g, mx, my, tr("solostatus.ui.sounds"), cx0, by, fa, () -> openOverlay(Overlay.SOUNDS));
+        footerLink(g, mx, my, tr("solostatus.ui.history"), cx0 + font.width(tr("solostatus.ui.sounds")) + 10, by, fa, () -> {
+            historyScroll = 0;
+            openOverlay(Overlay.HISTORY);
+        });
         int mid = cx0 + cw / 2 - 40;
         if (orbs > 0 || creative) {
             footerLink(g, mx, my, tr("solostatus.ui.respec", orbs), mid, by, fa, () -> askRespec());
@@ -1268,6 +1280,12 @@ public class SystemScreen extends Screen {
                 oy = (height - oh) / 2;
                 if (window(g, ox, oy, ow, oh, u, 1f) >= oh - 1) renderSounds(g, mx, my, ox, oy, ow, oh);
             }
+            case HISTORY -> {
+                oh = Math.min(230, height - 20);
+                ox = (width - ow) / 2 + 60;
+                oy = (height - oh) / 2;
+                if (window(g, ox, oy, ow, oh, u, 1f) >= oh - 1) renderHistory(g, mx, my, ox, oy, ow, oh);
+            }
             case RANK -> {
                 oh = Math.min(200, height - 20);
                 ox = (width - ow) / 2 + 60;
@@ -1377,6 +1395,43 @@ public class SystemScreen extends Screen {
             y += 23;
         }
         if (lockedHidden > 0 && y + 10 < oy + oh - 6) text(g, font, tr("solostatus.ui.titles_hidden", lockedHidden), x, y + 2, VIOLET, 1f);
+    }
+
+    /** The character's history, newest first; the wheel scrolls. */
+    private void renderHistory(GuiGraphics g, int mx, int my, int ox, int oy, int ow, int oh) {
+        PlayerData d = d();
+        int x = ox + 10, w = ow - 20, y = oy + 10;
+        text(g, font, trBold("solostatus.ui.history_title"), x, y, 0xFFFFFFFF, 1f);
+        y += 13;
+        List<com.vladosiwe.solostatus.data.History.Entry> list = new ArrayList<>(d.history);
+        java.util.Collections.reverse(list);
+        if (list.isEmpty()) {
+            wrap(g, tr("solostatus.ui.history_empty"), x, y, w, DIM, 1f);
+            return;
+        }
+        int rowH = 11;
+        int visible = (oy + oh - 8 - y) / rowH;
+        historyScroll = Mth.clamp(historyScroll, 0, Math.max(0, list.size() - visible));
+        for (int i = historyScroll; i < list.size() && i - historyScroll < visible; i++) {
+            var e = list.get(i);
+            Component day = tr("solostatus.ui.history_day", e.day());
+            int dw = font.width(day);
+            text(g, font, day, x, y, DIM, 1f);
+            Component line = com.vladosiwe.solostatus.data.History.describe(e);
+            String cut = font.plainSubstrByWidth(line.getString(), w - dw - 6);
+            text(g, font, Component.literal(cut), x + dw + 6, y, historyColor(e.type()), 1f);
+            if (cut.length() < line.getString().length()) hover(mx, my, x + dw + 6, y, w - dw - 6, rowH, List.of(line));
+            y += rowH;
+        }
+    }
+
+    private static int historyColor(String type) {
+        return switch (type) {
+            case "level", "limit" -> GOLD;
+            case "class", "spec", "advanced", "rank" -> 0xFFFFFFFF;
+            case "achievement", "boss" -> VIOLET;
+            default -> INK;
+        };
     }
 
     /** Hunter Rank: the score by parts and what the next rank still asks. */
@@ -1545,6 +1600,10 @@ public class SystemScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mx, double my, double sx, double sy) {
+        if (sy != 0 && overlay == Overlay.HISTORY) {
+            historyScroll = Math.max(0, historyScroll - (int) Math.signum(sy) * 3);
+            return true;
+        }
         if (sy != 0 && overlay == Overlay.NONE) {
             scroll = Math.max(0, scroll - (int) Math.signum(sy));
             return true;

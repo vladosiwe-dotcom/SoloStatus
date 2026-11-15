@@ -61,6 +61,7 @@ public final class SkillMods {
             return;
         }
         d.skillMods.put(skill, choice);
+        com.vladosiwe.solostatus.data.History.add(player, d, "mod", skill, choice);
         d.markDirty();
         SkillFx.sound(player.serverLevel(), player.position(), SoundEvents.ENCHANTMENT_TABLE_USE, 0.8f, 1.3f);
         Notices.send(player, Notices.INFO, Component.translatable("solostatus.notice.mod_chosen"),
