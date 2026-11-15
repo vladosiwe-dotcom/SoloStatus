@@ -82,7 +82,14 @@ public final class SkillAnimations {
             Map.entry("arcane_cataclysm", "WRATHFUL_LIGHTING"),
             Map.entry("unbreakable", "LONGSWORD_GUARD_ACTIVE_HIT2"),
             Map.entry("storm_of_arrows", "BIPED_BOW_SHOT"),
-            Map.entry("divine_intervention", "WRATHFUL_LIGHTING"));
+            Map.entry("divine_intervention", "WRATHFUL_LIGHTING"),
+            // третьи специализации
+            Map.entry("duel_challenge", "BIPED_SALUTE"),
+            Map.entry("toxic_cloud", "EVERLASTING_ALLEGIANCE_CALL"),
+            Map.entry("arcane_strike", "SWEEPING_EDGE"),
+            Map.entry("retribution", "METEOR_SLAM"),
+            Map.entry("bolt_barrage", "BIPED_CROSSBOW_SHOT"),
+            Map.entry("battle_hymn", "EVERLASTING_ALLEGIANCE_CALL"));
 
     private SkillAnimations() {}
 
