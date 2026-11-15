@@ -118,12 +118,18 @@ public final class DevShots {
             default -> {}
         }
         // weapon swings: one every 40 ticks from tick 390
-        net.minecraft.world.item.Item[] weapons = {Items.IRON_SWORD, Items.NETHERITE_SWORD, null, Items.IRON_AXE, Items.MACE, Items.TRIDENT};
+        net.minecraft.world.item.Item[] weapons = {
+                com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.HUNTER, com.vladosiwe.solostatus.registry.SystemWeapons.Kind.SWORD),
+                com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.HUNTER, com.vladosiwe.solostatus.registry.SystemWeapons.Kind.GREATSWORD),
+                com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.SHADOW, com.vladosiwe.solostatus.registry.SystemWeapons.Kind.DAGGER),
+                com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.SHADOW, com.vladosiwe.solostatus.registry.SystemWeapons.Kind.BATTLEAXE),
+                com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.SHADOW, com.vladosiwe.solostatus.registry.SystemWeapons.Kind.WARHAMMER),
+                com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.HUNTER, com.vladosiwe.solostatus.registry.SystemWeapons.Kind.SPEAR)};
         String[] names = {"sword", "sword2", "dagger", "axe", "mace", "spear"};
         for (int i = 0; i < weapons.length; i++) {
             int at = 390 + i * 40;
             if (tick == at) {
-                ItemStack st = weapons[i] != null ? new ItemStack(weapons[i]) : daggerLike();
+                ItemStack st = new ItemStack(weapons[i]);
                 server.execute(() -> sp.setItemInHand(InteractionHand.MAIN_HAND, st));
             }
             if (tick == at + 12) {
@@ -155,13 +161,6 @@ public final class DevShots {
             SoloStatus.LOGGER.info("DevShots: done");
             mc.stop();
         }
-    }
-
-    /** Vanilla has no dagger: a modded one if present, else a stone sword (then this frame set shows a sword swing). */
-    private static ItemStack daggerLike() {
-        var dagger = net.minecraft.core.registries.BuiltInRegistries.ITEM.stream()
-                .filter(i -> net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(i).getPath().contains("dagger")).findFirst();
-        return new ItemStack(dagger.orElse(Items.STONE_SWORD));
     }
 
     private static void spawn(ServerPlayer sp, EntityType<? extends Mob> type, double side) {

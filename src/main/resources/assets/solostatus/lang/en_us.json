@@ -885,5 +885,19 @@
   "solostatus.ui.filter_branches": "Branches",
   "solostatus.ui.sec_branch": "Branch: %s",
   "solostatus.ui.sec_spec": "Specialization: %s",
-  "solostatus.ui.sec_ultimate": "Ultimate"
+  "solostatus.ui.sec_ultimate": "Ultimate",
+  "item.solostatus.hunter_sword": "Hunter's Sword",
+  "item.solostatus.shadow_sword": "Shadow Sword",
+  "item.solostatus.hunter_greatsword": "Hunter's Greatsword",
+  "item.solostatus.shadow_greatsword": "Shadow Greatsword",
+  "item.solostatus.hunter_dagger": "Hunter's Dagger",
+  "item.solostatus.shadow_dagger": "Shadow Dagger",
+  "item.solostatus.hunter_battleaxe": "Hunter's Battleaxe",
+  "item.solostatus.shadow_battleaxe": "Shadow Battleaxe",
+  "item.solostatus.hunter_warhammer": "Hunter's Warhammer",
+  "item.solostatus.shadow_warhammer": "Shadow Warhammer",
+  "item.solostatus.hunter_spear": "Hunter's Spear",
+  "item.solostatus.shadow_spear": "Shadow Spear",
+  "item.solostatus.hunter_staff": "Hunter's Staff",
+  "item.solostatus.shadow_staff": "Shadow Staff"
 }

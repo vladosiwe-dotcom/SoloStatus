@@ -1,4 +1,7 @@
 {
   "replace": false,
-  "values": []
+  "values": [
+    "solostatus:hunter_warhammer",
+    "solostatus:shadow_warhammer"
+  ]
 }

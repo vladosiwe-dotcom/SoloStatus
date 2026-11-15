@@ -885,5 +885,19 @@
   "solostatus.ui.filter_branches": "Ветки",
   "solostatus.ui.sec_branch": "Ветка «%s»",
   "solostatus.ui.sec_spec": "Специализация: %s",
-  "solostatus.ui.sec_ultimate": "Высшее умение"
+  "solostatus.ui.sec_ultimate": "Высшее умение",
+  "item.solostatus.hunter_sword": "Меч охотника",
+  "item.solostatus.shadow_sword": "Меч Тени",
+  "item.solostatus.hunter_greatsword": "Тяжёлый меч охотника",
+  "item.solostatus.shadow_greatsword": "Тяжёлый меч Тени",
+  "item.solostatus.hunter_dagger": "Кинжал охотника",
+  "item.solostatus.shadow_dagger": "Кинжал Тени",
+  "item.solostatus.hunter_battleaxe": "Боевой топор охотника",
+  "item.solostatus.shadow_battleaxe": "Боевой топор Тени",
+  "item.solostatus.hunter_warhammer": "Боевой молот охотника",
+  "item.solostatus.shadow_warhammer": "Боевой молот Тени",
+  "item.solostatus.hunter_spear": "Копьё охотника",
+  "item.solostatus.shadow_spear": "Копьё Тени",
+  "item.solostatus.hunter_staff": "Посох охотника",
+  "item.solostatus.shadow_staff": "Посох Тени"
 }

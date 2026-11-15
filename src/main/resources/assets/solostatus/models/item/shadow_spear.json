@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/handheld",
+  "textures": {
+    "layer0": "solostatus:item/weapon/shadow_spear"
+  }
+}

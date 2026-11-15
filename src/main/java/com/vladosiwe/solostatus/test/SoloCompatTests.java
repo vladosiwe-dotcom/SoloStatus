@@ -99,6 +99,58 @@ public final class SoloCompatTests {
         h.succeed();
     }
 
+    /**
+     * The System's weapons: each is classified as its weapon type, the staff carries Iron's spell power, and Epic Fight
+     * gives each one the moveset its capability file names (checked when Epic Fight is loaded).
+     */
+    @GameTest(template = "empty")
+    public static void systemWeapons(GameTestHelper h) {
+        java.util.Map<com.vladosiwe.solostatus.registry.SystemWeapons.Kind, String> efType = java.util.Map.of(
+                com.vladosiwe.solostatus.registry.SystemWeapons.Kind.SWORD, "SWORD",
+                com.vladosiwe.solostatus.registry.SystemWeapons.Kind.GREATSWORD, "GREATSWORD",
+                com.vladosiwe.solostatus.registry.SystemWeapons.Kind.DAGGER, "DAGGER",
+                com.vladosiwe.solostatus.registry.SystemWeapons.Kind.BATTLEAXE, "AXE",
+                com.vladosiwe.solostatus.registry.SystemWeapons.Kind.WARHAMMER, "GREATSWORD",
+                com.vladosiwe.solostatus.registry.SystemWeapons.Kind.SPEAR, "SPEAR",
+                com.vladosiwe.solostatus.registry.SystemWeapons.Kind.STAFF, "SPEAR");
+        java.lang.reflect.Method capability = null, category = null;
+        if (ModList.get().isLoaded("epicfight")) {
+            try {
+                capability = Class.forName("yesman.epicfight.world.capabilities.EpicFightCapabilities").getMethod("getItemStackCapability", ItemStack.class);
+                category = Class.forName("yesman.epicfight.world.capabilities.item.CapabilityItem").getMethod("getWeaponCategory");
+            } catch (Exception e) {
+                SoloStatus.LOGGER.warn("Epic Fight capability API not found: {}", e.toString());
+            }
+        }
+        List<String> wrong = new java.util.ArrayList<>();
+        for (var g : com.vladosiwe.solostatus.registry.SystemWeapons.Grade.values()) {
+            for (var k : com.vladosiwe.solostatus.registry.SystemWeapons.Kind.values()) {
+                ItemStack st = new ItemStack(com.vladosiwe.solostatus.registry.SystemWeapons.get(g, k));
+                var type = com.vladosiwe.solostatus.combat.WeaponClassifier.classify(st);
+                if (type != k.type) wrong.add(g + " " + k + " is " + type);
+                if (capability != null) {
+                    try {
+                        String cat = String.valueOf(category.invoke(capability.invoke(null, st)));
+                        if (!cat.equalsIgnoreCase(efType.get(k))) wrong.add(g + " " + k + " has Epic Fight category " + cat);
+                    } catch (Exception e) {
+                        wrong.add(g + " " + k + ": " + e);
+                    }
+                }
+            }
+        }
+        h.assertTrue(wrong.isEmpty(), "System weapons: " + wrong);
+        if (ModList.get().isLoaded("irons_spellbooks")) {
+            var staff = new ItemStack(com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.HUNTER,
+                    com.vladosiwe.solostatus.registry.SystemWeapons.Kind.STAFF));
+            var mods = staff.getOrDefault(net.minecraft.core.component.DataComponents.ATTRIBUTE_MODIFIERS,
+                    net.minecraft.world.item.component.ItemAttributeModifiers.EMPTY);
+            boolean power = mods.modifiers().stream().anyMatch(e -> e.attribute().unwrapKey().map(k -> k.location().toString())
+                    .orElse("").equals("irons_spellbooks:spell_power"));
+            h.assertTrue(power, "the staff has no Iron's spell power");
+        }
+        h.succeed();
+    }
+
     /** Every Mage skill is a real Iron's spell that is cast with one press (no held spells on a skill key). */
     @GameTest(template = "empty")
     public static void mageSchoolsAreIronsSpells(GameTestHelper h) {
