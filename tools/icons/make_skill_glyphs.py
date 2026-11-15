@@ -1,4 +1,4 @@
-"""Glyphs of the third specializations' skills (textures/gui/skill/<id>.png): white 64x64 signs in the style of
+"""Glyphs of newer skills (third specializations, skill chains, Concealment) (textures/gui/skill/<id>.png): white 64x64 signs in the style of
 the other skill glyphs, tinted by the skill's origin colour when drawn.
 
 usage: python3 tools/icons/make_skill_glyphs.py   (from the repository root)
@@ -121,8 +121,40 @@ def melody_of_life(d):
     d.polygon([(132, 132), (204, 132), (168, 184)], fill=255)
 
 
+def riposte(d):
+    blade(d, -50, 160, 16, 112, 140)
+    d.arc((40, 30, 220, 210), 200, 330, fill=255, width=14)
+    d.polygon([(206, 70), (226, 112), (188, 100)], fill=255)
+
+
+def perfect_counter(d):
+    blade(d, -50, 160, 16, 112, 140)
+    star(d, 186, 72, 44, 11)
+    d.arc((40, 30, 220, 210), 200, 290, fill=255, width=12)
+
+
+def sky_strike(d):
+    d.rectangle((118, 30, 138, 150), fill=255)
+    d.polygon([(90, 140), (166, 140), (128, 190)], fill=255)
+    for x0, x1 in ((40, 100), (156, 216)):
+        d.line([(x0, 214), (x1, 214)], fill=255, width=12)
+    d.line([(60, 190), (84, 170)], fill=255, width=10)
+    d.line([(196, 190), (172, 170)], fill=255, width=10)
+
+
+def concealment(d):
+    d.polygon([(128, 30), (196, 100), (206, 220), (50, 220), (60, 100)], fill=255)
+    d.ellipse((86, 92, 170, 176), fill=0)
+    d.polygon([(100, 128), (122, 122), (120, 134)], fill=255)
+    d.polygon([(156, 128), (134, 122), (136, 134)], fill=255)
+    for k in range(5):
+        x = 60 + k * 34
+        d.line([(x, 222), (x + 10, 244)], fill=0, width=10)
+
+
 GLYPHS = {f.__name__: f for f in (duel_challenge, fencing, toxic_cloud, venom_mastery, arcane_strike, battle_magic,
-                                   retribution, vengeance, bolt_barrage, auto_reload, battle_hymn, melody_of_life)}
+                                   retribution, vengeance, bolt_barrage, auto_reload, battle_hymn, melody_of_life,
+                                   riposte, perfect_counter, sky_strike, concealment)}
 
 
 def main():

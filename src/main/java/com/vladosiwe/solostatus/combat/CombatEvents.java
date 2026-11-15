@@ -150,6 +150,7 @@ public final class CombatEvents {
             SkillFx.sound(level, p.position(), SoundEvents.ANVIL_PLACE, 0.5f, 1.9f);
             if (now - d.lastBlockTick > 10 && Threat.fairness(attacker, p) > 0.2) d.addCounter("parries", 1);
             d.lastBlockTick = now; // opens the counter window, like a block
+            if (d.hasSkill("riposte")) SkillFx.state(d, level, "riposte_ready", 50); // 2.5 s for the Riposte
             return true;
         }
 
@@ -305,6 +306,12 @@ public final class CombatEvents {
         }
         if (type != null) add += MasteryMath.damageBonus(masteryLevel);
         if (type != null) add += com.vladosiwe.solostatus.clazz.Proficiency.of(d, type).damage; // the class's own weapons hit harder
+
+        // Concealment ends with the first blow, which lands from nowhere
+        if ((melee || projectile) && com.vladosiwe.solostatus.skill.Concealment.active(p)) {
+            add += 0.5 + 0.1 * Math.max(0, d.skillRank("concealment") - 1);
+            com.vladosiwe.solostatus.skill.Concealment.end(p);
+        }
 
         // --- third specializations ---
         if (SkillFx.marked(target, "duel", p)) add += 0.20 + 0.05 * Math.max(0, d.skillRank("duel_challenge") - 1);

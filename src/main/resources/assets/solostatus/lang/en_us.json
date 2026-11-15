@@ -873,5 +873,14 @@
   "solostatus.skill.battle_hymn": "Battle Hymn",
   "solostatus.skill.battle_hymn.desc": "10s (+1.5s per rank): allies get speed, strength and regeneration; foes get weakness and slowness.",
   "solostatus.skill.melody_of_life": "Melody of Life",
-  "solostatus.skill.melody_of_life.desc": "Passive: you and allies nearby keep regaining health."
+  "solostatus.skill.melody_of_life.desc": "Passive: you and allies nearby keep regaining health.",
+  "solostatus.skill.riposte": "Riposte",
+  "solostatus.skill.riposte.desc": "Only right after a successful parry (2.5 s): a lunge, a blow x2.2 (+0.3 per rank) and a long stun. Opens after 15 successful parries.",
+  "solostatus.skill.perfect_counter": "Perfect Answer",
+  "solostatus.skill.perfect_counter.desc": "Passive: a riposte makes Parry ready again and heals 1 health per rank. Opens after 30 ripostes.",
+  "solostatus.skill.sky_strike": "Sky Strike",
+  "solostatus.skill.sky_strike.desc": "Only in the air: a dive that hits everything around where you land. No fall damage.",
+  "solostatus.skill.concealment": "Concealment",
+  "solostatus.skill.concealment.desc": "6s (+1s per rank): everyone loses sight of you — mobs drop you as a target, other players see only a faint aura. The first blow ends it and deals +50% damage.",
+  "solostatus.error.riposte_window": "Riposte works only right after a successful parry"
 }

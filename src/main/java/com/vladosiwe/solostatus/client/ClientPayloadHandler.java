@@ -27,6 +27,10 @@ public final class ClientPayloadHandler {
         }
     }
 
+    public static void conceal(Payloads.ConcealSync msg) {
+        com.vladosiwe.solostatus.client.ConcealmentClient.set(msg.entity(), msg.ticks());
+    }
+
     public static void skillCast(Payloads.SkillCast msg) {
         com.vladosiwe.solostatus.client.fp.FirstPersonAnimations.playSkill(msg.skill());
     }

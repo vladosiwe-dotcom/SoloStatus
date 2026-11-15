@@ -83,6 +83,8 @@ public final class Skills {
         reg(b("ambush", CLASS_START, PASSIVE, Items.SHEARS).forClass(T).tree(0, 2).build());
         reg(b("flurry", CLASS, ATTACK, Items.IRON_SWORD).forClass(T).level(5).parent("ambush", 2).cooldown(9, 0.6).energy(18).tree(1, 2).effect(SkillEffects::flurry).build());
         reg(b("vanish", CLASS, DEFENSE, Items.GLASS_PANE).forClass(T).level(10).parent("quick_dash", 2).cooldown(30, 2).energy(25).tree(1, 0).effect(SkillEffects::vanish).build());
+        reg(b("concealment", CLASS, DEFENSE, Items.BLACK_DYE).forClass(T).level(18).parent("vanish", 2).cooldown(35, 2).energy(30).tree(2, 1)
+                .effect(SkillEffects::concealment).build());
         reg(b("poison_blade", CLASS, ATTACK, Items.SPIDER_EYE).forClass(T).level(15).cooldown(25, 1.5).energy(20).tree(1, 1).effect(SkillEffects::poisonBlade).build());
         reg(b("assassinate", CLASS, ATTACK, Items.WITHER_SKELETON_SKULL).forClass(T).level(20).parent("flurry", 2).cooldown(20, 1.2).energy(30).tree(2, 2).effect(SkillEffects::assassinate).build());
 
@@ -195,10 +197,17 @@ public final class Skills {
 
         // ============================== GENERAL (любой класс, выбор за очки) ==============================
         reg(b("parry", GENERAL, DEFENSE, Items.SHIELD).ranks(3).level(3).rankStep(10).cooldown(7, 0.8).energy(8).effect(GeneralSkills::parry).build());
+        // a chain grown from Parry: a counter only after a successful parry, then its perfection
+        reg(b("riposte", GENERAL, ATTACK, Items.IRON_SWORD).ranks(3).level(8).rankStep(10).parent("parry", 2).requires(Req.counter("parries", 15))
+                .cooldown(4, 0.5).energy(6).effect(GeneralSkills::riposte).build());
+        reg(b("perfect_counter", GENERAL, PASSIVE, Items.DIAMOND_SWORD).ranks(3).level(20).rankStep(10).parent("riposte", 2)
+                .requires(Req.counter("ripostes", 30)).build());
         reg(b("acrobatics", GENERAL, PASSIVE, Items.FEATHER).ranks(3).level(4).rankStep(10).build());
         reg(b("body_reinforcement", GENERAL, SUPPORT, Items.IRON_INGOT).ranks(3).level(5).rankStep(10).cooldown(35, 3).energy(20).effect(GeneralSkills::bodyReinforcement).build());
         reg(b("iron_will", GENERAL, PASSIVE, Items.IRON_BARS).ranks(3).level(6).rankStep(10).build());
         reg(b("air_step", GENERAL, MOVEMENT, Items.PHANTOM_MEMBRANE).ranks(3).level(8).rankStep(10).cooldown(6, 0.5).energy(8).effect(GeneralSkills::airStep).build());
+        reg(b("sky_strike", GENERAL, ATTACK, Items.MACE).ranks(3).level(14).rankStep(10).parent("air_step", 2)
+                .cooldown(10, 1).energy(14).effect(GeneralSkills::skyStrike).build());
         reg(b("breathing_technique", GENERAL, PASSIVE, Items.GLASS_BOTTLE).ranks(3).level(10).rankStep(10).build());
         reg(b("focus", GENERAL, ATTACK, Items.SPYGLASS).ranks(3).level(12).rankStep(10).cooldown(25, 2).energy(12).effect(GeneralSkills::focus).build());
         reg(b("weapon_adept", GENERAL, PASSIVE, Items.GRINDSTONE).ranks(3).level(15).rankStep(10).build());

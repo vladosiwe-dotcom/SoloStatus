@@ -31,6 +31,7 @@ public final class SoloStatus {
         ModItems.ITEMS.register(modBus);
         ModLootModifiers.SERIALIZERS.register(modBus);
         ModSounds.SOUNDS.register(modBus);
+        com.vladosiwe.solostatus.registry.ModEffects.EFFECTS.register(modBus);
 
         container.registerConfig(ModConfig.Type.SERVER, SoloConfig.SPEC);
         container.registerConfig(ModConfig.Type.CLIENT, SoloConfig.CLIENT_SPEC);

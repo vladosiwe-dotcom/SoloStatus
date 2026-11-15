@@ -39,6 +39,14 @@ public final class Payloads {
         @Override public Type<EnergySync> type() { return TYPE; }
     }
 
+    /** A hunter's Concealment started (ticks > 0) or ended (0): other clients hide him and show only an aura. */
+    public record ConcealSync(int entity, int ticks) implements CustomPacketPayload {
+        public static final Type<ConcealSync> TYPE = Payloads.typeOf("conceal");
+        public static final StreamCodec<ByteBuf, ConcealSync> CODEC =
+                StreamCodec.composite(ByteBufCodecs.VAR_INT, ConcealSync::entity, ByteBufCodecs.VAR_INT, ConcealSync::ticks, ConcealSync::new);
+        @Override public Type<ConcealSync> type() { return TYPE; }
+    }
+
     /** A skill of this player just worked: the client plays its first-person motion. */
     public record SkillCast(String skill) implements CustomPacketPayload {
         public static final Type<SkillCast> TYPE = Payloads.typeOf("skill_cast");

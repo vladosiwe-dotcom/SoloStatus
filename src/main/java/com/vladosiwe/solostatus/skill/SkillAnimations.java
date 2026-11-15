@@ -89,7 +89,11 @@ public final class SkillAnimations {
             Map.entry("arcane_strike", "SWEEPING_EDGE"),
             Map.entry("retribution", "METEOR_SLAM"),
             Map.entry("bolt_barrage", "BIPED_CROSSBOW_SHOT"),
-            Map.entry("battle_hymn", "EVERLASTING_ALLEGIANCE_CALL"));
+            Map.entry("battle_hymn", "EVERLASTING_ALLEGIANCE_CALL"),
+            // цепочки и Сокрытие
+            Map.entry("riposte", "EVISCERATE_FIRST"),
+            Map.entry("sky_strike", "METEOR_SLAM"),
+            Map.entry("concealment", "BIPED_STEP_BACKWARD"));
 
     private SkillAnimations() {}
 

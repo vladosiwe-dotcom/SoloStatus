@@ -167,4 +167,38 @@ public final class SoloGameTests {
         h.assertTrue(ok && d.vengeance == 0, "Retribution did not release the stored damage");
         h.succeed();
     }
+
+    /** Riposte works only in the moment after a successful parry. */
+    @GameTest(template = "empty")
+    public static void riposteOnlyAfterParry(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.WARRIOR);
+        PlayerData d = Hunter.get(p);
+        d.skills.put("riposte", 1);
+        var zombie = h.spawn(net.minecraft.world.entity.EntityType.ZOMBIE, new net.minecraft.core.BlockPos(1, 1, 3));
+        p.lookAt(net.minecraft.commands.arguments.EntityAnchorArgument.Anchor.EYES, zombie.getEyePosition());
+        var def = com.vladosiwe.solostatus.skill.Skills.get("riposte");
+        var ctx = new com.vladosiwe.solostatus.skill.SkillContext(p, p.serverLevel(), d, def, 1);
+        h.assertFalse(def.effect.execute(ctx), "Riposte worked without a parry");
+        com.vladosiwe.solostatus.skill.SkillFx.state(d, p.serverLevel(), "riposte_ready", 50);
+        h.assertTrue(def.effect.execute(ctx), "Riposte did not work right after a parry");
+        h.assertFalse(d.stateActive("riposte_ready", p.serverLevel().getGameTime()), "the riposte window must close after use");
+        h.succeed();
+    }
+
+    /** Concealment: a mob drops the hunter as its target and cannot pick him again; the first blow ends it. */
+    @GameTest(template = "empty")
+    public static void concealmentLosesTargets(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.THIEF);
+        var zombie = h.spawn(net.minecraft.world.entity.EntityType.ZOMBIE, new net.minecraft.core.BlockPos(1, 1, 3));
+        zombie.setTarget(p);
+        com.vladosiwe.solostatus.skill.Concealment.start(p, 100);
+        h.assertTrue(zombie.getTarget() == null, "the zombie still targets the concealed hunter");
+        zombie.setTarget(p);
+        h.assertTrue(zombie.getTarget() == null, "the zombie picked the concealed hunter again");
+        com.vladosiwe.solostatus.skill.Concealment.end(p);
+        h.assertFalse(com.vladosiwe.solostatus.skill.Concealment.active(p), "Concealment did not end");
+        h.succeed();
+    }
 }

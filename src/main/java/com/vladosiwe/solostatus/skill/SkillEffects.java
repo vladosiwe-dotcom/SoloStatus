@@ -167,6 +167,15 @@ public final class SkillEffects {
         return true;
     }
 
+    /** Thief's Concealment: everyone loses the hunter; the first blow from it ends it with extra damage. */
+    public static boolean concealment(SkillContext c) {
+        ServerPlayer p = c.player();
+        Concealment.start(p, (int) c.scale(120, 20));
+        particles(c.level(), ParticleTypes.LARGE_SMOKE, p.position().add(0, 1, 0), 40, 0.5, 0.02);
+        sound(c.level(), p.position(), SoundEvents.ILLUSIONER_MIRROR_MOVE, 0.9f, 0.7f);
+        return true;
+    }
+
     public static boolean poisonBlade(SkillContext c) {
         state(c.data(), c.level(), "poison_blade", 200);
         particles(c.level(), ParticleTypes.ITEM_SLIME, c.player().position().add(0, 1, 0), 15, 0.4, 0.05);

@@ -131,7 +131,10 @@ public final class SkillSystem {
             d.castingSkill = null;
         }
         if (!ok) {
-            if (!def.isSpell()) Notices.warn(player, "solostatus.error.no_target"); // Iron's says itself why a spell failed
+            if (!def.isSpell()) { // Iron's says itself why a spell failed
+                boolean noWindow = id.equals("riposte") && !d.stateActive("riposte_ready", now);
+                Notices.warn(player, noWindow ? "solostatus.error.riposte_window" : "solostatus.error.no_target");
+            }
             return;
         }
         if (!player.isCreative() && cost > 0) {

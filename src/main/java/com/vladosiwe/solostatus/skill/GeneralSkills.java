@@ -36,6 +36,54 @@ public final class GeneralSkills {
         return true;
     }
 
+    /**
+     * Riposte: only in the moment after a successful Parry (state "riposte_ready"). A lunge at the staggered foe, a
+     * heavy blow and a longer stun. With Perfect Answer it also makes Parry ready again and heals a little.
+     */
+    public static boolean riposte(SkillContext c) {
+        ServerPlayer p = c.player();
+        PlayerData d = c.data();
+        long now = c.level().getGameTime();
+        if (!d.stateActive("riposte_ready", now)) return false;
+        LivingEntity t = closestInCone(p, 5, 80);
+        if (t == null) return false;
+        d.timedStates.remove("riposte_ready");
+        dash(p, t.position().subtract(p.position()).normalize(), 0.6, 0.05);
+        swing(p);
+        hitPhysical(p, t, melee(p) * c.scale(2.2, 0.3));
+        stun(p, t, 30 + 5 * c.rank());
+        particles(c.level(), ParticleTypes.CRIT, t.getBoundingBox().getCenter(), 20, 0.3, 0.3);
+        sound(c.level(), t.position(), SoundEvents.PLAYER_ATTACK_CRIT, 1f, 0.9f);
+        d.addCounter("ripostes", 1);
+        int perfect = d.skillRank("perfect_counter");
+        if (perfect > 0) {
+            d.cooldowns.remove("parry");
+            p.heal(1.0f * perfect);
+        }
+        return true;
+    }
+
+    /** Sky Strike: from the air, a dive that lands as a blow on everything around. */
+    public static boolean skyStrike(SkillContext c) {
+        ServerPlayer p = c.player();
+        if (p.onGround()) return false; // jump (or Sky Step) first
+        double dmg = melee(p) * c.scale(1.4, 0.25);
+        p.setDeltaMovement(p.getDeltaMovement().x * 0.3, -1.6, p.getDeltaMovement().z * 0.3);
+        p.hurtMarked = true;
+        Scheduler.later(6, () -> {
+            if (!p.isAlive()) return;
+            p.resetFallDistance();
+            for (LivingEntity t : enemiesAround(p, p.position(), 3.5)) {
+                hitPhysical(p, t, dmg);
+                launch(t, 0.5);
+            }
+            particles(c.level(), ParticleTypes.EXPLOSION, p.position(), 2, 0.6, 0);
+            ring(c.level(), ParticleTypes.CLOUD, p.position().add(0, 0.1, 0), 3, 30);
+            sound(c.level(), p.position(), SoundEvents.MACE_SMASH_GROUND, 1f, 1f);
+        });
+        return true;
+    }
+
     /** 0.4 s at rank 1, 0.8 s at rank 3. */
     public static int parryWindow(int rank) {
         return 6 + 2 * Math.max(1, rank) + (rank >= 3 ? 2 : 0);
