@@ -93,7 +93,14 @@ public final class SkillAnimations {
             // цепочки и Сокрытие
             Map.entry("riposte", "EVISCERATE_FIRST"),
             Map.entry("sky_strike", "METEOR_SLAM"),
-            Map.entry("concealment", "BIPED_STEP_BACKWARD"));
+            Map.entry("concealment", "BIPED_STEP_BACKWARD"),
+            // Legendary weapons
+            Map.entry("mountain_fall", "METEOR_SLAM"),
+            Map.entry("thousand_shadows", "BLADE_RUSH_COMBO3"),
+            Map.entry("star_well", "WRATHFUL_LIGHTING"),
+            Map.entry("unbreakable_line", "SWORD_GUARD_ACTIVE_HIT3"),
+            Map.entry("heavens_verdict", "BIPED_BOW_SHOT"),
+            Map.entry("daybreak", "WRATHFUL_LIGHTING"));
 
     private SkillAnimations() {}
 

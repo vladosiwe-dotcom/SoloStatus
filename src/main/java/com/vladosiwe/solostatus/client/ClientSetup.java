@@ -22,6 +22,24 @@ public final class ClientSetup {
         for (KeyMapping k : Keys.SKILLS) event.register(k);
     }
 
+    /**
+     * Model states of the legendary bow (drawn: pull, pulling — by its own draw time) and shield (blocking), under
+     * vanilla's predicate names so their item models read like vanilla's.
+     */
+    @SubscribeEvent
+    public static void clientSetup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event) {
+        event.enqueueWork(() -> {
+            var bow = com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.SKYHUNT_BOW.item();
+            net.minecraft.client.renderer.item.ItemProperties.register(bow, net.minecraft.resources.ResourceLocation.withDefaultNamespace("pull"),
+                    (stack, level, entity, seed) -> com.vladosiwe.solostatus.registry.LegendaryWeapons.pull(stack, entity));
+            net.minecraft.client.renderer.item.ItemProperties.register(bow, net.minecraft.resources.ResourceLocation.withDefaultNamespace("pulling"),
+                    (stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1f : 0f);
+            var shield = com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.LAST_BASTION.item();
+            net.minecraft.client.renderer.item.ItemProperties.register(shield, net.minecraft.resources.ResourceLocation.withDefaultNamespace("blocking"),
+                    (stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1f : 0f);
+        });
+    }
+
     /** The gem of a ring/amulet (layer 1) takes the colour of its rarity. */
     @SubscribeEvent
     public static void itemColors(net.neoforged.neoforge.client.event.RegisterColorHandlersEvent.Item event) {

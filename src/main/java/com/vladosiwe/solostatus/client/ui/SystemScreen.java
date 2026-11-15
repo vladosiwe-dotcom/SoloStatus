@@ -573,7 +573,8 @@ public class SystemScreen extends Screen {
             return switch (this) {
                 case ALL -> true;
                 case BRANCHES -> true;
-                case CLASS -> def.source == SkillSource.CLASS_START || def.source == SkillSource.CLASS || def.source == SkillSource.ULTIMATE;
+                case CLASS -> def.source == SkillSource.CLASS_START || def.source == SkillSource.CLASS || def.source == SkillSource.ULTIMATE
+                        || def.source == SkillSource.LEGENDARY;
                 case SPEC -> def.source == SkillSource.SPEC;
                 case GENERAL -> def.source == SkillSource.GENERAL;
                 case AWAKENING -> def.source == SkillSource.AWAKENING;
@@ -644,7 +645,7 @@ public class SystemScreen extends Screen {
         List<SkillDef> cls = new ArrayList<>();
         for (SkillDef def : Skills.all()) {
             if (def.school != null || def.hunterClass == null || def.hunterClass != d.hunterClass) continue;
-            if (def.source == SkillSource.SPEC || def.source == SkillSource.ULTIMATE) continue;
+            if (def.source == SkillSource.SPEC || def.source == SkillSource.ULTIMATE || def.source == SkillSource.LEGENDARY) continue;
             cls.add(def);
         }
         java.util.Set<String> ids = new java.util.HashSet<>();
@@ -674,6 +675,8 @@ public class SystemScreen extends Screen {
         }
         SkillDef ult = d.hunterClass != null ? Skills.ultimate(d.hunterClass) : null;
         if (ult != null) addSection(rows, "solostatus.ui.sec_ultimate", List.of(ult));
+        List<SkillDef> legendary = Skills.all().stream().filter(x -> x.source == SkillSource.LEGENDARY && x.hunterClass == d.hunterClass).toList();
+        addSection(rows, "solostatus.ui.sec_legendary", legendary);
         return rows;
     }
 

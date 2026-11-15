@@ -64,6 +64,7 @@ public final class WeaponClassifier {
 
     /** Предмет, который может иметь качество (любое оружие, кроме пустой руки). */
     public static boolean isQualityWeapon(ItemStack stack) {
+        if (com.vladosiwe.solostatus.registry.LegendaryWeapons.of(stack) != null) return false; // legendary: no random quality
         WeaponType t = classify(stack);
         return t != WeaponType.NONE && t != WeaponType.FIST && stack.getMaxStackSize() == 1;
     }

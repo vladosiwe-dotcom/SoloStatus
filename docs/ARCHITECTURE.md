@@ -19,6 +19,7 @@
 | CombatSystem | `combat/CombatEvents`, `combat/Threat`, `combat/WeaponClassifier` | Анализ боя, анти-фарм, типы оружия |
 | MasterySystem | `mastery/*` | Мастерство оружия и школ магии; `MasteryTechniques` — техника оружия (40) и развитие навыка оружия (50) |
 | WeaponQualitySystem | `quality/*` | Data component качества, лут, подсказки |
+| Легендарное оружие | `registry/LegendaryWeapons`, `LegendaryDrops`, `skill/LegendarySkills` | Оружие классов (модели Blockbench), свойства, выпадение с боссов, легендарные навыки |
 | HunterRankSystem | `rank/*` | Очки силы по частям (`breakdown`), условия рангов (`gates`), ранги |
 | AchievementSystem | `achievement/*` | Достижения по разделам (`AchievementCategory`), скрытые, титулы Истребителей, награды |
 | Networking | `network/*` | Пакеты, синхронизация, осмотр |

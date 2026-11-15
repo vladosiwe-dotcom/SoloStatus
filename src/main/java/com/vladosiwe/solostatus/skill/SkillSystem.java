@@ -135,6 +135,11 @@ public final class SkillSystem {
         int rank = d.skillRank(id);
         if (rank <= 0 || !def.availableFor(d)) return;
 
+        if (def.source == SkillSource.LEGENDARY
+                && !com.vladosiwe.solostatus.registry.LegendaryWeapons.holds(player, com.vladosiwe.solostatus.registry.LegendaryWeapons.forClass(def.hunterClass))) {
+            Notices.warn(player, "solostatus.error.legendary_hold");
+            return;
+        }
         long now = player.serverLevel().getGameTime();
         Long ready = d.cooldowns.get(id);
         if (ready != null && ready > now) return; // клиент тоже показывает перезарядку — без спама уведомлениями

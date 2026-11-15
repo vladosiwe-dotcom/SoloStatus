@@ -90,7 +90,7 @@ public final class SkillDef {
                 default -> 0;
             };
         }
-        if (source == SkillSource.ULTIMATE) return 2;
+        if (source == SkillSource.ULTIMATE || source == SkillSource.LEGENDARY) return 2;
         return newRank <= 3 ? 1 : 2;
     }
 

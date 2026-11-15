@@ -59,6 +59,7 @@ public final class History {
                 yield net.minecraft.network.chat.Component.translatable(key, id == null ? net.minecraft.network.chat.Component.literal(e.arg())
                         : net.minecraft.network.chat.Component.translatable(net.minecraft.Util.makeDescriptionId("entity", id)));
             }
+            case "legendary" -> net.minecraft.network.chat.Component.translatable(key, net.minecraft.network.chat.Component.translatable("item.solostatus." + e.arg()));
             case "mod" -> net.minecraft.network.chat.Component.translatable(key,
                     net.minecraft.network.chat.Component.translatable("solostatus.mod." + e.arg() + "." + e.n()), skillName(e.arg()));
             default -> net.minecraft.network.chat.Component.translatable(key);

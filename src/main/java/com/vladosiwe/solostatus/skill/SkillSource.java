@@ -15,9 +15,11 @@ public enum SkillSource {
     /** Как AWAKENING, но название и условия скрыты до пробуждения. */
     HIDDEN,
     /** Общая техника: любой класс покупает за очки навыков и выбирает по своему стилю. */
-    GENERAL;
+    GENERAL,
+    /** Навык легендарного оружия класса: пробуждается, когда охотник впервые берёт его в руки; применяется только с ним. */
+    LEGENDARY;
 
     public boolean autoAwaken() {
-        return this == AWAKENING || this == HIDDEN || this == ULTIMATE;
+        return this == AWAKENING || this == HIDDEN || this == ULTIMATE || this == LEGENDARY;
     }
 }

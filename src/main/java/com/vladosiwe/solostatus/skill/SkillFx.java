@@ -209,7 +209,8 @@ public final class SkillFx {
 
     public static void heal(ServerPlayer caster, LivingEntity t, double amount) {
         PlayerData d = Hunter.get(caster);
-        double mult = 1 + d.skillRank("divine_grace") * 0.10;
+        double mult = 1 + d.skillRank("divine_grace") * 0.10
+                + (com.vladosiwe.solostatus.registry.LegendaryWeapons.holds(caster, com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.DAWN_SCEPTER) ? 0.2 : 0);
         float before = t.getHealth();
         t.heal((float) (amount * mult));
         float healed = t.getHealth() - before;

@@ -124,8 +124,9 @@ public final class DevShots {
             default -> {}
         }
         // weapon swings: one every 40 ticks from tick 390
-        net.minecraft.world.item.Item[] weapons = {Items.IRON_SWORD, Items.DIAMOND_SWORD, Items.IRON_AXE, Items.MACE};
-        String[] names = {"sword", "sword2", "axe", "mace"};
+        net.minecraft.world.item.Item[] weapons = {Items.IRON_SWORD, com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.MOUNTAIN_CLEAVER.item(), com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.DUSK_FANG.item(),
+                com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.STARWELL_STAFF.item(), com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.DAWN_SCEPTER.item()};
+        String[] names = {"sword", "mountain_cleaver", "dusk_fang", "starwell_staff", "dawn_scepter"};
         for (int i = 0; i < weapons.length; i++) {
             int at = 390 + i * 40;
             if (tick == at) {
@@ -139,8 +140,7 @@ public final class DevShots {
         }
         int bowAt = 390 + weapons.length * 40;
         if (tick == bowAt) server.execute(() -> {
-            sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.BOW));
-            sp.getInventory().add(new ItemStack(Items.ARROW, 16));
+            sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.SKYHUNT_BOW.item())); // needs no arrows
         });
         if (tick == bowAt + 10) mc.options.keyUse.setDown(true);
         if (tick == bowAt + 20) shot(mc, "bow-drawing");
@@ -172,7 +172,19 @@ public final class DevShots {
             if (tick == at + 15) shot(mc, "anim-" + bodyAnims[i] + "-b");
         }
 
+        // the legendary weapons in hand, seen from the front in third person
         int armorAt = animAt + bodyAnims.length * 30 + 10;
+        var legendary = com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.values();
+        for (int i = 0; i < legendary.length; i++) {
+            int at = armorAt + i * 25;
+            var kind = legendary[i];
+            if (tick == at) {
+                mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT);
+                server.execute(() -> sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(kind.item())));
+            }
+            if (tick == at + 15) shot(mc, "legendary-" + kind.key);
+        }
+        armorAt += legendary.length * 25;
         if (tick == armorAt) mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
         // the rank and history windows and an achievement section
         int windowsAt = armorAt + 20;

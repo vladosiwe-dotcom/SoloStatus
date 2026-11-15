@@ -178,6 +178,15 @@ public final class Skills {
         ult(A, "storm_of_arrows", Items.TRIDENT, SkillEffects::stormOfArrows);
         ult(S, "divine_intervention", Items.TOTEM_OF_UNDYING, SkillEffects::divineIntervention);
 
+        // ============================== LEGENDARY WEAPONS ==============================
+        // awakened the first time a hunter of the class holds the class's legendary weapon, cast only while holding it
+        legendary(W, "mountain_fall", Items.NETHERITE_SWORD, LegendarySkills::mountainFall);
+        legendary(T, "thousand_shadows", Items.ECHO_SHARD, LegendarySkills::thousandShadows);
+        legendary(M, "star_well", Items.NETHER_STAR, LegendarySkills::starWell);
+        legendary(D, "unbreakable_line", Items.SHIELD, LegendarySkills::unbreakableLine);
+        legendary(A, "heavens_verdict", Items.SPECTRAL_ARROW, LegendarySkills::heavensVerdict);
+        legendary(S, "daybreak", Items.GLOWSTONE, LegendarySkills::daybreak);
+
         // ============================== AWAKENINGS (боевой опыт, любой класс) ==============================
         reg(b("sprint", AWAKENING, MOVEMENT, Items.SUGAR).level(3).requires(Req.counter("sprint_m", 2000)).requires(Req.stat(Stat.AGI, 13))
                 .cooldown(20, 1.5).energy(10).effect(SkillEffects::sprint).build());
@@ -302,6 +311,12 @@ public final class Skills {
         int column = active.treeColumn;
         reg(b(developId, SPEC, PASSIVE, active.icon).forSpec(s).ranks(3).level(30).rankStep(10).parent(activeId, 1).tree(column, 2).build());
         reg(b(styleId, SPEC, PASSIVE, Items.NETHER_STAR).forSpec(s).ranks(3).level(60).rankStep(10).parent(developId, 1).tree(column, 3).build());
+    }
+
+    private static void legendary(HunterClass c, String id, Item icon, SkillEffect effect) {
+        var weapon = com.vladosiwe.solostatus.registry.LegendaryWeapons.forClass(c);
+        reg(b(id, LEGENDARY, SkillCategory.ULTIMATE, icon).forClass(c).ranks(3).level(1).rankStep(15)
+                .requires(Req.counter(weapon.counter(), 1)).cooldown(75, 5).energy(50).tree(4, 1).effect(effect).build());
     }
 
     private static void ult(HunterClass c, String id, Item icon, SkillEffect effect) {

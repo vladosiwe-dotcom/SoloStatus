@@ -36,6 +36,16 @@ public final class ServerEvents {
         if (event.getSlot() == net.minecraft.world.entity.EquipmentSlot.MAINHAND && event.getEntity() instanceof ServerPlayer p) {
             AttributeSystem.applyWeaponSpeed(p);
         }
+        // a legendary weapon taken in hand for the first time by a hunter of its class awakens the class's legendary skill
+        if (event.getSlot().getType() == net.minecraft.world.entity.EquipmentSlot.Type.HAND && event.getEntity() instanceof ServerPlayer p) {
+            var kind = com.vladosiwe.solostatus.registry.LegendaryWeapons.of(event.getTo());
+            PlayerData d = Hunter.get(p);
+            if (kind != null && kind.owner == d.hunterClass && d.counter(kind.counter()) == 0) {
+                d.addCounter(kind.counter(), 1);
+                d.unlockCheckPending = true;
+                d.markDirty();
+            }
+        }
     }
 
     @SubscribeEvent

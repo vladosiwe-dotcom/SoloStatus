@@ -342,4 +342,47 @@ public final class SoloCompatTests {
         h.succeed();
     }
 
+    /** The legendary weapons: the System's weapon type and Epic Fight's moveset of each, Iron's power on the staff. */
+    @GameTest(template = "empty")
+    public static void legendaryWeaponTypes(GameTestHelper h) {
+        java.util.Map<com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind, Object[]> want = java.util.Map.of(
+                com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.MOUNTAIN_CLEAVER, new Object[]{com.vladosiwe.solostatus.combat.WeaponType.GREATSWORD, "GREATSWORD"},
+                com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.DUSK_FANG, new Object[]{com.vladosiwe.solostatus.combat.WeaponType.DAGGER, "DAGGER"},
+                com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.STARWELL_STAFF, new Object[]{com.vladosiwe.solostatus.combat.WeaponType.STAFF, "SPEAR"},
+                com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.LAST_BASTION, new Object[]{com.vladosiwe.solostatus.combat.WeaponType.SHIELD, "SHIELD"},
+                com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.SKYHUNT_BOW, new Object[]{com.vladosiwe.solostatus.combat.WeaponType.BOW, "BOW"},
+                com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.DAWN_SCEPTER, new Object[]{com.vladosiwe.solostatus.combat.WeaponType.MACE, "AXE"});
+        java.lang.reflect.Method capability = null, category = null;
+        if (ModList.get().isLoaded("epicfight")) {
+            try {
+                capability = Class.forName("yesman.epicfight.world.capabilities.EpicFightCapabilities").getMethod("getItemStackCapability", ItemStack.class);
+                category = Class.forName("yesman.epicfight.world.capabilities.item.CapabilityItem").getMethod("getWeaponCategory");
+            } catch (Exception e) {
+                SoloStatus.LOGGER.warn("Epic Fight capability API not found: {}", e.toString());
+            }
+        }
+        List<String> wrong = new java.util.ArrayList<>();
+        for (var k : com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.values()) {
+            ItemStack st = new ItemStack(k.item());
+            var type = com.vladosiwe.solostatus.combat.WeaponClassifier.classify(st);
+            if (type != want.get(k)[0]) wrong.add(k + " is " + type);
+            if (com.vladosiwe.solostatus.combat.WeaponClassifier.isQualityWeapon(st)) wrong.add(k + " would get a random quality");
+            if (capability != null) {
+                try {
+                    String cat = String.valueOf(category.invoke(capability.invoke(null, st)));
+                    if (!cat.equalsIgnoreCase((String) want.get(k)[1])) wrong.add(k + " has Epic Fight category " + cat);
+                } catch (Exception e) {
+                    wrong.add(k + ": " + e);
+                }
+            }
+        }
+        h.assertTrue(wrong.isEmpty(), "legendary weapons: " + wrong);
+        if (ModList.get().isLoaded("irons_spellbooks")) {
+            var mods = new ItemStack(com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.STARWELL_STAFF.item()).getOrDefault(
+                    net.minecraft.core.component.DataComponents.ATTRIBUTE_MODIFIERS, net.minecraft.world.item.component.ItemAttributeModifiers.EMPTY);
+            h.assertTrue(mods.modifiers().stream().anyMatch(e -> e.attribute().unwrapKey().map(x -> x.location().toString()).orElse("")
+                    .equals("irons_spellbooks:spell_power")), "the Starwell Staff has no Iron's spell power");
+        }
+        h.succeed();
+    }
 }

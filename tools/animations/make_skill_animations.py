@@ -343,6 +343,9 @@ SKILLS = {
     'cross_slash': swing(1.3, strikes=2), 'blade_flash': thrust(1.6), 'sunder': overhead(1.1, both=False),
     'piercing_thrust': thrust(1.1), 'ground_pound': ground_blow(0.9), 'frost_arrow': bow_shot(), 'explosive_bolt': crossbow_burst(1),
     'vital_strike': thrust(1.3, crouch=True),
+    # Legendary weapons (one per class)
+    'mountain_fall': dive_strike(1.1), 'thousand_shadows': flurry(6, 1.6), 'star_well': summon(1.2),
+    'unbreakable_line': guard(1.2), 'heavens_verdict': bow_shot(up=True, shots=1, length=1.1), 'daybreak': cast(both=True, length=1.2, high=True),
 }
 
 

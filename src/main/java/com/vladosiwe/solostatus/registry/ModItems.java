@@ -25,11 +25,16 @@ public final class ModItems {
     public static final DeferredItem<Item> SYSTEM_ICON = ITEMS.registerSimpleItem("system_icon", new Item.Properties().stacksTo(1));
 
 
+    static {
+        LegendaryWeapons.init(); // the legendary class weapons register into ITEMS too
+    }
+
     public static void addToCreativeTabs(BuildCreativeModeTabContentsEvent event) {
         if (event.getTabKey() == CreativeModeTabs.INGREDIENTS) {
             event.accept(RESET_ORB.get());
         }
         if (event.getTabKey() == CreativeModeTabs.COMBAT) {
+            for (Item weapon : LegendaryWeapons.all()) event.accept(weapon);
             // one of each rarity, so creative players and admins can try them
             for (var kind : com.vladosiwe.solostatus.accessory.AccessoryKind.values()) {
                 for (var rarity : com.vladosiwe.solostatus.quality.QualityRarity.VALUES) {

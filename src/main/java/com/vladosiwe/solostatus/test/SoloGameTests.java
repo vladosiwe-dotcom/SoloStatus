@@ -66,7 +66,7 @@ public final class SoloGameTests {
                 if (!json.has("solostatus.mastery.technique." + t.key) || !json.has("solostatus.mastery.mastered." + t.key)) missing.add(lang + ": mastery " + t.key);
             });
         }
-        for (String type : new String[]{"level", "limit", "class", "spec", "advanced", "skill", "awaken", "achievement", "mastery", "rank", "boss", "mod"}) {
+        for (String type : new String[]{"level", "limit", "class", "spec", "advanced", "skill", "awaken", "achievement", "mastery", "rank", "boss", "mod", "legendary"}) {
             langs.forEach((lang, json) -> { if (!json.has("solostatus.history." + type)) missing.add(lang + ": history " + type); });
         }
         h.assertTrue(missing.isEmpty(), "missing: " + missing);
@@ -577,6 +577,43 @@ public final class SoloGameTests {
             for (int b = 0; b < names.length; b++) if (v[b][2] > v[2][2] + 1e-9) wrong.add("lv" + level + ": " + names[b] + " outlives the defence build");
         }
         h.assertTrue(wrong.isEmpty(), String.join("; ", wrong));
+        h.succeed();
+    }
+
+    /**
+     * One legendary weapon per class: holding it awakens the class's legendary skill, which is cast only with it in
+     * hand; a boss gives it to a hunter who does not carry it yet.
+     */
+    @GameTest(template = "empty")
+    public static void legendaryWeapons(GameTestHelper h) {
+        var classes = new java.util.HashSet<HunterClass>();
+        for (var k : com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.values()) {
+            h.assertTrue(classes.add(k.owner), "two legendary weapons for " + k.owner);
+            SkillDef s = Skills.get(k.skill);
+            h.assertTrue(s != null && s.source == com.vladosiwe.solostatus.skill.SkillSource.LEGENDARY && s.hunterClass == k.owner && s.isActive(),
+                    k + ": its legendary skill is missing or wrong");
+        }
+        h.assertTrue(classes.size() == HunterClass.values().length, "not every class has a legendary weapon");
+
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.WARRIOR);
+        PlayerData d = Hunter.get(p);
+        var cleaver = com.vladosiwe.solostatus.registry.LegendaryWeapons.Kind.MOUNTAIN_CLEAVER;
+        h.assertFalse(com.vladosiwe.solostatus.registry.LegendaryDrops.carries(p, cleaver), "carries the weapon before getting it");
+        com.vladosiwe.solostatus.registry.LegendaryDrops.give(p, d, cleaver);
+        h.assertTrue(com.vladosiwe.solostatus.registry.LegendaryDrops.carries(p, cleaver), "the weapon was not given");
+        // holding it the first time (the equipment change event does this in game)
+        d.addCounter(cleaver.counter(), 1);
+        d.unlockCheckPending = true;
+        com.vladosiwe.solostatus.skill.SkillUnlockSystem.check(p);
+        h.assertTrue(d.hasSkill("mountain_fall"), "holding the weapon did not awaken its skill");
+        d.slots[0] = "mountain_fall";
+        d.energy = 500;
+        com.vladosiwe.solostatus.skill.SkillSystem.cast(p, 0);
+        h.assertTrue(!d.cooldowns.containsKey("mountain_fall"), "the legendary skill was cast without its weapon");
+        p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(cleaver.item()));
+        com.vladosiwe.solostatus.skill.SkillSystem.cast(p, 0);
+        h.assertTrue(d.cooldowns.containsKey("mountain_fall"), "the legendary skill did not work with its weapon in hand");
         h.succeed();
     }
 }

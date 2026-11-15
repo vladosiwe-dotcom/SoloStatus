@@ -432,6 +432,9 @@ public final class CombatEvents {
             if (rhythm > 0) add += Math.min(5, d.comboCount) * (0.03 + 0.01 * (rhythm - 1));
         }
 
+        // --- Свойство легендарного оружия ---
+        add += com.vladosiwe.solostatus.registry.LegendaryDrops.offense(p, target, melee, behind);
+
         // --- Техника оружия (мастерство 40) ---
         add += com.vladosiwe.solostatus.mastery.MasteryTechniques.offense(p, d, target, type, direct, dist);
         if (melee && !skill && com.vladosiwe.solostatus.mastery.MasteryTechniques.forceCrit(d, type, true)) forceCrit = true;
@@ -600,6 +603,7 @@ public final class CombatEvents {
             }
         }
         if (counted) com.vladosiwe.solostatus.skill.StyleSkills.onBlock(p, d, now);
+        com.vladosiwe.solostatus.registry.LegendaryDrops.onBlock(p, attacker, event.getBlockedDamage());
         if (counted) com.vladosiwe.solostatus.mastery.MasteryTechniques.onBlock(p, d, attacker);
         // Бастион Стража: поглощение при блоке
         if (d.skillRank("bulwark") > 0 && !d.stateActive("bulwark_cd", now)) {
@@ -820,6 +824,7 @@ public final class CombatEvents {
                 event.getDrops().add(new ItemEntity(dead.level(), dead.getX(), dead.getY(), dead.getZ(),
                         new ItemStack(com.vladosiwe.solostatus.registry.ModItems.RESET_ORB.get())));
             }
+            com.vladosiwe.solostatus.registry.LegendaryDrops.onBossKill(p, d, firstWin);
         }
     }
 
