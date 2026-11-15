@@ -49,6 +49,28 @@ public final class SoloGameTests {
             h.assertTrue(need > prev, "опыт до уровня " + (lv + 1) + " не больше предыдущего: " + need);
             prev = need;
         }
+        long total = 0;
+        int points = 1; // the starting point
+        for (int lv = 1; lv < 100; lv++) {
+            total += LevelSystem.xpToNext(lv);
+            points += LevelSystem.skillPointsForLevel(lv + 1);
+        }
+        h.assertTrue(total > 650_000 && total < 850_000, "experience to level 100 is " + total + ", the pace targets need ≈750 thousand");
+        h.assertTrue(points == 70, "skill points by level 100: " + points + ", expected 70");
+        h.succeed();
+    }
+
+    /** A profile from before version 3 gets the skill points of the odd levels below 20 it already passed. */
+    @GameTest(template = "empty")
+    public static void skillPointCatchUp(GameTestHelper h) {
+        PlayerData old = new PlayerData();
+        old.level = 15;
+        old.skillPoints = 4;
+        var tag = old.write();
+        tag.putInt("v", 2);
+        PlayerData d = new PlayerData();
+        d.read(tag);
+        h.assertTrue(d.skillPoints == 4 + 7, "skill points " + d.skillPoints + ", expected 11 (levels 3, 5 ... 15)");
         h.succeed();
     }
 
@@ -192,6 +214,11 @@ public final class SoloGameTests {
         ServerPlayer p = TestPlayers.create(h);
         ClassSystem.chooseClass(p, HunterClass.THIEF);
         var zombie = h.spawn(net.minecraft.world.entity.EntityType.ZOMBIE, new net.minecraft.core.BlockPos(1, 1, 3));
+        // a freshly placed test area may not be entity-ticking yet, and entity searches skip it until it is
+        h.runAfterDelay(5, () -> concealmentChecks(h, p, zombie));
+    }
+
+    private static void concealmentChecks(GameTestHelper h, ServerPlayer p, net.minecraft.world.entity.monster.Zombie zombie) {
         zombie.setTarget(p);
         com.vladosiwe.solostatus.skill.Concealment.start(p, 100);
         h.assertTrue(zombie.getTarget() == null, "the zombie still targets the concealed hunter");
@@ -209,7 +236,10 @@ public final class SoloGameTests {
         ClassSystem.chooseClass(p, HunterClass.WARRIOR);
         PlayerData d = Hunter.get(p);
         d.stats[com.vladosiwe.solostatus.stats.Stat.AGI.ordinal()] = com.vladosiwe.solostatus.stats.Stat.BASE_VALUE + 40; // +16%
-        p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_SWORD));
+        var sword = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_SWORD);
+        p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, sword);
+        // the sword's own speed is applied when the player ticks; a test player does not, so it is applied here
+        sword.forEachModifier(net.minecraft.world.entity.EquipmentSlot.MAINHAND, (attr, mod) -> p.getAttribute(attr).addOrUpdateTransientModifier(mod));
         com.vladosiwe.solostatus.stats.AttributeSystem.apply(p);
         double expected = 1.6 * 1.16 * 1.10; // sword 1.6, AGI +16%, a sword is familiar to the Warrior (+10%)
         double got = p.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED);
@@ -251,12 +281,13 @@ public final class SoloGameTests {
         h.assertTrue(d.level == 12 && d.hunterClass == HunterClass.MAGE, "level or class lost");
         h.assertFalse(d.skills.containsKey("mana_bolt") || d.skills.containsKey("frost_nova"), "retired skills were kept");
         h.assertTrue(d.skillRank("arcane_mind") == 2, "a current skill was lost");
-        h.assertTrue(d.skillPoints == 2 + 2 + 1, "skill points " + d.skillPoints + ", expected 5");
+        // 2 kept + 2 paid for Mana Bolt + 1 for Frost Nova + 5 for the odd levels 3..11 (version 3)
+        h.assertTrue(d.skillPoints == 2 + 2 + 1 + 5, "skill points " + d.skillPoints + ", expected 10");
         h.assertTrue(d.slots[0] == null, "the retired skill stayed in a slot");
         h.assertTrue(d.skillsMigrated, "the player is not told about the change");
         PlayerData again = new PlayerData();
         again.read(d.write());
-        h.assertTrue(again.skillPoints == 5 && !again.skillsMigrated, "the migration ran twice");
+        h.assertTrue(again.skillPoints == 10 && !again.skillsMigrated, "the migration ran twice");
         h.succeed();
     }
 }

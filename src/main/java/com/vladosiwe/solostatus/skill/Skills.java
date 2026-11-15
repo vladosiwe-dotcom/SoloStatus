@@ -72,21 +72,21 @@ public final class Skills {
         HunterClass W = HunterClass.WARRIOR;
         reg(b("power_strike", CLASS_START, ATTACK, Items.IRON_SWORD).forClass(W).cooldown(6, 0.5).energy(10).tree(0, 0).effect(SkillEffects::powerStrike).build());
         reg(b("warrior_spirit", CLASS_START, PASSIVE, Items.RED_DYE).forClass(W).tree(0, 2).build());
-        reg(b("whirlwind", CLASS, ATTACK, Items.IRON_AXE).forClass(W).level(5).parent("power_strike", 2).cooldown(10, 0.6).energy(20).tree(1, 0).effect(SkillEffects::whirlwind).build());
+        reg(b("whirlwind", CLASS, ATTACK, Items.IRON_AXE).forClass(W).level(5).parent("power_strike", 1).cooldown(10, 0.6).energy(20).tree(1, 0).effect(SkillEffects::whirlwind).build());
         reg(b("charge", CLASS, MOVEMENT, Items.LEATHER_BOOTS).forClass(W).level(10).cooldown(12, 0.8).energy(15).tree(1, 1).effect(SkillEffects::charge).build());
-        reg(b("war_cry", CLASS, SUPPORT, Items.GOAT_HORN).forClass(W).level(15).parent("warrior_spirit", 2).cooldown(30, 2).energy(25).tree(1, 2).effect(SkillEffects::warCry).build());
-        reg(b("devastating_blow", CLASS, ATTACK, Items.NETHERITE_AXE).forClass(W).level(20).parent("whirlwind", 2).cooldown(25, 1.5).energy(35).tree(2, 0).effect(SkillEffects::devastatingBlow).build());
+        reg(b("war_cry", CLASS, SUPPORT, Items.GOAT_HORN).forClass(W).level(15).parent("warrior_spirit", 1).cooldown(30, 2).energy(25).tree(1, 2).effect(SkillEffects::warCry).build());
+        reg(b("devastating_blow", CLASS, ATTACK, Items.NETHERITE_AXE).forClass(W).level(20).parent("whirlwind", 1).cooldown(25, 1.5).energy(35).tree(2, 0).effect(SkillEffects::devastatingBlow).build());
 
         // ============================== THIEF ==============================
         HunterClass T = HunterClass.THIEF;
         reg(b("quick_dash", CLASS_START, MOVEMENT, Items.FEATHER).forClass(T).cooldown(5, 0.4).energy(8).tree(0, 0).effect(SkillEffects::quickDash).build());
         reg(b("ambush", CLASS_START, PASSIVE, Items.SHEARS).forClass(T).tree(0, 2).build());
-        reg(b("flurry", CLASS, ATTACK, Items.IRON_SWORD).forClass(T).level(5).parent("ambush", 2).cooldown(9, 0.6).energy(18).tree(1, 2).effect(SkillEffects::flurry).build());
-        reg(b("vanish", CLASS, DEFENSE, Items.GLASS_PANE).forClass(T).level(10).parent("quick_dash", 2).cooldown(30, 2).energy(25).tree(1, 0).effect(SkillEffects::vanish).build());
-        reg(b("concealment", CLASS, DEFENSE, Items.BLACK_DYE).forClass(T).level(18).parent("vanish", 2).cooldown(35, 2).energy(30).tree(2, 1)
+        reg(b("flurry", CLASS, ATTACK, Items.IRON_SWORD).forClass(T).level(5).parent("ambush", 1).cooldown(9, 0.6).energy(18).tree(1, 2).effect(SkillEffects::flurry).build());
+        reg(b("vanish", CLASS, DEFENSE, Items.GLASS_PANE).forClass(T).level(10).parent("quick_dash", 1).cooldown(30, 2).energy(25).tree(1, 0).effect(SkillEffects::vanish).build());
+        reg(b("concealment", CLASS, DEFENSE, Items.BLACK_DYE).forClass(T).level(18).parent("vanish", 1).cooldown(35, 2).energy(30).tree(2, 1)
                 .effect(SkillEffects::concealment).build());
         reg(b("poison_blade", CLASS, ATTACK, Items.SPIDER_EYE).forClass(T).level(15).cooldown(25, 1.5).energy(20).tree(1, 1).effect(SkillEffects::poisonBlade).build());
-        reg(b("assassinate", CLASS, ATTACK, Items.WITHER_SKELETON_SKULL).forClass(T).level(20).parent("flurry", 2).cooldown(20, 1.2).energy(30).tree(2, 2).effect(SkillEffects::assassinate).build());
+        reg(b("assassinate", CLASS, ATTACK, Items.WITHER_SKELETON_SKULL).forClass(T).level(20).parent("flurry", 1).cooldown(20, 1.2).energy(30).tree(2, 2).effect(SkillEffects::assassinate).build());
 
         // ============================== MAGE ==============================
         HunterClass M = HunterClass.MAGE;
@@ -107,27 +107,27 @@ public final class Skills {
         reg(b("shield_bash", CLASS_START, ATTACK, Items.SHIELD).forClass(D).cooldown(6, 0.4).energy(10).tree(0, 0).effect(SkillEffects::shieldBash).build());
         reg(b("iron_skin", CLASS_START, PASSIVE, Items.IRON_CHESTPLATE).forClass(D).tree(0, 2).build());
         reg(b("taunt", CLASS, DEFENSE, Items.BELL).forClass(D).level(5).cooldown(15, 1).energy(15).tree(1, 0).effect(SkillEffects::taunt).build());
-        reg(b("defensive_stance", CLASS, DEFENSE, Items.OBSIDIAN).forClass(D).level(10).parent("iron_skin", 2).cooldown(25, 1.5).energy(20).tree(1, 2).effect(SkillEffects::defensiveStance).build());
-        reg(b("counter_attack", CLASS, DEFENSE, Items.CACTUS).forClass(D).level(15).parent("shield_bash", 2).cooldown(15, 1).energy(20).tree(1, 1).effect(SkillEffects::counterAttack).build());
-        reg(b("fortress", CLASS, SUPPORT, Items.IRON_BLOCK).forClass(D).level(20).parent("defensive_stance", 2).cooldown(40, 2).energy(40).tree(2, 2).effect(SkillEffects::fortress).build());
+        reg(b("defensive_stance", CLASS, DEFENSE, Items.OBSIDIAN).forClass(D).level(10).parent("iron_skin", 1).cooldown(25, 1.5).energy(20).tree(1, 2).effect(SkillEffects::defensiveStance).build());
+        reg(b("counter_attack", CLASS, DEFENSE, Items.CACTUS).forClass(D).level(15).parent("shield_bash", 1).cooldown(15, 1).energy(20).tree(1, 1).effect(SkillEffects::counterAttack).build());
+        reg(b("fortress", CLASS, SUPPORT, Items.IRON_BLOCK).forClass(D).level(20).parent("defensive_stance", 1).cooldown(40, 2).energy(40).tree(2, 2).effect(SkillEffects::fortress).build());
 
         // ============================== ARCHER ==============================
         HunterClass A = HunterClass.ARCHER;
         reg(b("power_shot", CLASS_START, ATTACK, Items.SPECTRAL_ARROW).forClass(A).cooldown(5, 0.3).energy(12).tree(0, 0).effect(SkillEffects::powerShot).build());
         reg(b("steady_aim", CLASS_START, PASSIVE, Items.TARGET).forClass(A).tree(0, 2).build());
-        reg(b("arrow_volley", CLASS, ATTACK, Items.ARROW).forClass(A).level(5).parent("power_shot", 2).cooldown(10, 0.6).energy(20).tree(1, 0).effect(SkillEffects::arrowVolley).build());
+        reg(b("arrow_volley", CLASS, ATTACK, Items.ARROW).forClass(A).level(5).parent("power_shot", 1).cooldown(10, 0.6).energy(20).tree(1, 0).effect(SkillEffects::arrowVolley).build());
         reg(b("knockback_shot", CLASS, ATTACK, Items.SLIME_BALL).forClass(A).level(10).cooldown(8, 0.5).energy(12).tree(1, 1).effect(SkillEffects::knockbackShot).build());
-        reg(b("rain_of_arrows", CLASS, ATTACK, Items.TIPPED_ARROW).forClass(A).level(15).parent("arrow_volley", 2).cooldown(18, 1).energy(30).tree(2, 0).effect(SkillEffects::rainOfArrows).build());
-        reg(b("hunters_mark", CLASS, SUPPORT, Items.SPYGLASS).forClass(A).level(20).parent("steady_aim", 2).cooldown(20, 1).energy(15).tree(1, 2).effect(SkillEffects::huntersMark).build());
+        reg(b("rain_of_arrows", CLASS, ATTACK, Items.TIPPED_ARROW).forClass(A).level(15).parent("arrow_volley", 1).cooldown(18, 1).energy(30).tree(2, 0).effect(SkillEffects::rainOfArrows).build());
+        reg(b("hunters_mark", CLASS, SUPPORT, Items.SPYGLASS).forClass(A).level(20).parent("steady_aim", 1).cooldown(20, 1).energy(15).tree(1, 2).effect(SkillEffects::huntersMark).build());
 
         // ============================== SUPPORT ==============================
         HunterClass S = HunterClass.SUPPORT;
         reg(b("mend", CLASS_START, SUPPORT, Items.GLISTERING_MELON_SLICE).forClass(S).cooldown(6, 0.4).energy(15).tree(0, 0).effect(SkillEffects::mend).build());
         reg(b("aura_of_vigor", CLASS_START, PASSIVE, Items.GOLDEN_CARROT).forClass(S).tree(0, 2).build());
-        reg(b("blessing", CLASS, SUPPORT, Items.GOLDEN_APPLE).forClass(S).level(5).parent("mend", 2).cooldown(25, 1.5).energy(20).tree(1, 0).effect(SkillEffects::blessing).build());
+        reg(b("blessing", CLASS, SUPPORT, Items.GOLDEN_APPLE).forClass(S).level(5).parent("mend", 1).cooldown(25, 1.5).energy(20).tree(1, 0).effect(SkillEffects::blessing).build());
         reg(b("barrier", CLASS, DEFENSE, Items.HONEYCOMB).forClass(S).level(10).cooldown(25, 1.5).energy(25).tree(1, 1).effect(SkillEffects::barrier).build());
-        reg(b("purify", CLASS, SUPPORT, Items.MILK_BUCKET).forClass(S).level(15).parent("aura_of_vigor", 2).cooldown(20, 1).energy(20).tree(1, 2).effect(SkillEffects::purify).build());
-        reg(b("sanctuary", CLASS, SUPPORT, Items.BEACON).forClass(S).level(20).parent("blessing", 2).cooldown(40, 2).energy(40).tree(2, 0).effect(SkillEffects::sanctuary).build());
+        reg(b("purify", CLASS, SUPPORT, Items.MILK_BUCKET).forClass(S).level(15).parent("aura_of_vigor", 1).cooldown(20, 1).energy(20).tree(1, 2).effect(SkillEffects::purify).build());
+        reg(b("sanctuary", CLASS, SUPPORT, Items.BEACON).forClass(S).level(20).parent("blessing", 1).cooldown(40, 2).energy(40).tree(2, 0).effect(SkillEffects::sanctuary).build());
 
         // ============================== SPECIALIZATIONS ==============================
         spec(Specialization.BERSERKER, "berserk", Items.REDSTONE, SkillEffects::berserk, 40, 2, 30, "blood_rage", Items.FERMENTED_SPIDER_EYE);
@@ -179,7 +179,7 @@ public final class Skills {
         reg(b("afterimage", AWAKENING, PASSIVE, Items.PHANTOM_MEMBRANE).level(12).requires(Req.counter("dodges", 40)).requires(Req.stat(Stat.AGI, 25)).build());
 
         // ---- Второй круг: меч (мастерство 25) ----
-        reg(b("blade_flash", AWAKENING, MOVEMENT, Items.GOLDEN_SWORD).level(20).requires(Req.mastery(WeaponType.SWORD, 25)).parent("cross_slash", 2)
+        reg(b("blade_flash", AWAKENING, MOVEMENT, Items.GOLDEN_SWORD).level(20).requires(Req.mastery(WeaponType.SWORD, 25)).parent("cross_slash", 1)
                 .cooldown(10, 0.6).energy(18).effect(SkillEffects::bladeFlash).build());
         reg(b("titan_grip", AWAKENING, PASSIVE, Items.IRON_BLOCK).level(8).requires(Req.mastery(WeaponType.GREATSWORD, 10)).build());
         reg(b("frost_arrow", AWAKENING, ATTACK, Items.SNOWBALL).level(8).requires(Req.mastery(WeaponType.BOW, 10))
@@ -198,15 +198,15 @@ public final class Skills {
         // ============================== GENERAL (любой класс, выбор за очки) ==============================
         reg(b("parry", GENERAL, DEFENSE, Items.SHIELD).ranks(3).level(3).rankStep(10).cooldown(7, 0.8).energy(8).effect(GeneralSkills::parry).build());
         // a chain grown from Parry: a counter only after a successful parry, then its perfection
-        reg(b("riposte", GENERAL, ATTACK, Items.IRON_SWORD).ranks(3).level(8).rankStep(10).parent("parry", 2).requires(Req.counter("parries", 15))
+        reg(b("riposte", GENERAL, ATTACK, Items.IRON_SWORD).ranks(3).level(8).rankStep(10).parent("parry", 1).requires(Req.counter("parries", 15))
                 .cooldown(4, 0.5).energy(6).effect(GeneralSkills::riposte).build());
-        reg(b("perfect_counter", GENERAL, PASSIVE, Items.DIAMOND_SWORD).ranks(3).level(20).rankStep(10).parent("riposte", 2)
+        reg(b("perfect_counter", GENERAL, PASSIVE, Items.DIAMOND_SWORD).ranks(3).level(20).rankStep(10).parent("riposte", 1)
                 .requires(Req.counter("ripostes", 30)).build());
         reg(b("acrobatics", GENERAL, PASSIVE, Items.FEATHER).ranks(3).level(4).rankStep(10).build());
         reg(b("body_reinforcement", GENERAL, SUPPORT, Items.IRON_INGOT).ranks(3).level(5).rankStep(10).cooldown(35, 3).energy(20).effect(GeneralSkills::bodyReinforcement).build());
         reg(b("iron_will", GENERAL, PASSIVE, Items.IRON_BARS).ranks(3).level(6).rankStep(10).build());
         reg(b("air_step", GENERAL, MOVEMENT, Items.PHANTOM_MEMBRANE).ranks(3).level(8).rankStep(10).cooldown(6, 0.5).energy(8).effect(GeneralSkills::airStep).build());
-        reg(b("sky_strike", GENERAL, ATTACK, Items.MACE).ranks(3).level(14).rankStep(10).parent("air_step", 2)
+        reg(b("sky_strike", GENERAL, ATTACK, Items.MACE).ranks(3).level(14).rankStep(10).parent("air_step", 1)
                 .cooldown(10, 1).energy(14).effect(GeneralSkills::skyStrike).build());
         reg(b("breathing_technique", GENERAL, PASSIVE, Items.GLASS_BOTTLE).ranks(3).level(10).rankStep(10).build());
         reg(b("focus", GENERAL, ATTACK, Items.SPYGLASS).ranks(3).level(12).rankStep(10).cooldown(25, 2).energy(12).effect(GeneralSkills::focus).build());
@@ -241,7 +241,7 @@ public final class Skills {
             SkillSource src = tier == 0 && starting ? CLASS_START : CLASS;
             var b = b(spellSkill(spells[tier]), src, MAGIC, Items.ENCHANTED_BOOK).forClass(c).level(TIER_LEVEL[tier]).rankStep(6)
                     .tree(column, tier).spell(spells[tier], school);
-            if (prev != null) b.parent(prev, 2);
+            if (prev != null) b.parent(prev, 1);
             reg(b.build());
             prev = spellSkill(spells[tier]);
         }
@@ -261,7 +261,7 @@ public final class Skills {
             var b = b(spellSkill(spells[tier]), CLASS, MAGIC, Items.ECHO_SHARD).forClass(c).level(levels[tier]).rankStep(8).ranks(3)
                     .tree(column, tier).spell(spells[tier], "eldritch");
             if (prev == null) b.requires(anyCapstone);
-            else b.parent(prev, 2);
+            else b.parent(prev, 1);
             reg(b.build());
             prev = spellSkill(spells[tier]);
         }

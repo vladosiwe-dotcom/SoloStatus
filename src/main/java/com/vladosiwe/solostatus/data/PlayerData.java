@@ -25,7 +25,7 @@ import java.util.*;
  */
 public final class PlayerData implements INBTSerializable<CompoundTag> {
     /** Версия формата сохранения. Увеличивайте при изменении структуры и добавляйте миграцию в {@link #migrate}. */
-    public static final int DATA_VERSION = 2;
+    public static final int DATA_VERSION = 3;
     public static final int MAX_LEVEL = 100;
     public static final int SKILL_SLOTS = 4;
     public static final int RECENT_KILLS_WINDOW = 30;
@@ -305,7 +305,16 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
     private static CompoundTag migrate(CompoundTag t, int fromVersion) {
         if (fromVersion < DATA_VERSION) t = t.copy(); // never change the tag the caller still holds
         if (fromVersion < 2) retireOldMageSkills(t);
+        if (fromVersion < 3) catchUpSkillPoints(t);
         return t;
+    }
+
+    /** Version 3: odd levels below 20 give a skill point too; levels already reached give theirs now. */
+    private static void catchUpSkillPoints(CompoundTag t) {
+        int level = Mth.clamp(t.getInt("level"), 1, MAX_LEVEL);
+        int owed = 0;
+        for (int l = 3; l <= Math.min(level, com.vladosiwe.solostatus.level.LevelSystem.EVERY_LEVEL_UNTIL - 1); l += 2) owed++;
+        if (owed > 0) t.putInt("sp", t.getInt("sp") + owed);
     }
 
     /**

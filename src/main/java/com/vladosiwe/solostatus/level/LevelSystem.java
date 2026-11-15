@@ -16,32 +16,35 @@ import net.minecraft.sounds.SoundSource;
  * Уровни 1..100, опыт и очки развития.
  *
  * Очки характеристик: statPointsPerLevel (3) за каждый уровень — отдельная система.
- * Очки навыков: 1 за каждый чётный уровень + 1 бонусное каждые 10 уровней (итого 60 к 100 уровню)
+ * Очки навыков: 1 за каждый уровень до 20, дальше за каждый чётный, + 1 бонусное каждые 10 уровней (итого 69 к 100 уровню)
  * + 1 стартовое + награды достижений + ограниченные «пробуждения» после 100 уровня.
  * Обоснование — в docs/DESIGN.md (раздел «Очки навыков»).
  */
 public final class LevelSystem {
-    /** Опыт после 100 уровня, нужный для одного «пробуждения предела» (растёт на 25% за каждое). */
-    public static final long OVERFLOW_BASE = 150_000;
+    /** Опыт после 100 уровня, нужный для одного «пробуждения предела» (≈1,3 уровня; растёт на 10% за каждое). */
+    public static final long OVERFLOW_BASE = 25_000;
     public static final int MAX_OVERFLOW_AWAKENINGS = 20;
 
     private LevelSystem() {}
 
     /**
-     * Experience from level to level + 1: 200 at level 1, ≈1 700 at 10, ≈17 800 at 50, ≈42 800 at 90
-     * (≈2 million in all to level 100). Each level asks noticeably more than the one before, but the growth slows down
-     * (power 1.5), so the late game is long without becoming a wall.
+     * Experience from level to level + 1: ≈330 at level 1, ≈700 at 10, ≈6 100 at 50, ≈18 800 at 99 (≈750 thousand in
+     * all to level 100). With the kill reward in CombatEvents.onKill it gives about 4 / 12 / 35 / 60 hours of fighting
+     * for the stages 1–20 / 21–40 / 41–70 / 71–100 (tools/balance/pacing.py has the assumptions).
      */
     public static long xpToNext(int level) {
-        return Math.round(50 * Math.pow(level, 1.5) + 150);
+        return Math.round(7.5 * Math.pow(level, 1.7) + 320);
     }
 
     public static long overflowNeed(int awakenings) {
-        return Math.round(OVERFLOW_BASE * (1 + awakenings * 0.25));
+        return Math.round(OVERFLOW_BASE * (1 + awakenings * 0.10));
     }
 
+    /** Levels below this give a skill point each, so the first skills come quickly. */
+    public static final int EVERY_LEVEL_UNTIL = 20;
+
     public static int skillPointsForLevel(int level) {
-        int sp = level % 2 == 0 ? 1 : 0;
+        int sp = level % 2 == 0 || level < EVERY_LEVEL_UNTIL ? 1 : 0;
         if (level % 10 == 0) sp++;
         return sp;
     }

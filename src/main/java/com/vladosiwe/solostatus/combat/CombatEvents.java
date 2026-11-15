@@ -453,11 +453,12 @@ public final class CombatEvents {
     /** Опыт за босса (первая победа над этим видом; повторные — 25%). */
     private static double bossXp(String type, LivingEntity dead) {
         return switch (type) {
-            case "minecraft:ender_dragon" -> 15000;
-            case "minecraft:wither" -> 10000;
-            case "minecraft:warden" -> 8000;
-            case "minecraft:elder_guardian" -> 3000;
-            default -> 2000 + Math.min(20000, dead.getMaxHealth() * 10);
+            // scaled to the level curve: the Dragon is worth about a level at 50, the Wither most of one
+            case "minecraft:ender_dragon" -> 6000;
+            case "minecraft:wither" -> 4000;
+            case "minecraft:warden" -> 3500;
+            case "minecraft:elder_guardian" -> 1200;
+            default -> 800 + Math.min(8000, dead.getMaxHealth() * 4);
         };
     }
 
@@ -621,8 +622,9 @@ public final class CombatEvents {
 
         // --- Опыт системы ---
         // Разница «уровня» врага и охотника: слабые для вашего уровня враги дают меньше (до 30%),
-        // сильные — больше (до 150%). Ожидаемая опасность растёт с уровнем: 1 + уровень × 0.06.
-        double expected = 1 + d.level * 0.06;
+        // сильные — больше (до 150%). Ожидаемая опасность растёт с уровнем: 1 + уровень × 0.025 (3.5 к 100 уровню —
+        // эндермен или поборник; при 0.06 даже враги Энда давали к концу игры треть опыта).
+        double expected = 1 + d.level * 0.025;
         double gap = Math.max(0.3, Math.min(1.5, threat / (expected * 0.6)));
         if (boss && fairness > 0) { // a boss without AI (statue, command dummy) gives nothing
             boolean first = !d.bossesKilled.contains(type);

@@ -35,7 +35,7 @@ public final class MasterySystem {
             d.markDirty();
             boolean milestone = false;
             for (int l = oldLevel + 1; l <= newLevel; l++) { // a big gain can cross several levels: no milestone is skipped
-                int bonus = switch (l) { case 10 -> 300; case 25 -> 1500; case 40 -> 4000; case 50 -> 8000; default -> 0; };
+                int bonus = switch (l) { case 10 -> 150; case 25 -> 600; case 40 -> 1600; case 50 -> 3200; default -> 0; };
                 if (bonus > 0) {
                     milestone = true;
                     com.vladosiwe.solostatus.level.LevelSystem.grantXp(player, bonus, com.vladosiwe.solostatus.level.XpReason.MASTERY);
