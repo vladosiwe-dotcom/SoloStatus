@@ -103,6 +103,10 @@ public final class DevShots {
                 sp.getInventory().setItem(1, spare);
                 sp.getInventory().setItem(2, new ItemStack(com.vladosiwe.solostatus.registry.ModItems.AMULET.get()));
                 sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_SWORD));
+                var hunter = com.vladosiwe.solostatus.data.Hunter.get(sp); // a modified skill for the skill card frame
+                hunter.skills.put("whirlwind", 3);
+                hunter.skillMods.put("whirlwind", 1);
+                hunter.markDirty();
             });
             case 150 -> server.execute(() -> sp.serverLevel().getEntitiesOfClass(LivingEntity.class, sp.getBoundingBox().inflate(8),
                     e -> e != sp).forEach(e -> e.hurt(sp.damageSources().playerAttack(sp), 6)));
@@ -114,7 +118,9 @@ public final class DevShots {
             case 305 -> shot(mc, "mastery");
             case 310 -> mc.setScreen(new SystemScreen(SystemScreen.Win.SKILLS));
             case 360 -> shot(mc, "skills");
-            case 365 -> mc.setScreen(null);
+            case 362 -> mc.setScreen(new SystemScreen(SystemScreen.Win.SKILLS).select("whirlwind"));
+            case 385 -> shot(mc, "skill-mods");
+            case 388 -> mc.setScreen(null);
             default -> {}
         }
         // weapon swings: one every 40 ticks from tick 390

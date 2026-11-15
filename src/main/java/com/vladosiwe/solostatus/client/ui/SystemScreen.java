@@ -88,6 +88,12 @@ public class SystemScreen extends Screen {
     private float dragStartYaw;
     // состояние
     @Nullable private String selectedSkill;
+
+    /** Opens with this skill's card selected (development screenshots). */
+    public SystemScreen select(String skill) {
+        selectedSkill = skill;
+        return this;
+    }
     private final float[] shownStats = new float[Stat.VALUES.length];
     @Nullable private Component confirmTitle, confirmText;
     @Nullable private Runnable confirmAction;
