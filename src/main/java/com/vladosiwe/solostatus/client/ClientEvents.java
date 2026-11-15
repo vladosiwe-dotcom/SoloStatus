@@ -114,7 +114,7 @@ public final class ClientEvents {
             lines.add(Component.translatable("solostatus.tooltip.type", type.displayName()).withStyle(ChatFormatting.DARK_AQUA));
             var hc = ClientState.data.hunterClass;
             if (hc != null && type.hasMastery()) {
-                var prof = com.vladosiwe.solostatus.clazz.Proficiency.of(hc, type);
+                var prof = com.vladosiwe.solostatus.clazz.Proficiency.of(ClientState.data, type);
                 lines.add(Component.translatable("solostatus.tooltip.proficiency", hc.displayName(), prof.displayName()).withStyle(ChatFormatting.GRAY));
                 if (prof.damage != 0) lines.add(stat("solostatus.tooltip.damage", (float) prof.damage));
                 if (prof.attackSpeed != 0 && type.melee) lines.add(stat("solostatus.tooltip.speed", (float) prof.attackSpeed));

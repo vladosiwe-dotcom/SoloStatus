@@ -36,6 +36,13 @@ public enum Proficiency {
         return Component.translatable("solostatus.proficiency." + key).withStyle(color);
     }
 
+    /** With the specialization: a Spellblade fights with swords as its own weapon. */
+    public static Proficiency of(com.vladosiwe.solostatus.data.PlayerData d, WeaponType t) {
+        if (d.specialization == Specialization.SPELLBLADE && (t == WeaponType.SWORD || t == WeaponType.STAFF)) return MAIN;
+        if (d.specialization == Specialization.DUELIST && t == WeaponType.DAGGER) return UNFAMILIAR; // a parrying dagger
+        return of(d.hunterClass, t);
+    }
+
     /** Before the System awakens (no class) every weapon is familiar: no bonus, no penalty. */
     public static Proficiency of(HunterClass c, WeaponType t) {
         if (c == null || !t.hasMastery()) return FAMILIAR;

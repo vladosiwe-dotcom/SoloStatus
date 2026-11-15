@@ -77,7 +77,10 @@ public final class AttributeSystem {
     public static void applyWeaponSpeed(ServerPlayer player) {
         PlayerData d = Hunter.get(player);
         var type = com.vladosiwe.solostatus.combat.WeaponClassifier.classify(player.getMainHandItem());
-        double speed = type.melee ? com.vladosiwe.solostatus.clazz.Proficiency.of(d.hunterClass, type).attackSpeed : 0;
+        double speed = type.melee ? com.vladosiwe.solostatus.clazz.Proficiency.of(d, type).attackSpeed : 0;
+        if (type == com.vladosiwe.solostatus.combat.WeaponType.SWORD || type == com.vladosiwe.solostatus.combat.WeaponType.GREATSWORD) {
+            speed += d.skillRank("fencing") * 0.04; // Duelist: swords swing faster
+        }
         set(player, Attributes.ATTACK_SPEED, WEAPON_SPEED, speed, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
     }
 

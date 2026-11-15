@@ -113,4 +113,58 @@ public final class SoloGameTests {
         h.assertTrue(com.vladosiwe.solostatus.achievement.SlayerTitles.damageBonus(d, spider) == 0, "the zombie title must not help against spiders");
         h.succeed();
     }
+
+    /** Every class has three specializations, each with an active and a passive skill. */
+    @GameTest(template = "empty")
+    public static void threeSpecializationsPerClass(GameTestHelper h) {
+        for (HunterClass c : HunterClass.VALUES) {
+            var specs = c.specializations();
+            h.assertTrue(specs.length == 3, c + " has " + specs.length + " specializations");
+            for (var s : specs) {
+                var skills = com.vladosiwe.solostatus.skill.Skills.forSpec(s);
+                h.assertTrue(skills.stream().anyMatch(d -> d.isActive()) && skills.stream().anyMatch(d -> !d.isActive()),
+                        s + " needs an active and a passive skill");
+            }
+        }
+        h.succeed();
+    }
+
+    /** Crossbowman's Auto-reload winds an empty crossbow and takes one arrow from the inventory. */
+    @GameTest(template = "empty")
+    public static void crossbowAutoReload(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.ARCHER);
+        PlayerData d = Hunter.get(p);
+        d.level = 20;
+        d.specialization = com.vladosiwe.solostatus.clazz.Specialization.CROSSBOWMAN;
+        d.skills.put("auto_reload", 1);
+        var crossbow = new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.CROSSBOW);
+        p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, crossbow);
+        p.getInventory().add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.ARROW, 5));
+        com.vladosiwe.solostatus.combat.CrossbowReload.reload(p);
+        h.assertTrue(net.minecraft.world.item.CrossbowItem.isCharged(p.getMainHandItem()), "the crossbow was not reloaded");
+        h.assertTrue(p.getInventory().countItem(net.minecraft.world.item.Items.ARROW) == 4, "the reload did not take one arrow");
+        h.succeed();
+    }
+
+    /** Avenger: damage taken is stored, and Retribution gives it back and empties the store. */
+    @GameTest(template = "empty")
+    public static void avengerStoresDamage(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.DEFENDER);
+        PlayerData d = Hunter.get(p);
+        d.level = 20;
+        d.specialization = com.vladosiwe.solostatus.clazz.Specialization.AVENGER;
+        d.skills.put("vengeance", 3);
+        d.skills.put("retribution", 1);
+        var zombie = h.spawn(net.minecraft.world.entity.EntityType.ZOMBIE, net.minecraft.core.BlockPos.ZERO.above());
+        // a FakePlayer is invulnerable, so the incoming-damage event the System listens to is posted directly
+        net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent(p,
+                new net.neoforged.neoforge.common.damagesource.DamageContainer(p.damageSources().mobAttack(zombie), 8f)));
+        h.assertTrue(d.vengeance > 0, "taken damage was not stored");
+        var def = com.vladosiwe.solostatus.skill.Skills.get("retribution");
+        boolean ok = def.effect.execute(new com.vladosiwe.solostatus.skill.SkillContext(p, p.serverLevel(), d, def, 1));
+        h.assertTrue(ok && d.vengeance == 0, "Retribution did not release the stored damage");
+        h.succeed();
+    }
 }

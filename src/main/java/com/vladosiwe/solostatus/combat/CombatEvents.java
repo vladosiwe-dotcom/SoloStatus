@@ -195,7 +195,10 @@ public final class CombatEvents {
             mult *= 0.90; // титул «Драконоборец»
         }
         if (attackerEntity instanceof LivingEntity slayerTarget) mult *= 1 - com.vladosiwe.solostatus.achievement.SlayerTitles.defense(d, slayerTarget);
+        if (attackerEntity instanceof LivingEntity duelist && SkillFx.marked(duelist, "duel", p)) mult *= 0.8; // the challenged foe hits softer
         event.setAmount((float) Math.max(0, amount * mult));
+        int vengeance = d.skillRank("vengeance"); // Avenger: part of what is taken is stored for Retribution
+        if (vengeance > 0) d.vengeance = (float) Math.min(20 + 6 * vengeance, d.vengeance + amount * mult * (0.25 + 0.05 * (vengeance - 1)));
 
         // Шипы Колосса
         int thorns = d.skillRank("thorns_body");
@@ -301,7 +304,21 @@ public final class CombatEvents {
             if (Threat.fairness(target, p) > 0.2) d.addCounter("magic_hits", 1);
         }
         if (type != null) add += MasteryMath.damageBonus(masteryLevel);
-        if (type != null) add += com.vladosiwe.solostatus.clazz.Proficiency.of(hc, type).damage; // the class's own weapons hit harder
+        if (type != null) add += com.vladosiwe.solostatus.clazz.Proficiency.of(d, type).damage; // the class's own weapons hit harder
+
+        // --- third specializations ---
+        if (SkillFx.marked(target, "duel", p)) add += 0.20 + 0.05 * Math.max(0, d.skillRank("duel_challenge") - 1);
+        int venom = d.skillRank("venom_mastery");
+        if (venom > 0 && melee && type == WeaponType.DAGGER) {
+            if (target.hasEffect(MobEffects.POISON)) add += 0.06 * venom;
+            target.addEffect(new MobEffectInstance(MobEffects.POISON, 40 + 10 * venom, 0), p);
+        }
+        if (melee && d.stateActive("arcane_strike", now)) {
+            add += 0.35 + 0.08 * Math.max(0, d.skillRank("arcane_strike") - 1);
+            com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.spendMana(p, -4f * d.skillRank("arcane_strike")); // gives mana back
+        }
+        int battleMagic = d.skillRank("battle_magic");
+        if (melee && battleMagic > 0) com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.spendMana(p, -1.5f * battleMagic);
 
         // --- Состояния навыков ---
         if (d.stateActive("berserk", now)) add += 0.20 + 0.05 * (d.skillRank("berserk") - 1);

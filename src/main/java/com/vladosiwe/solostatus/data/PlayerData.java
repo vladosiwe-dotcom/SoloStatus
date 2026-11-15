@@ -57,6 +57,8 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
     /** id навыка -> игровое время (gameTime), когда перезарядка закончится. */
     public final Map<String, Long> cooldowns = new HashMap<>();
     public float energy = 100;
+    /** Avenger: damage taken and stored for Retribution (not saved: it fades out of combat anyway). */
+    public transient float vengeance;
 
     // --- Боевой опыт ---
     /** Опыт мастерства: ключ — тип оружия или "magic:<школа>". */

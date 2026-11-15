@@ -947,11 +947,13 @@ public class SystemScreen extends Screen {
             boolean can = d.level >= specLevel;
             text(g, font, can ? tr("solostatus.class.spec_choose") : tr("solostatus.class.spec_locked", specLevel), cx0, y, can ? GOLD : DIM, row(4));
             y += 12;
-            int cardW = (cw - 6) / 2, cardH = 54;
+            // three paths: stacked cards across the whole width, so each description has room
             Specialization[] specs = hc.specializations();
+            int cardW = cw, cardH = 36;
             for (int i = 0; i < specs.length; i++) {
                 Specialization s = specs[i];
-                int x = cx0 + i * (cardW + 6);
+                int x = cx0;
+                y = y + (i == 0 ? 0 : cardH + 4);
                 float ra = row(5 + i);
                 boolean h = can && inside(mx, my, x, y, cardW, cardH);
                 g.fill(x, y, x + cardW, y + cardH, a(h ? 0xD0123A60 : 0xA0081828, ra));
@@ -991,7 +993,7 @@ public class SystemScreen extends Screen {
         List<String> keys = new ArrayList<>();
         // the class's own weapons first: main, then familiar, unfamiliar, foreign
         java.util.Arrays.stream(WeaponType.VALUES).filter(WeaponType::hasMastery)
-                .sorted(Comparator.comparingInt(t -> com.vladosiwe.solostatus.clazz.Proficiency.of(d.hunterClass, t).ordinal()))
+                .sorted(Comparator.comparingInt(t -> com.vladosiwe.solostatus.clazz.Proficiency.of(d, t).ordinal()))
                 .forEach(t -> keys.add(t.key));
         d.mastery.keySet().stream().filter(k -> k.startsWith("magic:")).sorted().forEach(keys::add);
         int y = wy + 18, rowH = 22;
@@ -1007,7 +1009,7 @@ public class SystemScreen extends Screen {
             if (ra > 0.5f) g.renderItem(com.vladosiwe.solostatus.registry.SystemIcon.mastery(key), cx0, y + 2);
             text(g, font, bold(name), cx0 + 20, y + 1, lvl > 0 ? INK : DIM, ra);
             if (!magic && d.hunterClass != null) {
-                var prof = com.vladosiwe.solostatus.clazz.Proficiency.of(d.hunterClass, WeaponType.byKey(key));
+                var prof = com.vladosiwe.solostatus.clazz.Proficiency.of(d, WeaponType.byKey(key));
                 int px = cx0 + 20 + font.width(bold(name)) + 6;
                 int pc = switch (prof) { case MAIN -> GOLD; case FAMILIAR -> 0xFF7DDC8A; case UNFAMILIAR -> 0xFFE8C860; case FOREIGN -> 0xFFE8604A; };
                 Component pl = body(Component.translatable("solostatus.proficiency." + prof.key));

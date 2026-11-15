@@ -140,6 +140,13 @@ public final class Skills {
         spec(Specialization.RANGER, "evasive_roll", Items.RABBIT_FOOT, SkillEffects::evasiveRoll, 8, 0.5, 15, "fleet_foot", Items.LEATHER_BOOTS);
         spec(Specialization.CLERIC, "holy_light", Items.GLOWSTONE_DUST, SkillEffects::holyLight, 20, 1.2, 35, "divine_grace", Items.ENCHANTED_GOLDEN_APPLE);
         spec(Specialization.ENCHANTER, "hex", Items.FERMENTED_SPIDER_EYE, SkillEffects::hex, 14, 0.8, 18, "resonance", Items.ENCHANTED_BOOK);
+        // third specializations
+        spec(Specialization.DUELIST, "duel_challenge", Items.IRON_SWORD, SkillEffects::duelChallenge, 18, 1, 20, "fencing", Items.GOLDEN_SWORD);
+        spec(Specialization.VENOMANCER, "toxic_cloud", Items.SPIDER_EYE, SkillEffects::toxicCloud, 16, 1, 22, "venom_mastery", Items.FERMENTED_SPIDER_EYE);
+        spec(Specialization.SPELLBLADE, "arcane_strike", Items.AMETHYST_SHARD, SkillEffects::arcaneStrike, 14, 0.8, 25, "battle_magic", Items.LAPIS_LAZULI);
+        spec(Specialization.AVENGER, "retribution", Items.BLAZE_POWDER, SkillEffects::retribution, 12, 0.6, 15, "vengeance", Items.NETHERITE_SCRAP);
+        spec(Specialization.CROSSBOWMAN, "bolt_barrage", Items.CROSSBOW, SkillEffects::boltBarrage, 14, 0.8, 22, "auto_reload", Items.TRIPWIRE_HOOK);
+        spec(Specialization.BARD, "battle_hymn", Items.NOTE_BLOCK, SkillEffects::battleHymn, 30, 2, 30, "melody_of_life", Items.MUSIC_DISC_OTHERSIDE);
 
         // ============================== ULTIMATES (Испытание смены пути) ==============================
         ult(W, "titan_slash", Items.NETHERITE_SWORD, SkillEffects::titanSlash);
@@ -255,7 +262,7 @@ public final class Skills {
 
     private static void spec(Specialization s, String activeId, Item activeIcon, SkillEffect effect, double cd, double cdPerRank, float energy,
                              String passiveId, Item passiveIcon) {
-        int column = s == s.parent.specializations()[0] ? 0 : 2;
+        int column = java.util.Arrays.asList(s.parent.specializations()).indexOf(s) * 2;
         reg(b(activeId, SPEC, ATTACK, activeIcon).forSpec(s).level(10).cooldown(cd, cdPerRank).energy(energy).tree(column, 0).effect(effect).build());
         reg(b(passiveId, SPEC, PASSIVE, passiveIcon).forSpec(s).level(15).tree(column, 1).build());
     }

@@ -3,7 +3,8 @@ package com.vladosiwe.solostatus.clazz;
 import net.minecraft.network.chat.Component;
 
 /**
- * Двенадцать специализаций (по две на класс). Выбор — на уровне specializationLevel (по умолчанию 5).
+ * Восемнадцать специализаций (по три на класс; третьи добавлены позже, поэтому стоят в конце: порядок — это номер
+ * в пакете выбора, а в сохранении хранится ключ). Выбор — на уровне specializationLevel (по умолчанию 5).
  * Вторая ступень («Смена пути») открывается Испытанием класса начиная с advancementLevel (по умолчанию 40).
  */
 public enum Specialization {
@@ -18,7 +19,13 @@ public enum Specialization {
     SHARPSHOOTER("sharpshooter", HunterClass.ARCHER),
     RANGER("ranger", HunterClass.ARCHER),
     CLERIC("cleric", HunterClass.SUPPORT),
-    ENCHANTER("enchanter", HunterClass.SUPPORT);
+    ENCHANTER("enchanter", HunterClass.SUPPORT),
+    DUELIST("duelist", HunterClass.WARRIOR),
+    VENOMANCER("venomancer", HunterClass.THIEF),
+    SPELLBLADE("spellblade", HunterClass.MAGE),
+    AVENGER("avenger", HunterClass.DEFENDER),
+    CROSSBOWMAN("crossbowman", HunterClass.ARCHER),
+    BARD("bard", HunterClass.SUPPORT);
 
     public static final Specialization[] VALUES = values();
 

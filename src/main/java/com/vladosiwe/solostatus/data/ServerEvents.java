@@ -137,6 +137,12 @@ public final class ServerEvents {
                 p.heal(0.5f * regen);
             }
             // Аура бодрости Поддержки
+            int melody = d.skillRank("melody_of_life"); // Bard: the melody heals everyone around, the bard too
+            if (melody > 0) {
+                for (LivingEntity a : SkillFx.alliesAround(p, p.position(), 8)) if (a.getHealth() < a.getMaxHealth()) SkillFx.heal(p, a, 0.4 * melody);
+                if (p.getHealth() < p.getMaxHealth()) p.heal(0.4f * melody);
+            }
+            if (d.vengeance > 0 && p.serverLevel().getGameTime() - d.lastCombatTick > 200) d.vengeance = 0; // stored anger fades
             int vigor = d.skillRank("aura_of_vigor");
             if (vigor > 0) {
                 for (LivingEntity a : SkillFx.alliesAround(p, p.position(), 8)) {

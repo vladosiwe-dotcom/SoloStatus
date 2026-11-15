@@ -45,12 +45,12 @@ public enum HunterClass {
 
     public Specialization[] specializations() {
         return switch (this) {
-            case WARRIOR -> new Specialization[]{Specialization.BERSERKER, Specialization.WARLORD};
-            case THIEF -> new Specialization[]{Specialization.SHADOW, Specialization.BLADE_DANCER};
-            case MAGE -> new Specialization[]{Specialization.ELEMENTALIST, Specialization.ARCANIST};
-            case DEFENDER -> new Specialization[]{Specialization.GUARDIAN, Specialization.JUGGERNAUT};
-            case ARCHER -> new Specialization[]{Specialization.SHARPSHOOTER, Specialization.RANGER};
-            case SUPPORT -> new Specialization[]{Specialization.CLERIC, Specialization.ENCHANTER};
+            case WARRIOR -> new Specialization[]{Specialization.BERSERKER, Specialization.WARLORD, Specialization.DUELIST};
+            case THIEF -> new Specialization[]{Specialization.SHADOW, Specialization.BLADE_DANCER, Specialization.VENOMANCER};
+            case MAGE -> new Specialization[]{Specialization.ELEMENTALIST, Specialization.ARCANIST, Specialization.SPELLBLADE};
+            case DEFENDER -> new Specialization[]{Specialization.GUARDIAN, Specialization.JUGGERNAUT, Specialization.AVENGER};
+            case ARCHER -> new Specialization[]{Specialization.SHARPSHOOTER, Specialization.RANGER, Specialization.CROSSBOWMAN};
+            case SUPPORT -> new Specialization[]{Specialization.CLERIC, Specialization.ENCHANTER, Specialization.BARD};
         };
     }
 

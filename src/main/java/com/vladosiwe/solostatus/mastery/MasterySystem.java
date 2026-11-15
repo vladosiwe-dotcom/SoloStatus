@@ -53,7 +53,7 @@ public final class MasterySystem {
 
     public static void addWeapon(ServerPlayer player, PlayerData d, WeaponType type, double amount) {
         if (type == null || !type.hasMastery()) return;
-        double proficiency = com.vladosiwe.solostatus.clazz.Proficiency.of(d.hunterClass, type).masteryGain;
+        double proficiency = com.vladosiwe.solostatus.clazz.Proficiency.of(d, type).masteryGain;
         add(player, d, type.key, amount * proficiency * (1 + d.skillRank("weapon_adept") * 0.05), type.displayName());
     }
 

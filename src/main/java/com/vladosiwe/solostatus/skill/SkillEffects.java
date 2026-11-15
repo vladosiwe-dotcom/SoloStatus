@@ -649,6 +649,96 @@ public final class SkillEffects {
         return true;
     }
 
+    // =============================== THIRD SPECIALIZATIONS ===============================
+
+    /** Duelist: challenges one enemy. Against it: more damage dealt, less taken (CombatEvents reads the mark). */
+    public static boolean duelChallenge(SkillContext c) {
+        ServerPlayer p = c.player();
+        LivingEntity t = raycast(p, 16, false);
+        if (t == null) return false;
+        int ticks = (int) c.scale(200, 20);
+        mark(t, "duel", p, ticks);
+        debuff(p, t, MobEffects.GLOWING, ticks, 0);
+        line(c.level(), ParticleTypes.CRIT, p.getEyePosition(), t.getBoundingBox().getCenter(), 0.3);
+        ring(c.level(), ParticleTypes.ENCHANTED_HIT, t.position().add(0, 0.1, 0), 1.2, 16);
+        sound(c.level(), p.position(), SoundEvents.ANVIL_PLACE, 0.6f, 1.6f);
+        return true;
+    }
+
+    /** Venomancer: a cloud of poison around the hunter. */
+    public static boolean toxicCloud(SkillContext c) {
+        ServerPlayer p = c.player();
+        double r = c.scale(4, 0.5);
+        int amp = c.rank() >= 4 ? 2 : 1;
+        for (LivingEntity t : enemiesAround(p, p.position(), r)) {
+            debuff(p, t, MobEffects.POISON, (int) c.scale(100, 20), amp);
+            debuff(p, t, MobEffects.MOVEMENT_SLOWDOWN, 80, 0);
+            mark(t, "venom", p, 160);
+        }
+        particles(c.level(), ParticleTypes.ITEM_SLIME, p.position().add(0, 0.5, 0), 60, r * 0.6, 0.02);
+        particles(c.level(), ParticleTypes.SNEEZE, p.position().add(0, 0.6, 0), 40, r * 0.6, 0.01);
+        sound(c.level(), p.position(), SoundEvents.BREWING_STAND_BREW, 1f, 0.6f);
+        return true;
+    }
+
+    /** Spellblade: for a few seconds melee hits carry magic and give mana back (CombatEvents). */
+    public static boolean arcaneStrike(SkillContext c) {
+        state(c.data(), c.level(), "arcane_strike", (int) c.scale(120, 20));
+        ring(c.level(), ParticleTypes.WITCH, c.player().position().add(0, 1, 0), 1, 20);
+        sound(c.level(), c.player().position(), SoundEvents.ILLUSIONER_PREPARE_MIRROR, 1f, 1.3f);
+        return true;
+    }
+
+    /** Avenger: releases the damage stored by Vengeance around the hunter. */
+    public static boolean retribution(SkillContext c) {
+        ServerPlayer p = c.player();
+        com.vladosiwe.solostatus.data.PlayerData d = c.data();
+        if (d.vengeance < 2) return false; // nothing taken yet: nothing to give back
+        double dmg = d.vengeance * c.scale(1.0, 0.2);
+        d.vengeance = 0;
+        for (LivingEntity t : enemiesAround(p, p.position(), 5)) {
+            hitPhysical(p, t, dmg);
+            launch(t, 0.4);
+        }
+        particles(c.level(), ParticleTypes.FLAME, p.position().add(0, 1, 0), 60, 2, 0.1);
+        ring(c.level(), ParticleTypes.LAVA, p.position().add(0, 0.2, 0), 4, 30);
+        sound(c.level(), p.position(), SoundEvents.BLAZE_SHOOT, 1f, 0.6f);
+        return true;
+    }
+
+    /** Crossbowman: a quick burst of bolts. */
+    public static boolean boltBarrage(SkillContext c) {
+        ServerPlayer p = c.player();
+        int bolts = 3 + c.rank();
+        double dmg = 4.0 * c.scale(1.0, 0.15);
+        Scheduler.repeat(3, bolts, i -> {
+            if (!p.isAlive()) return;
+            arrow(p, (i % 2 == 0 ? 1 : -1) * i * 1.2f, 0, 3.6f, dmg, false);
+            sound(c.level(), p.position(), SoundEvents.CROSSBOW_SHOOT, 0.8f, 1.2f + i * 0.05f);
+        });
+        return true;
+    }
+
+    /** Bard: a hymn that strengthens allies and weakens enemies around. */
+    public static boolean battleHymn(SkillContext c) {
+        ServerPlayer p = c.player();
+        int dur = (int) c.scale(200, 30);
+        for (LivingEntity a : alliesAround(p, p.position(), 10)) {
+            buff(p, a, MobEffects.MOVEMENT_SPEED, dur, 0);
+            buff(p, a, MobEffects.DAMAGE_BOOST, dur, c.rank() >= 3 ? 1 : 0);
+            buff(p, a, MobEffects.REGENERATION, dur / 2, 0);
+        }
+        buff(p, p, MobEffects.DAMAGE_BOOST, dur, c.rank() >= 3 ? 1 : 0);
+        for (LivingEntity t : enemiesAround(p, p.position(), 10)) {
+            debuff(p, t, MobEffects.WEAKNESS, dur, 0);
+            debuff(p, t, MobEffects.MOVEMENT_SLOWDOWN, dur / 2, 0);
+        }
+        particles(c.level(), ParticleTypes.NOTE, p.position().add(0, 2, 0), 30, 2.5, 1);
+        sound(c.level(), p.position(), SoundEvents.NOTE_BLOCK_CHIME.value(), 1f, 1f);
+        sound(c.level(), p.position(), SoundEvents.NOTE_BLOCK_BELL.value(), 1f, 1.5f);
+        return true;
+    }
+
     // =============================== AWAKENINGS ===============================
 
     public static boolean sprint(SkillContext c) {
