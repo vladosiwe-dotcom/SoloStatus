@@ -21,7 +21,6 @@
 | WeaponQualitySystem | `quality/*` | Data component качества, лут, подсказки |
 | HunterRankSystem | `rank/*` | Очки силы по частям (`breakdown`), условия рангов (`gates`), ранги |
 | AchievementSystem | `achievement/*` | Достижения по разделам (`AchievementCategory`), скрытые, титулы Истребителей, награды |
-| Снаряжение | `registry/SystemWeapons`, `SystemRanged`, `SystemArmor`, `SetBonuses` | Оружие, луки и арбалеты, броня, бонусы комплектов |
 | Networking | `network/*` | Пакеты, синхронизация, осмотр |
 | StatusScreen / HUD | `client/*` | Голографический интерфейс (только клиент) |
 | Configuration | `config/SoloConfig` | Серверный баланс + клиентские настройки |

@@ -123,22 +123,13 @@ public final class ClientEvents {
         tip.addAll(at, lines);
     }
 
-    /** Armour sets: the set, how many pieces are worn and its bonuses; any gear: the difference with what is worn. */
+    /** Any weapon or armour: the difference with what is worn in the same slot. */
     @SubscribeEvent
     public static void onGearTooltip(ItemTooltipEvent event) {
         var player = event.getEntity();
         if (player == null) return;
         net.minecraft.world.item.ItemStack stack = event.getItemStack();
         List<Component> tip = event.getToolTip();
-        if (stack.getItem() instanceof com.vladosiwe.solostatus.registry.SystemArmor.Piece piece) {
-            var set = piece.set();
-            int worn = com.vladosiwe.solostatus.registry.SetBonuses.pieces(player, set);
-            tip.add(Component.translatable("solostatus.tooltip.set", Component.translatable("solostatus.set." + set.key), worn).withStyle(ChatFormatting.GOLD));
-            for (int need : new int[]{2, 4}) {
-                tip.add(Component.literal(" " + need + ": ").append(Component.translatable("solostatus.set." + set.key + "." + need))
-                        .withStyle(worn >= need ? ChatFormatting.AQUA : ChatFormatting.DARK_GRAY));
-            }
-        }
         // comparison with what is worn in the same slot (not for the worn item itself)
         net.minecraft.world.entity.EquipmentSlot slot = stack.getItem() instanceof net.minecraft.world.item.ArmorItem armor ? armor.getEquipmentSlot()
                 : hasAttack(stack) ? net.minecraft.world.entity.EquipmentSlot.MAINHAND : null;

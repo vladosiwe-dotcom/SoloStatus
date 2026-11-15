@@ -201,7 +201,7 @@ public final class CombatEvents {
 
         // Уклонение (AGI)
         if (!bypass && byEntity && !source.is(DamageTypeTags.IS_EXPLOSION)
-                && p.getRandom().nextDouble() < StatFormulas.dodgeChance(d) + com.vladosiwe.solostatus.registry.SetBonuses.dodge(p)) {
+                && p.getRandom().nextDouble() < StatFormulas.dodgeChance(d)) {
             event.setCanceled(true);
             registerDodge(p, d, (LivingEntity) attackerEntity, now);
             return true;
@@ -220,7 +220,6 @@ public final class CombatEvents {
         if (attackerEntity instanceof LivingEntity slayerTarget) mult *= 1 - com.vladosiwe.solostatus.achievement.SlayerTitles.defense(d, slayerTarget);
         if (attackerEntity instanceof LivingEntity duelist && SkillFx.marked(duelist, "duel", p)) mult *= 0.8; // the challenged foe hits softer
         mult *= com.vladosiwe.solostatus.skill.StyleSkills.defense(p, d, attackerEntity, now);
-        mult *= com.vladosiwe.solostatus.registry.SetBonuses.defense(p);
         event.setAmount((float) Math.max(0, amount * mult));
         int vengeance = d.skillRank("vengeance"); // Avenger: part of what is taken is stored for Retribution
         if (vengeance > 0) d.vengeance = (float) Math.min(com.vladosiwe.solostatus.skill.StyleSkills.vengeanceCap(d, vengeance),
@@ -271,7 +270,6 @@ public final class CombatEvents {
         }
         d.lastBlockTick = now; // уклонение тоже открывает окно контратаки
         if (d.skillRank("wind_runner") > 0) SkillFx.state(d, level, "wind_runner", 60); // Ranger at 60: arrows after a dodge
-        com.vladosiwe.solostatus.registry.SetBonuses.onDodge(p, d);
         int after = d.skillRank("afterimage");
         if (after > 0) {
             p.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 20 + after * 4, 1, false, false));
@@ -437,7 +435,6 @@ public final class CombatEvents {
         // --- Техника оружия (мастерство 40) ---
         add += com.vladosiwe.solostatus.mastery.MasteryTechniques.offense(p, d, target, type, direct, dist);
         if (melee && !skill && com.vladosiwe.solostatus.mastery.MasteryTechniques.forceCrit(d, type, true)) forceCrit = true;
-        if (com.vladosiwe.solostatus.registry.SetBonuses.onBlow(p, d, melee, skill, now)) forceCrit = true;
 
         float amount = (float) (event.getAmount() * Math.max(0.1, 1 + add));
 

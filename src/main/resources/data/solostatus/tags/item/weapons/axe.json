@@ -1,7 +1,4 @@
 {
   "replace": false,
-  "values": [
-    "solostatus:hunter_battleaxe",
-    "solostatus:shadow_battleaxe"
-  ]
+  "values": []
 }

@@ -28,7 +28,6 @@ public final class SoloStatus {
     public SoloStatus(IEventBus modBus, ModContainer container) {
         ModAttachments.ATTACHMENTS.register(modBus);
         ModComponents.COMPONENTS.register(modBus);
-        com.vladosiwe.solostatus.registry.SystemArmor.MATERIALS.register(modBus);
         ModItems.ITEMS.register(modBus);
         ModLootModifiers.SERIALIZERS.register(modBus);
         ModSounds.SOUNDS.register(modBus);

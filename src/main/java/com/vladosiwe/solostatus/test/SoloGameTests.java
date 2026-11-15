@@ -494,27 +494,6 @@ public final class SoloGameTests {
         h.succeed();
     }
 
-    /** Set bonuses come with 2 and 4 pieces of one System armour set. */
-    @GameTest(template = "empty")
-    public static void armourSetBonuses(GameTestHelper h) {
-        ServerPlayer p = TestPlayers.create(h);
-        ClassSystem.chooseClass(p, HunterClass.DEFENDER);
-        var vanguard = com.vladosiwe.solostatus.registry.SystemArmor.Set.VANGUARD;
-        var types = new net.minecraft.world.item.ArmorItem.Type[]{net.minecraft.world.item.ArmorItem.Type.HELMET, net.minecraft.world.item.ArmorItem.Type.CHESTPLATE,
-                net.minecraft.world.item.ArmorItem.Type.LEGGINGS, net.minecraft.world.item.ArmorItem.Type.BOOTS};
-        h.assertTrue(com.vladosiwe.solostatus.registry.SetBonuses.defense(p) == 1.0, "a set bonus without the set");
-        for (int i = 0; i < 2; i++) p.setItemSlot(types[i].getSlot(), new net.minecraft.world.item.ItemStack(com.vladosiwe.solostatus.registry.SystemArmor.get(vanguard, types[i])));
-        h.assertTrue(Math.abs(com.vladosiwe.solostatus.registry.SetBonuses.defense(p) - 0.92) < 1e-9, "Vanguard 2: 8% less damage");
-        com.vladosiwe.solostatus.stats.AttributeSystem.apply(p);
-        var kb = p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE);
-        h.assertTrue(kb.getModifier(SoloStatus.id("set_vanguard_knockback")) == null, "the 4 piece bonus with 2 pieces");
-        for (int i = 2; i < 4; i++) p.setItemSlot(types[i].getSlot(), new net.minecraft.world.item.ItemStack(com.vladosiwe.solostatus.registry.SystemArmor.get(vanguard, types[i])));
-        com.vladosiwe.solostatus.stats.AttributeSystem.apply(p);
-        h.assertTrue(kb.getModifier(SoloStatus.id("set_vanguard_knockback")) != null, "Vanguard 4: no knockback resistance");
-        h.assertTrue(com.vladosiwe.solostatus.registry.SetBonuses.dodge(p) == 0, "a Stalker bonus with Vanguard armour");
-        h.succeed();
-    }
-
     /** Two skill sets: switching swaps the slots, only out of combat, and drops skills no longer known. */
     @GameTest(template = "empty")
     public static void skillLoadouts(GameTestHelper h) {

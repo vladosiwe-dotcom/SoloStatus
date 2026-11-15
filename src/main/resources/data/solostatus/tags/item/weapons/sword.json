@@ -1,7 +1,4 @@
 {
   "replace": false,
-  "values": [
-    "solostatus:hunter_sword",
-    "solostatus:shadow_sword"
-  ]
+  "values": []
 }

@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/crossbow",
-  "textures": {
-    "layer0": "solostatus:item/ranged/hunter_heavy_crossbow_pulling_1"
-  }
-}

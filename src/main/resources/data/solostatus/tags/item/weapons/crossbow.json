@@ -1,9 +1,4 @@
 {
   "replace": false,
-  "values": [
-    "solostatus:hunter_heavy_crossbow",
-    "solostatus:hunter_repeating_crossbow",
-    "solostatus:shadow_heavy_crossbow",
-    "solostatus:shadow_repeating_crossbow"
-  ]
+  "values": []
 }

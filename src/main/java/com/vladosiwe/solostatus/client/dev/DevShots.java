@@ -124,14 +124,8 @@ public final class DevShots {
             default -> {}
         }
         // weapon swings: one every 40 ticks from tick 390
-        net.minecraft.world.item.Item[] weapons = {
-                com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.HUNTER, com.vladosiwe.solostatus.registry.SystemWeapons.Kind.SWORD),
-                com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.HUNTER, com.vladosiwe.solostatus.registry.SystemWeapons.Kind.GREATSWORD),
-                com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.SHADOW, com.vladosiwe.solostatus.registry.SystemWeapons.Kind.DAGGER),
-                com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.SHADOW, com.vladosiwe.solostatus.registry.SystemWeapons.Kind.BATTLEAXE),
-                com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.SHADOW, com.vladosiwe.solostatus.registry.SystemWeapons.Kind.WARHAMMER),
-                com.vladosiwe.solostatus.registry.SystemWeapons.get(com.vladosiwe.solostatus.registry.SystemWeapons.Grade.HUNTER, com.vladosiwe.solostatus.registry.SystemWeapons.Kind.SPEAR)};
-        String[] names = {"sword", "sword2", "dagger", "axe", "mace", "spear"};
+        net.minecraft.world.item.Item[] weapons = {Items.IRON_SWORD, Items.DIAMOND_SWORD, Items.IRON_AXE, Items.MACE};
+        String[] names = {"sword", "sword2", "axe", "mace"};
         for (int i = 0; i < weapons.length; i++) {
             int at = 390 + i * 40;
             if (tick == at) {
@@ -178,27 +172,10 @@ public final class DevShots {
             if (tick == at + 15) shot(mc, "anim-" + bodyAnims[i] + "-b");
         }
 
-        // the armour sets, seen from the front in third person
         int armorAt = animAt + bodyAnims.length * 30 + 10;
-        var sets = com.vladosiwe.solostatus.registry.SystemArmor.Set.values();
-        for (int i = 0; i < sets.length; i++) {
-            int at = armorAt + i * 30;
-            var set = sets[i];
-            if (tick == at) {
-                mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_FRONT);
-                server.execute(() -> {
-                    for (var t : new net.minecraft.world.item.ArmorItem.Type[]{net.minecraft.world.item.ArmorItem.Type.HELMET,
-                            net.minecraft.world.item.ArmorItem.Type.CHESTPLATE, net.minecraft.world.item.ArmorItem.Type.LEGGINGS,
-                            net.minecraft.world.item.ArmorItem.Type.BOOTS}) {
-                        sp.setItemSlot(t.getSlot(), new ItemStack(com.vladosiwe.solostatus.registry.SystemArmor.get(set, t)));
-                    }
-                });
-            }
-            if (tick == at + 20) shot(mc, "armor-" + set.key);
-        }
-        if (tick == armorAt + sets.length * 30 + 10) mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+        if (tick == armorAt) mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
         // the rank and history windows and an achievement section
-        int windowsAt = armorAt + sets.length * 30 + 20;
+        int windowsAt = armorAt + 20;
         if (tick == windowsAt) mc.setScreen(new SystemScreen(SystemScreen.Win.STATUS).showOverlay("RANK"));
         if (tick == windowsAt + 40) shot(mc, "rank");
         if (tick == windowsAt + 45) mc.setScreen(new SystemScreen(SystemScreen.Win.STATUS).showOverlay("HISTORY"));
