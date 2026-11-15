@@ -32,6 +32,9 @@ neoForge {
         // Проверяет, что мод загружается на сервере (реестры, конфиги, сеть) и не тянет клиентский код.
         gameTestServer {
             type = "gameTestServer"
+            // Своя папка: иначе тестовый сервер берёт имя мира из run/server.properties и пересоздаёт
+            // ваш мир разработки плоским — новые чанки в нём станут суперплоскостью.
+            gameDirectory = project.file('run/gametest')
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
         configureEach {

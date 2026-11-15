@@ -18,7 +18,7 @@ jobs:
       - name: Build the mod
         run: ./gradlew build --no-daemon --stacktrace
       - name: Add Epic Fight and Iron's Spells for the integration tests
-        run: python3 tools/fetch_mods.py run/mods /tmp/client-mods "$GITHUB_STEP_SUMMARY" required:epic-fight required:irons-spells-n-spellbooks+irons-lib+curios+geckolib+playeranimator
+        run: python3 tools/fetch_mods.py run/gametest/mods /tmp/client-mods "$GITHUB_STEP_SUMMARY" required:epic-fight required:irons-spells-n-spellbooks+irons-lib+curios+geckolib+playeranimator
       - name: Start a dedicated server with the mod (smoke test)
         env:
           SOLO_COMPAT_REQUIRED: '1'
@@ -37,7 +37,7 @@ jobs:
       - name: Epic Fight API as shipped (for reflection mismatches)
         if: failure()
         run: |
-          jar=$(ls run/mods/*epic*fight*.jar 2>/dev/null | head -1); [ -n "$jar" ] || exit 0
+          jar=$(ls run/gametest/mods/*epic*fight*.jar 2>/dev/null | head -1); [ -n "$jar" ] || exit 0
           echo "$jar"
           for c in yesman.epicfight.world.capabilities.EpicFightCapabilities yesman.epicfight.world.capabilities.entitypatch.LivingEntityPatch yesman.epicfight.gameasset.Animations; do
             javap -cp "$jar" "$c" 2>&1 | grep -E "class |getServerPlayerPatch|playAnimationInClientSide|playAnimationSynchronized| static .*(SWORD_AUTO1|BIPED_STEP)" | head -20
@@ -58,8 +58,8 @@ jobs:
           SOLO_RPG_REQUIRED: '1'
         run: |
           set -o pipefail
-          mkdir -p /tmp/ef-mods && mv run/mods/* /tmp/ef-mods/ 2>/dev/null || true
-          python3 tools/fetch_mods.py run/mods /tmp/client-rpg "$GITHUB_STEP_SUMMARY" required:wizards optional:rogues-and-warriors optional:paladins-and-priests
+          mkdir -p /tmp/ef-mods && mv run/gametest/mods/* /tmp/ef-mods/ 2>/dev/null || true
+          python3 tools/fetch_mods.py run/gametest/mods /tmp/client-rpg "$GITHUB_STEP_SUMMARY" required:wizards optional:rogues-and-warriors optional:paladins-and-priests
           timeout 600 ./gradlew runGameTestServer --no-daemon 2>&1 | tee rpg.log || true
           grep -E "RPG Series weapons|Solo Status System:|failed at|tests passed|tests failed|   - |Missing or unsupported" rpg.log | grep -v "^\s*at " | head -40 || true
           grep -Eq "All [0-9]+ required tests passed" rpg.log

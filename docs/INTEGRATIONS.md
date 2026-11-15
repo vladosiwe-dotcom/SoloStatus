@@ -143,7 +143,7 @@ CI делает второй, необязательный прогон тест
 
 Без Lord's Outpost эти счётчики не растут, а достижения просто остаются закрытыми.
 
-Проверено: игровой тест `lordTitleFollowsOwnership` здесь и `soloStatusLordTitle` в Lord's Outpost (запускался с jar этого мода в `run/mods`).
+Проверено: игровой тест `lordTitleFollowsOwnership` здесь и `soloStatusLordTitle` в Lord's Outpost (запускался с jar этого мода в `run/gametest/mods`).
 
 ## Технические риски
 
