@@ -812,7 +812,6 @@
   "solostatus.achievement.breeze_slayer": "Wind Tamer",
   "solostatus.achievement.breeze_slayer.desc": "Defeat 80 breezes and bogged.",
   "solostatus.achievement.breeze_slayer.title": "Title: +15% damage to breezes and bogged and -15% damage from them.",
-  "solostatus.ui.filter_schools": "Schools",
   "solostatus.skills.mana": "Mana: %s",
   "solostatus.skills.spell_level": "Spell level: %s",
   "solostatus.req.any_capstone": "The top spell of any school",
@@ -882,5 +881,9 @@
   "solostatus.skill.sky_strike.desc": "Only in the air: a dive that hits everything around where you land. No fall damage.",
   "solostatus.skill.concealment": "Concealment",
   "solostatus.skill.concealment.desc": "6s (+1s per rank): everyone loses sight of you — mobs drop you as a target, other players see only a faint aura. The first blow ends it and deals +50% damage.",
-  "solostatus.error.riposte_window": "Riposte works only right after a successful parry"
+  "solostatus.error.riposte_window": "Riposte works only right after a successful parry",
+  "solostatus.ui.filter_branches": "Branches",
+  "solostatus.ui.sec_branch": "Branch: %s",
+  "solostatus.ui.sec_spec": "Specialization: %s",
+  "solostatus.ui.sec_ultimate": "Ultimate"
 }

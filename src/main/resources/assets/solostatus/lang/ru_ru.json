@@ -812,7 +812,6 @@
   "solostatus.achievement.breeze_slayer": "Укротитель ветра",
   "solostatus.achievement.breeze_slayer.desc": "Победите 80: вихрей и болотников.",
   "solostatus.achievement.breeze_slayer.title": "Титул: +15% урона по вихрям и болотникам и −15% урона от них.",
-  "solostatus.ui.filter_schools": "Школы",
   "solostatus.skills.mana": "Мана: %s",
   "solostatus.skills.spell_level": "Ур. заклинания: %s",
   "solostatus.req.any_capstone": "Высшее заклинание любой школы",
@@ -882,5 +881,9 @@
   "solostatus.skill.sky_strike.desc": "Только в воздухе: пикирование вниз, удар по всем вокруг места приземления. Без урона от падения.",
   "solostatus.skill.concealment": "Сокрытие",
   "solostatus.skill.concealment.desc": "6с (+1с за ранг): вас теряют из виду все — мобы сбрасывают цель, другие игроки видят лишь слабую ауру вместо вас. Первый удар снимает сокрытие и наносит +50% урона.",
-  "solostatus.error.riposte_window": "Контратака — только сразу после удачного парирования"
+  "solostatus.error.riposte_window": "Контратака — только сразу после удачного парирования",
+  "solostatus.ui.filter_branches": "Ветки",
+  "solostatus.ui.sec_branch": "Ветка «%s»",
+  "solostatus.ui.sec_spec": "Специализация: %s",
+  "solostatus.ui.sec_ultimate": "Высшее умение"
 }

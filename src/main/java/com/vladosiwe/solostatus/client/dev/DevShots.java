@@ -81,6 +81,7 @@ public final class DevShots {
                 server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "gamerule doMobSpawning false");
                 ClassSystem.chooseClass(sp, "mage".equals(System.getenv("SOLO_DEVSHOTS_CLASS")) ? HunterClass.MAGE : HunterClass.WARRIOR);
                 com.vladosiwe.solostatus.level.LevelSystem.grantXp(sp, 400000, com.vladosiwe.solostatus.level.XpReason.COMMAND); // open the tiers
+                if (!"mage".equals(System.getenv("SOLO_DEVSHOTS_CLASS"))) com.vladosiwe.solostatus.clazz.ClassSystem.chooseSpec(sp, com.vladosiwe.solostatus.clazz.Specialization.DUELIST);
                 sp.setYRot(0); sp.setXRot(10);
                 sp.connection.teleport(sp.getX(), sp.getY(), sp.getZ(), 0, 8);
                 spawn(sp, EntityType.ZOMBIE, -1.6);

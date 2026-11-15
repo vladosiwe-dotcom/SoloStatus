@@ -506,7 +506,15 @@ public class SystemScreen extends Screen {
 
     // ============================================================ SKILLS
 
-    private record SkillRow(@Nullable String section, @Nullable SkillDef def) {}
+    /** A list row: a section header (key, or a ready title) or a skill. */
+    private record SkillRow(@Nullable String section, @Nullable SkillDef def, @Nullable Component title) {
+        SkillRow(@Nullable String section, @Nullable SkillDef def) {
+            this(section, def, null);
+        }
+    }
+
+    /** Depth of each skill in the branch view: how many steps it grows from the first skill of its branch. */
+    private final java.util.Map<String, Integer> branchDepth = new java.util.HashMap<>();
 
     /**
      * Cooldown and cost of an active skill. A Mage spell shows Iron's numbers: mana at the spell level of this rank
@@ -531,12 +539,12 @@ public class SystemScreen extends Screen {
 
     /** Фильтр списка навыков по происхождению. Цвет фильтра совпадает с цветом иконок этого происхождения. */
     private enum SkillFilter {
-        ALL, SCHOOLS, CLASS, SPEC, GENERAL, AWAKENING, HIDDEN;
+        BRANCHES, ALL, CLASS, SPEC, GENERAL, AWAKENING, HIDDEN;
 
         boolean accepts(SkillDef def) {
             return switch (this) {
                 case ALL -> true;
-                case SCHOOLS -> def.school != null;
+                case BRANCHES -> true;
                 case CLASS -> def.source == SkillSource.CLASS_START || def.source == SkillSource.CLASS || def.source == SkillSource.ULTIMATE;
                 case SPEC -> def.source == SkillSource.SPEC;
                 case GENERAL -> def.source == SkillSource.GENERAL;
@@ -548,7 +556,7 @@ public class SystemScreen extends Screen {
         int color() {
             return switch (this) {
                 case ALL -> INK;
-                case SCHOOLS -> 0xFFB48CFF;
+                case BRANCHES -> 0xFFB48CFF;
                 case CLASS -> SkillIcons.CLASS;
                 case SPEC -> SkillIcons.SPEC;
                 case GENERAL -> SkillIcons.GENERAL;
@@ -558,7 +566,7 @@ public class SystemScreen extends Screen {
         }
     }
 
-    private SkillFilter skillFilter = SkillFilter.ALL;
+    private SkillFilter skillFilter = SkillFilter.ALL; // switched to BRANCHES on first open once the class is known
     private boolean schoolsDefaulted;
 
     /** Карточка навыка встроена в окно под списком; на невысоких экранах она открывается поверх, как раньше. */
@@ -573,21 +581,79 @@ public class SystemScreen extends Screen {
     }
 
     private boolean filterShown(SkillFilter f) {
-        return f != SkillFilter.SCHOOLS || hasSchools();
+        return f != SkillFilter.BRANCHES || d().hasClass();
     }
 
-    private List<SkillRow> skillRows() {
-        PlayerData d = d();
-        if (skillFilter == SkillFilter.SCHOOLS) {
-            // one branch per school in learning order (spells by tier, then the school's passive)
-            List<SkillRow> rows = new ArrayList<>();
+    private static int depth(SkillDef def, java.util.Set<String> within) {
+        int n = 0;
+        for (SkillDef cur = def; cur.parent != null && within.contains(cur.parent) && n < 8; cur = Skills.get(cur.parent)) n++;
+        return n;
+    }
+
+    private static String rootOf(SkillDef def, java.util.Set<String> within) {
+        SkillDef cur = def;
+        for (int n = 0; cur.parent != null && within.contains(cur.parent) && n < 8; n++) cur = Skills.get(cur.parent);
+        return cur.id;
+    }
+
+    /**
+     * The branch view. A Mage: one branch per magic school. Other classes: every chain of active class skills is a
+     * branch named after its first skill, steps indented under the skill they grow from; passives apart; then the
+     * specialization and the ultimate.
+     */
+    private List<SkillRow> branchRows(PlayerData d) {
+        List<SkillRow> rows = new ArrayList<>();
+        branchDepth.clear();
+        if (hasSchools()) {
             java.util.LinkedHashMap<String, List<SkillDef>> bySchool = new java.util.LinkedHashMap<>();
             for (SkillDef def : Skills.all()) {
                 if (def.school == null || (!def.availableFor(d) && !d.hasSkill(def.id))) continue;
                 bySchool.computeIfAbsent(def.school, k -> new ArrayList<>()).add(def);
+                branchDepth.put(def.id, def.isSpell() ? def.treeRow : 0);
             }
             bySchool.forEach((school, defs) -> addSection(rows, "solostatus.school." + school, defs));
-            return rows;
+        }
+        List<SkillDef> cls = new ArrayList<>();
+        for (SkillDef def : Skills.all()) {
+            if (def.school != null || def.hunterClass == null || def.hunterClass != d.hunterClass) continue;
+            if (def.source == SkillSource.SPEC || def.source == SkillSource.ULTIMATE) continue;
+            cls.add(def);
+        }
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        cls.forEach(x -> ids.add(x.id));
+        java.util.LinkedHashMap<String, List<SkillDef>> chains = new java.util.LinkedHashMap<>();
+        List<SkillDef> passives = new ArrayList<>();
+        for (SkillDef def : cls) {
+            branchDepth.put(def.id, depth(def, ids));
+            if (!def.isActive()) passives.add(def);
+            else chains.computeIfAbsent(rootOf(def, ids), k -> new ArrayList<>()).add(def);
+        }
+        chains.forEach((root, defs) -> {
+            SkillDef rootDef = Skills.get(root);
+            rows.add(new SkillRow("branch", null, Component.translatable("solostatus.ui.sec_branch", rootDef != null ? rootDef.name() : Component.literal(root))));
+            defs.forEach(x -> rows.add(new SkillRow(null, x)));
+        });
+        addSection(rows, "solostatus.ui.sec_passive", passives);
+        if (d.specialization != null) {
+            List<SkillDef> spec = Skills.forSpec(d.specialization);
+            if (!spec.isEmpty()) {
+                rows.add(new SkillRow("spec", null, Component.translatable("solostatus.ui.sec_spec", d.specialization.displayName())));
+                spec.forEach(x -> rows.add(new SkillRow(null, x)));
+            }
+        }
+        SkillDef ult = d.hunterClass != null ? Skills.ultimate(d.hunterClass) : null;
+        if (ult != null) addSection(rows, "solostatus.ui.sec_ultimate", List.of(ult));
+        return rows;
+    }
+
+    private List<SkillRow> skillRows() {
+        PlayerData d = d();
+        if (skillFilter == SkillFilter.BRANCHES) return branchRows(d);
+        branchDepth.clear();
+        if (skillFilter == SkillFilter.GENERAL) { // general chains (Parry -> Riposte...) step in as well
+            java.util.Set<String> ids = new java.util.HashSet<>();
+            for (SkillDef def : Skills.all()) if (def.source == SkillSource.GENERAL) ids.add(def.id);
+            for (SkillDef def : Skills.all()) if (def.source == SkillSource.GENERAL) branchDepth.put(def.id, depth(def, ids));
         }
         List<SkillDef> active = new ArrayList<>(), passive = new ArrayList<>(), learnable = new ArrayList<>(), locked = new ArrayList<>();
         for (SkillDef def : Skills.all()) {
@@ -613,9 +679,9 @@ public class SystemScreen extends Screen {
 
     private void renderSkills(GuiGraphics g, int mx, int my) {
         PlayerData d = d();
-        if (!schoolsDefaulted) { // a Mage opens on the school branches
+        if (!schoolsDefaulted) { // the skills open on the class's branches
             schoolsDefaulted = true;
-            if (hasSchools() && skillFilter == SkillFilter.ALL) skillFilter = SkillFilter.SCHOOLS;
+            if (d.hasClass() && skillFilter == SkillFilter.ALL) skillFilter = SkillFilter.BRANCHES;
         }
         if (!filterShown(skillFilter)) skillFilter = SkillFilter.ALL;
         boolean split = skillsSplit();
@@ -687,7 +753,7 @@ public class SystemScreen extends Screen {
             float ra = row(2 + (i - scroll));
             if (r.section() != null) {
                 // заголовок раздела: отступ сверху, подпись и тонкая линия до края — не путается со строкой навыка
-                Component sec = trBold(r.section());
+                Component sec = r.title() != null ? bold(r.title()) : trBold(r.section());
                 int ty = yy + (i == scroll ? 2 : 5);
                 text(g, font, sec, cx0, ty, r.section().endsWith("learnable") ? GOLD : DIM, ra);
                 g.fill(cx0 + font.width(sec) + 6, ty + 4, cx0 + cw, ty + 5, a(0x3355C8FF, ra));
@@ -702,7 +768,7 @@ public class SystemScreen extends Screen {
             if (sel || hov) g.fill(cx0 - 4, yy, cx0 + cw + 4, yy + rowH, a(sel ? 0x3355C8FF : 0x1A55C8FF, ra));
             g.fill(cx0 - 4, yy + 2, cx0 - 2, yy + rowH - 2, a(SkillIcons.color(def.source), ra * (learned ? 1f : 0.45f)));
             // school branches: each spell steps in under the one it grows from, joined by a line
-            int ind = skillFilter == SkillFilter.SCHOOLS && def.isSpell() ? def.treeRow * 8 : 0;
+            int ind = branchDepth.getOrDefault(def.id, 0) * 8;
             if (ind > 0) {
                 int lx = cx0 + ind - 5;
                 g.fill(lx, yy - 6, lx + 1, yy + 8, a(0x6655C8FF, ra));
