@@ -90,6 +90,16 @@ public final class IronsSpellsBridge {
         }
     }
 
+    /** Whether Iron's has a cast of this player in progress (started, not finished). */
+    public static boolean isCasting(ServerPlayer player) {
+        if (!init()) return false;
+        try {
+            return (boolean) isCasting.invoke(getMagicData.invoke(null, player));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     /** Cooldown Iron's gives this spell for this player (with cooldown reduction), in ticks. */
     public static int cooldownTicks(Player player, String path) {
         if (!init()) return 0;

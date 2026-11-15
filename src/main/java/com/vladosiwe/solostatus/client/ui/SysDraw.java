@@ -78,11 +78,21 @@ public final class SysDraw {
     }
 
     /** Мягкая тень под охотником. */
+    /**
+     * Soft oval shadow on the floor: nested ellipses, each a faint layer, so it darkens smoothly towards the middle
+     * instead of showing the steps of stacked rectangles.
+     */
     public static void shadow(GuiGraphics g, int cx, int y, int radius, float alpha) {
-        for (int i = 0; i < 6; i++) {
-            int rw = radius - i * radius / 7;
-            int rh = Math.max(1, 6 - i);
-            g.fill(cx - rw, y - rh / 2, cx + rw, y + rh / 2 + 1, a(0x1A0D2238, alpha));
+        int layers = 6;
+        for (int i = 0; i < layers; i++) {
+            float rw = radius * (1f - i / (float) (layers + 1));
+            float rh = Math.max(1.5f, radius * 0.16f * (1f - i / (float) (layers + 1)));
+            for (int dy = -(int) rh; dy <= (int) rh; dy++) {
+                float k = 1f - (dy / rh) * (dy / rh);
+                if (k <= 0) continue;
+                int half = Math.round(rw * (float) Math.sqrt(k));
+                g.fill(cx - half, y + dy, cx + half, y + dy + 1, a(0x140D2238, alpha));
+            }
         }
     }
 

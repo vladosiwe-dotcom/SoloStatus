@@ -3,11 +3,10 @@ name: Modpack
 # Builds one archive with everything a player needs for Solo Status on the client:
 # the mod itself, Openace (awakening scene), Epic Fight, Iron's Spells with its libraries,
 # Legendary Tooltips, and the NeoForge installer. Download it from the run's "Artifacts".
+# Rebuilt on every push, so the archive always holds the current mod.
 on:
   workflow_dispatch:
   push:
-    paths:
-      - .github/workflows/modpack.yml
 
 jobs:
   modpack:

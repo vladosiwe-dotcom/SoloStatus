@@ -1,6 +1,5 @@
 package com.vladosiwe.solostatus.accessory;
 
-import com.vladosiwe.solostatus.quality.QualityRarity;
 import com.vladosiwe.solostatus.registry.ModComponents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
@@ -39,12 +38,6 @@ public class AccessoryItem extends Item {
         AccessoryData data = stack.get(ModComponents.ACCESSORY.get());
         Component base = super.getName(stack);
         return data == null ? base : base.copy().withStyle(data.tier().format);
-    }
-
-    @Override
-    public boolean isFoil(ItemStack stack) {
-        AccessoryData data = stack.get(ModComponents.ACCESSORY.get());
-        return data != null && data.tier() == QualityRarity.LEGENDARY;
     }
 
     @Override

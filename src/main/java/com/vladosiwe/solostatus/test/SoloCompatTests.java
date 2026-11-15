@@ -108,13 +108,15 @@ public final class SoloCompatTests {
             return;
         }
         int spells = 0;
+        List<String> missing = new java.util.ArrayList<>(), held = new java.util.ArrayList<>();
         for (var def : com.vladosiwe.solostatus.skill.Skills.all()) {
             if (!def.isSpell()) continue;
             spells++;
-            h.assertTrue(com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.available(def.ironsSpell), "no Iron's spell " + def.ironsSpell);
-            String type = com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.castType(def.ironsSpell);
-            h.assertTrue(!type.equals("CONTINUOUS"), def.ironsSpell + " must be held: it does not fit a skill key");
+            if (!com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.available(def.ironsSpell)) missing.add(def.ironsSpell);
+            else if (com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.castType(def.ironsSpell).equals("CONTINUOUS")) held.add(def.ironsSpell);
         }
+        h.assertTrue(missing.isEmpty(), "spells this Iron's Spells does not register: " + missing);
+        h.assertTrue(held.isEmpty(), "held spells do not fit a skill key: " + held);
         h.assertTrue(spells >= 24, "too few Mage spells: " + spells);
         h.succeed();
     }
@@ -135,15 +137,13 @@ public final class SoloCompatTests {
         int slot = java.util.Arrays.asList(d.slots).indexOf(start);
         h.assertTrue(slot >= 0, "Magic Missile is not on a skill key");
         com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.spendMana(p, -200); // a new player may start with no mana
-        float before = com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.mana(p);
         com.vladosiwe.solostatus.skill.SkillSystem.cast(p, slot);
         long now = p.serverLevel().getGameTime();
-        h.assertTrue(d.cooldowns.getOrDefault(start, 0L) > now, "the skill key got no cooldown: Iron's refused the cast");
-        h.runAfterDelay(20, () -> {
-            float after = com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.mana(p);
-            h.assertTrue(after < before, "Iron's mana was not spent: " + before + " -> " + after);
-            h.succeed();
-        });
+        // Iron's starts the cast (it checked mana and cooldown); it finishes it on its player tick, which a test
+        // FakePlayer (not in the player list) never gets, so the start is what can be checked here
+        h.assertTrue(com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.isCasting(p), "Iron's did not start casting Magic Missile");
+        h.assertTrue(d.cooldowns.getOrDefault(start, 0L) > now, "the skill key got no cooldown");
+        h.succeed();
     }
 
     @GameTest(template = "empty")
@@ -258,6 +258,7 @@ public final class SoloCompatTests {
         h.assertTrue(d.skillPoints == points - 1, "Parry must cost one point");
         int slot = java.util.Arrays.asList(d.slots).indexOf("parry");
         h.assertTrue(slot >= 0, "Parry was not put into a free slot");
+        com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.spendMana(p, -200); // the Mage pays skills from Iron's mana
         com.vladosiwe.solostatus.skill.SkillSystem.cast(p, slot);
         h.assertTrue(d.stateActive("parry", p.serverLevel().getGameTime()), "Parry window did not open");
         h.assertTrue(com.vladosiwe.solostatus.stats.StatFormulas.usesMana(d), "Mage must use mana");

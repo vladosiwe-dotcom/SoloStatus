@@ -95,7 +95,7 @@ public final class Skills {
         school(M, "ender", true, "magic_missile", "teleport", "summon_swords", "black_hole");
         school(M, "fire", false, "firebolt", "burning_dash", "fireball", "raise_hell");
         school(M, "ice", false, "icicle", "frost_step", "ice_tomb", "blizzard");
-        school(M, "lightning", false, "ball_lightning", "chain_lightning", "thunder_step", "lightning_bolt");
+        school(M, "lightning", false, "ball_lightning", "chain_lightning", "lightning_lance", "lightning_bolt");
         school(M, "evocation", false, "fang_strike", "shield", "summon_vex", "fang_swirl");
         school(M, "blood", false, "blood_needles", "blood_step", "blood_slash", "raise_dead");
         eldritch(M);

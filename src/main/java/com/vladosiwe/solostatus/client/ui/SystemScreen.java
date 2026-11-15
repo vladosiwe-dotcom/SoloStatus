@@ -201,7 +201,8 @@ public class SystemScreen extends Screen {
         if (minecraft == null || minecraft.player == null) return;
         float appear = easeOut(Mth.clamp((since(openAt) - 250) / 450f, 0f, 1f));
         if (appear <= 0) return;
-        shadow(g, playerX, floorY, 46, appear);
+        // the model's feet land a little below floorY (camera tilt and its foot offset): the shadow goes under them
+        shadow(g, playerX, floorY + 8, 46, appear);
         LivingEntity entity = minecraft.player;
         if (!showArmor) {
             if (noArmor == null && minecraft.level != null) noArmor = new DisplayPlayer(minecraft.level, (AbstractClientPlayer) minecraft.player);
@@ -218,11 +219,11 @@ public class SystemScreen extends Screen {
         // переключатель брони
         int bw = 120;
         Component label = trBold(showArmor ? "solostatus.ui.armor_hide" : "solostatus.ui.armor_show");
-        boolean hover = inside(mx, my, playerX - bw / 2, floorY + 10, bw, 14);
-        g.fill(playerX - bw / 2, floorY + 10, playerX + bw / 2, floorY + 24, a(hover ? 0xFFFFFFFF : 0xE6FFFFFF, appear));
-        g.renderOutline(playerX - bw / 2, floorY + 10, bw, 14, a(hover ? 0xFF1E8EF0 : 0xFF9CC8F2, appear));
-        textCenter(g, font, label, playerX, floorY + 13, 0xFF0A5CB8, appear);
-        hots.add(new Hot(playerX - bw / 2, floorY + 10, bw, 14, () -> {
+        boolean hover = inside(mx, my, playerX - bw / 2, floorY + 18, bw, 14);
+        g.fill(playerX - bw / 2, floorY + 18, playerX + bw / 2, floorY + 32, a(hover ? 0xFFFFFFFF : 0xE6FFFFFF, appear));
+        g.renderOutline(playerX - bw / 2, floorY + 18, bw, 14, a(hover ? 0xFF1E8EF0 : 0xFF9CC8F2, appear));
+        textCenter(g, font, label, playerX, floorY + 21, 0xFF0A5CB8, appear);
+        hots.add(new Hot(playerX - bw / 2, floorY + 18, bw, 14, () -> {
             showArmor = !showArmor;
             play(ModSounds.CLICK.get(), 1.2f);
         }, null));

@@ -85,6 +85,22 @@ public final class DevShots {
                 sp.connection.teleport(sp.getX(), sp.getY(), sp.getZ(), 0, 8);
                 spawn(sp, EntityType.ZOMBIE, -1.6);
                 spawn(sp, EntityType.WITHER_SKELETON, 1.6);
+                // jewellery: a legendary ring and an epic amulet worn, a rare ring left in the hotbar
+                for (var kind : new com.vladosiwe.solostatus.accessory.AccessoryKind[]{com.vladosiwe.solostatus.accessory.AccessoryKind.RING,
+                        com.vladosiwe.solostatus.accessory.AccessoryKind.AMULET}) {
+                    ItemStack jewel = new ItemStack(kind == com.vladosiwe.solostatus.accessory.AccessoryKind.RING
+                            ? com.vladosiwe.solostatus.registry.ModItems.RING.get() : com.vladosiwe.solostatus.registry.ModItems.AMULET.get());
+                    com.vladosiwe.solostatus.accessory.AccessorySystem.apply(jewel, com.vladosiwe.solostatus.accessory.AccessorySystem.roll(kind,
+                            kind == com.vladosiwe.solostatus.accessory.AccessoryKind.RING ? com.vladosiwe.solostatus.quality.QualityRarity.LEGENDARY
+                                    : com.vladosiwe.solostatus.quality.QualityRarity.EPIC, sp.getRandom()));
+                    sp.setItemInHand(InteractionHand.MAIN_HAND, jewel);
+                    com.vladosiwe.solostatus.accessory.AccessorySystem.equipFromHand(sp, InteractionHand.MAIN_HAND);
+                }
+                ItemStack spare = new ItemStack(com.vladosiwe.solostatus.registry.ModItems.RING.get());
+                com.vladosiwe.solostatus.accessory.AccessorySystem.apply(spare, com.vladosiwe.solostatus.accessory.AccessorySystem.roll(
+                        com.vladosiwe.solostatus.accessory.AccessoryKind.RING, com.vladosiwe.solostatus.quality.QualityRarity.RARE, sp.getRandom()));
+                sp.getInventory().setItem(1, spare);
+                sp.getInventory().setItem(2, new ItemStack(com.vladosiwe.solostatus.registry.ModItems.AMULET.get()));
                 sp.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_SWORD));
             });
             case 150 -> server.execute(() -> sp.serverLevel().getEntitiesOfClass(LivingEntity.class, sp.getBoundingBox().inflate(8),
