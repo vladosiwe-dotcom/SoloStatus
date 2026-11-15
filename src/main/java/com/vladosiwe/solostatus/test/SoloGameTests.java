@@ -201,4 +201,62 @@ public final class SoloGameTests {
         h.assertFalse(com.vladosiwe.solostatus.skill.Concealment.active(p), "Concealment did not end");
         h.succeed();
     }
+
+    /** AGI speeds up the weapon's own swing by a share of it: a greatsword gains as much in percent as a sword. */
+    @GameTest(template = "empty")
+    public static void agilityScalesWeaponSpeed(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.WARRIOR);
+        PlayerData d = Hunter.get(p);
+        d.stats[com.vladosiwe.solostatus.stats.Stat.AGI.ordinal()] = com.vladosiwe.solostatus.stats.Stat.BASE_VALUE + 40; // +16%
+        p.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_SWORD));
+        com.vladosiwe.solostatus.stats.AttributeSystem.apply(p);
+        double expected = 1.6 * 1.16 * 1.10; // sword 1.6, AGI +16%, a sword is familiar to the Warrior (+10%)
+        double got = p.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED);
+        h.assertTrue(Math.abs(got - expected) < 0.01, "attack speed " + got + ", expected " + expected);
+        h.succeed();
+    }
+
+    /** Mage and Support spend Iron's mana, so the "mana / stamina" bonuses raise it. */
+    @GameTest(template = "empty")
+    public static void casterManaBonuses(GameTestHelper h) {
+        if (!com.vladosiwe.solostatus.compat.CompatManager.ironsLoaded()) { h.succeed(); return; }
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.MAGE);
+        PlayerData d = Hunter.get(p);
+        double before = com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.maxMana(p);
+        d.gear.put(com.vladosiwe.solostatus.accessory.Affix.MAX_ENERGY, 30.0);
+        com.vladosiwe.solostatus.stats.AttributeSystem.apply(p);
+        double after = com.vladosiwe.solostatus.compat.ironsspells.IronsSpellsBridge.maxMana(p);
+        h.assertTrue(Math.abs(after - before - 30) < 0.5, "max mana " + before + " -> " + after + ", expected +30");
+        h.succeed();
+    }
+
+    /** A profile saved before version 2 loses the retired Mage skills and gets the paid points back. */
+    @GameTest(template = "empty")
+    public static void oldProfileMigrates(GameTestHelper h) {
+        PlayerData old = new PlayerData();
+        old.level = 12;
+        old.hunterClass = HunterClass.MAGE;
+        old.skillPoints = 2;
+        old.skills.put("mana_bolt", 3);
+        old.paidRanks.put("mana_bolt", 2);
+        old.skills.put("frost_nova", 1); // no paid record: the old table gives 1 back
+        old.slots[0] = "mana_bolt";
+        old.skills.put("arcane_mind", 2);
+        var tag = old.write();
+        tag.putInt("v", 1);
+        PlayerData d = new PlayerData();
+        d.read(tag);
+        h.assertTrue(d.level == 12 && d.hunterClass == HunterClass.MAGE, "level or class lost");
+        h.assertFalse(d.skills.containsKey("mana_bolt") || d.skills.containsKey("frost_nova"), "retired skills were kept");
+        h.assertTrue(d.skillRank("arcane_mind") == 2, "a current skill was lost");
+        h.assertTrue(d.skillPoints == 2 + 2 + 1, "skill points " + d.skillPoints + ", expected 5");
+        h.assertTrue(d.slots[0] == null, "the retired skill stayed in a slot");
+        h.assertTrue(d.skillsMigrated, "the player is not told about the change");
+        PlayerData again = new PlayerData();
+        again.read(d.write());
+        h.assertTrue(again.skillPoints == 5 && !again.skillsMigrated, "the migration ran twice");
+        h.succeed();
+    }
 }

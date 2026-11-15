@@ -1,6 +1,7 @@
 package com.vladosiwe.solostatus.compat.ironsspells;
 
 import com.vladosiwe.solostatus.SoloStatus;
+import com.vladosiwe.solostatus.accessory.Affix;
 import com.vladosiwe.solostatus.clazz.HunterClass;
 import com.vladosiwe.solostatus.data.Hunter;
 import com.vladosiwe.solostatus.data.PlayerData;
@@ -67,8 +68,14 @@ public final class IronsSpellsCompat {
         set(p, "spell_power", spellPower, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         // magic is the harder path: INT adds half of what it used to (cap 100 mana, +15% regen)
         // INT (up to 100) and the Mage's Arcane Mind (+15 per rank) raise Iron's mana: casters spend it on every skill
-        set(p, "max_mana", Math.min(100, StatFormulas.eff(d, Stat.INT)) + d.skillRank("arcane_mind") * 15, AttributeModifier.Operation.ADD_VALUE);
+        double maxMana = Math.min(100, StatFormulas.eff(d, Stat.INT)) + d.skillRank("arcane_mind") * 15;
         double regen = Math.min(0.15, StatFormulas.eff(d, Stat.INT) * 0.003) + d.skillRank("arcane_flow") * 0.05 + d.skillRank("arcane_mind") * 0.10;
+        if (StatFormulas.usesMana(d)) {
+            // casters spend Iron's mana on their skills, so the "mana / stamina" bonuses go to it, not to the unused stamina
+            maxMana += d.gear(Affix.MAX_ENERGY);
+            regen += d.skillRank("breathing_technique") * 0.08 + d.gear(Affix.ENERGY_REGEN);
+        }
+        set(p, "max_mana", maxMana, AttributeModifier.Operation.ADD_VALUE);
         set(p, "mana_regen", regen, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         set(p, "cooldown_reduction", d.skillRank("arcane_flow") * 0.02, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
 

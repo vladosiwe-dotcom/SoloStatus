@@ -61,7 +61,7 @@ public final class Achievements {
         reg("first_blood", false, Items.WOODEN_SWORD, 50, 0, 0, Req.counter("kills", 1));
         reg("first_awakening", false, Items.ENDER_EYE, 300, 0, 0, Req.awakenedCount(1));
         reg("path_chosen", false, Items.COMPASS, 500, 0, 0, specChosen());
-        reg("level_10", false, Items.EXPERIENCE_BOTTLE, 0, 0, 0, Req.level(10));
+        reg("level_10", false, Items.EXPERIENCE_BOTTLE, 500, 0, 0, Req.level(10));
         reg("level_50", false, Items.EXPERIENCE_BOTTLE, 0, 1, 0, Req.level(50));
         reg("level_100", false, Items.BEACON, 0, 1, 1, Req.level(100));
         reg("class_trial", false, Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 0, 0, 0, Req.advanced());

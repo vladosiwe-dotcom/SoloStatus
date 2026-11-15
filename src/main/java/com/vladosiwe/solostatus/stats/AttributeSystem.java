@@ -53,8 +53,9 @@ public final class AttributeSystem {
 
         set(player, Attributes.MAX_HEALTH, HEALTH, health, AttributeModifier.Operation.ADD_VALUE);
         set(player, Attributes.MOVEMENT_SPEED, SPEED, speed, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        // a share of the weapon's own speed: of the player's base (4.0) it would speed a greatsword up 2.5 times as much
         set(player, Attributes.ATTACK_SPEED, ATK_SPEED, StatFormulas.attackSpeed(d) + (d.titleIs("frenzy") ? 0.05 : 0),
-                AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+                AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
         set(player, Attributes.LUCK, LUCK, StatFormulas.luckAttribute(d), AttributeModifier.Operation.ADD_VALUE);
         set(player, Attributes.ARMOR, ARMOR, armor, AttributeModifier.Operation.ADD_VALUE);
         set(player, Attributes.KNOCKBACK_RESISTANCE, KNOCKBACK, Math.min(0.5, knockback), AttributeModifier.Operation.ADD_VALUE);

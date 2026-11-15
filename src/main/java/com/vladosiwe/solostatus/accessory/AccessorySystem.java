@@ -215,7 +215,7 @@ public final class AccessorySystem {
         AttributeSystem.set(p, Attributes.MAX_HEALTH, HEALTH, d.gear(Affix.MAX_HEALTH), AttributeModifier.Operation.ADD_VALUE);
         AttributeSystem.set(p, Attributes.ARMOR, ARMOR, d.gear(Affix.ARMOR), AttributeModifier.Operation.ADD_VALUE);
         AttributeSystem.set(p, Attributes.MOVEMENT_SPEED, SPEED, d.gear(Affix.MOVE_SPEED), AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
-        AttributeSystem.set(p, Attributes.ATTACK_SPEED, ATK_SPEED, d.gear(Affix.ATTACK_SPEED), AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        AttributeSystem.set(p, Attributes.ATTACK_SPEED, ATK_SPEED, d.gear(Affix.ATTACK_SPEED), AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
         AttributeSystem.set(p, Attributes.LUCK, LUCK, d.gear(Affix.LUCK), AttributeModifier.Operation.ADD_VALUE);
     }
 

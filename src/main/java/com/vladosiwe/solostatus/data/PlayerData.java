@@ -25,7 +25,7 @@ import java.util.*;
  */
 public final class PlayerData implements INBTSerializable<CompoundTag> {
     /** Версия формата сохранения. Увеличивайте при изменении структуры и добавляйте миграцию в {@link #migrate}. */
-    public static final int DATA_VERSION = 1;
+    public static final int DATA_VERSION = 2;
     public static final int MAX_LEVEL = 100;
     public static final int SKILL_SLOTS = 4;
     public static final int RECENT_KILLS_WINDOW = 30;
@@ -59,6 +59,8 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
     public float energy = 100;
     /** Avenger: damage taken and stored for Retribution (not saved: it fades out of combat anyway). */
     public transient float vengeance;
+    /** Set when loading this profile took retired skills away (see migrate): the player is told at login. */
+    public transient boolean skillsMigrated;
 
     // --- Боевой опыт ---
     /** Опыт мастерства: ключ — тип оружия или "magic:<школа>". */
@@ -235,6 +237,7 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
                 SoloStatus.LOGGER.warn("Профиль сохранён более новой версией мода ({} > {}), читаю совместимые поля", version, DATA_VERSION);
             }
             t = migrate(t, version);
+            skillsMigrated = t.getBoolean("migratedSkills");
 
             level = Mth.clamp(t.getInt("level"), 1, MAX_LEVEL);
             xp = Math.max(0, t.getLong("xp"));
@@ -300,9 +303,43 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
 
     /** Миграция старых форматов. Версия 0 — профиль без поля версии (только значения по умолчанию). */
     private static CompoundTag migrate(CompoundTag t, int fromVersion) {
-        // Пример будущей миграции:
-        // if (fromVersion < 2) { t.putString("newField", convert(t.get("oldField"))); }
+        if (fromVersion < DATA_VERSION) t = t.copy(); // never change the tag the caller still holds
+        if (fromVersion < 2) retireOldMageSkills(t);
         return t;
+    }
+
+    /**
+     * Version 2: the Mage's own System spells were replaced by Iron's Spells schools. They are taken away with every
+     * skill point paid for them given back; a free starting rank gives back nothing.
+     */
+    private static final Map<String, Boolean> RETIRED_V2 = Map.of(
+            "mana_bolt", true, "frost_nova", false, "flame_burst", false, "chain_lightning", false, "mana_shield", false);
+
+    private static void retireOldMageSkills(CompoundTag t) {
+        CompoundTag skills = t.getCompound("skills");
+        CompoundTag paid = t.getCompound("paid");
+        int refund = 0;
+        boolean removed = false;
+        for (var e : RETIRED_V2.entrySet()) {
+            String id = e.getKey();
+            if (!skills.contains(id)) continue;
+            int rank = skills.getInt(id);
+            if (paid.contains(id)) {
+                refund += paid.getInt(id);
+            } else { // profiles from before paid ranks were kept: the price table of that time
+                for (int r = 1; r <= rank; r++) refund += r == 1 ? (e.getValue() ? 0 : 1) : r <= 3 ? 1 : 2;
+            }
+            skills.remove(id);
+            paid.remove(id);
+            removed = true;
+            t.getCompound("cooldowns").remove(id);
+            ListTag slots = t.getList("slots", Tag.TAG_STRING);
+            for (int i = 0; i < slots.size(); i++) if (id.equals(slots.getString(i))) slots.set(i, StringTag.valueOf(""));
+        }
+        if (removed) t.putBoolean("migratedSkills", true);
+        t.put("skills", skills);
+        t.put("paid", paid);
+        t.putInt("sp", t.getInt("sp") + refund);
     }
 
     /** Копия профиля (используется при клонировании игрока и для клиентского кэша). */

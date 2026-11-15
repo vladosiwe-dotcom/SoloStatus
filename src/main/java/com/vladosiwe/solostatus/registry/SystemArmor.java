@@ -112,7 +112,7 @@ public final class SystemArmor {
             switch (set) {
                 case STALKER -> {
                     b.add(Attributes.MOVEMENT_SPEED, new AttributeModifier(id("speed"), 0.03, AttributeModifier.Operation.ADD_MULTIPLIED_BASE), slot);
-                    b.add(Attributes.ATTACK_SPEED, new AttributeModifier(id("attack_speed"), 0.03, AttributeModifier.Operation.ADD_MULTIPLIED_BASE), slot);
+                    b.add(Attributes.ATTACK_SPEED, new AttributeModifier(id("attack_speed"), 0.03, AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL), slot);
                 }
                 case ARCANIST -> {
                     irons(b, "max_mana", 25, AttributeModifier.Operation.ADD_VALUE, slot);
