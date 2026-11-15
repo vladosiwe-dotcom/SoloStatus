@@ -43,6 +43,12 @@ jobs:
             javap -cp "$jar" "$c" 2>&1 | grep -E "class |getServerPlayerPatch|playAnimationInClientSide|playAnimationSynchronized| static .*(SWORD_AUTO1|BIPED_STEP)" | head -20
           done
           unzip -l "$jar" | grep -E "AssetAccessor|StaticAnimation.class" | head
+      - name: Epic Fight animations available to skills
+        if: always()
+        run: |
+          jar=$(ls run/mods/*epic*fight*.jar 2>/dev/null | head -1); [ -n "$jar" ] || exit 0
+          javap -cp "$jar" yesman.epicfight.gameasset.Animations 2>/dev/null | grep -oE "public static [^ ]+ [A-Z0-9_]+;" | awk '{print $4}' | tr -d ';' | sort | tr '\n' ' '
+          echo
       - name: Upload the mod jar
         if: success()
         uses: actions/upload-artifact@v4
