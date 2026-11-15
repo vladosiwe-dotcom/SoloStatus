@@ -316,7 +316,7 @@ public final class Skills {
     private static void legendary(HunterClass c, String id, Item icon, SkillEffect effect) {
         var weapon = com.vladosiwe.solostatus.registry.LegendaryWeapons.forClass(c);
         reg(b(id, LEGENDARY, SkillCategory.ULTIMATE, icon).forClass(c).ranks(3).level(1).rankStep(15)
-                .requires(Req.counter(weapon.counter(), 1)).cooldown(75, 5).energy(50).tree(4, 1).effect(effect).build());
+                .requires(Req.counter(weapon.counter(), 1)).cooldown(75, 5).energy(40).tree(4, 1).effect(effect).build());
     }
 
     private static void ult(HunterClass c, String id, Item icon, SkillEffect effect) {

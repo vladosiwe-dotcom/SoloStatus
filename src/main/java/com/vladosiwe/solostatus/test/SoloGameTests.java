@@ -602,6 +602,7 @@ public final class SoloGameTests {
         h.assertFalse(com.vladosiwe.solostatus.registry.LegendaryDrops.carries(p, cleaver), "carries the weapon before getting it");
         com.vladosiwe.solostatus.registry.LegendaryDrops.give(p, d, cleaver);
         h.assertTrue(com.vladosiwe.solostatus.registry.LegendaryDrops.carries(p, cleaver), "the weapon was not given");
+        p.getInventory().clearContent(); // given into the first free slot, which is the hand: empty it for the check below
         // holding it the first time (the equipment change event does this in game)
         d.addCounter(cleaver.counter(), 1);
         d.unlockCheckPending = true;
