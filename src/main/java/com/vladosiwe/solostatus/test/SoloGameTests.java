@@ -290,4 +290,37 @@ public final class SoloGameTests {
         h.assertTrue(again.skillPoints == 10 && !again.skillsMigrated, "the migration ran twice");
         h.succeed();
     }
+
+    /**
+     * Every class can use its costliest skill at least twice from a full pool, at levels 10, 40, 70 and 100 with the
+     * stat points spread evenly, and a full stamina pool comes back within about a minute (75 s at most).
+     */
+    @GameTest(template = "empty")
+    public static void resourceCoversSkills(GameTestHelper h) {
+        java.util.List<String> wrong = new java.util.ArrayList<>();
+        for (HunterClass hc : HunterClass.values()) {
+            for (int level : new int[]{10, 40, 70, 100}) {
+                ServerPlayer p = TestPlayers.create(h);
+                ClassSystem.chooseClass(p, hc);
+                PlayerData d = Hunter.get(p);
+                d.level = level;
+                for (var st : com.vladosiwe.solostatus.stats.Stat.values()) d.stats[st.ordinal()] = com.vladosiwe.solostatus.stats.Stat.BASE_VALUE + level / 2;
+                com.vladosiwe.solostatus.stats.AttributeSystem.apply(p);
+                float pool = com.vladosiwe.solostatus.skill.ManaPool.max(p, d);
+                float costliest = 0;
+                String which = "";
+                for (SkillDef s : Skills.all()) {
+                    boolean mine = s.hunterClass == hc || (s.spec != null && s.spec.parent == hc) || s.source == com.vladosiwe.solostatus.skill.SkillSource.GENERAL;
+                    if (mine && s.baseLevel <= level && s.ironsSpell == null && s.energyCost > costliest) { costliest = s.energyCost; which = s.id; }
+                }
+                if (pool < costliest * 2) wrong.add(hc.key + " lv" + level + ": pool " + pool + " < 2 × " + which + " " + costliest);
+                if (!com.vladosiwe.solostatus.skill.ManaPool.ironsMana(d)) {
+                    double refill = pool / com.vladosiwe.solostatus.stats.StatFormulas.energyRegen(d);
+                    if (refill > 75) wrong.add(hc.key + " lv" + level + ": stamina refills in " + Math.round(refill) + " s");
+                }
+            }
+        }
+        h.assertTrue(wrong.isEmpty(), String.join("; ", wrong));
+        h.succeed();
+    }
 }
