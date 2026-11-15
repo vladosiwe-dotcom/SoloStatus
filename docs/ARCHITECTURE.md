@@ -4,20 +4,24 @@
 
 | Система | Пакет / класс | Назначение |
 |---|---|---|
-| PlayerData | `data/PlayerData`, `data/Hunter` | Профиль охотника, сериализация, версия формата, миграции |
+| PlayerData | `data/PlayerData`, `data/Hunter` | Профиль охотника, сериализация, версия формата (сейчас 3), миграции |
+| История | `data/History` | История персонажа (до 300 записей с игровым днём), синхронизируется только при изменении |
 | Persistence | `registry/ModAttachments` | Data attachment NeoForge (`copyOnDeath`), сохраняется вместе с игроком |
 | LevelSystem | `level/LevelSystem` | Опыт, уровни, очки, Преодоление предела |
 | AttributeSystem | `stats/AttributeSystem`, `stats/StatFormulas` | Формулы характеристик, временные модификаторы атрибутов |
 | ClassSystem / SpecializationSystem | `clazz/*` | Классы, специализации, Испытание смены пути |
-| SkillSystem | `skill/SkillSystem` | Изучение, улучшение, слоты, применение, сброс |
+| SkillSystem | `skill/SkillSystem` | Изучение, улучшение, слоты, два набора навыков, применение, сброс |
+| Модификации навыков | `skill/SkillMods` | Выбор одной из двух модификаций на ранге 3, смена за Сферу перерождения |
+| Развитие специализаций | `skill/StyleSkills` | Реакции пассивов 30 и 60 уровня на удары, защиту, блоки, убийства |
 | SkillUnlockSystem | `skill/SkillUnlockSystem` | Адаптивное пробуждение по условиям |
 | SkillTreeSystem | `skill/Skills`, `skill/SkillDef`, `skill/Req` | Реестр навыков, требования, позиции в дереве |
 | Эффекты навыков | `skill/SkillEffects`, `skill/SkillFx`, `skill/Scheduler` | Механики навыков (только сервер) |
 | CombatSystem | `combat/CombatEvents`, `combat/Threat`, `combat/WeaponClassifier` | Анализ боя, анти-фарм, типы оружия |
-| MasterySystem | `mastery/*` | Мастерство оружия и школ магии |
+| MasterySystem | `mastery/*` | Мастерство оружия и школ магии; `MasteryTechniques` — техника оружия (40) и развитие навыка оружия (50) |
 | WeaponQualitySystem | `quality/*` | Data component качества, лут, подсказки |
-| HunterRankSystem | `rank/*` | Очки силы и ранги |
-| AchievementSystem | `achievement/*` | Достижения, скрытые достижения, награды |
+| HunterRankSystem | `rank/*` | Очки силы по частям (`breakdown`), условия рангов (`gates`), ранги |
+| AchievementSystem | `achievement/*` | Достижения по разделам (`AchievementCategory`), скрытые, титулы Истребителей, награды |
+| Снаряжение | `registry/SystemWeapons`, `SystemRanged`, `SystemArmor`, `SetBonuses` | Оружие, луки и арбалеты, броня, бонусы комплектов |
 | Networking | `network/*` | Пакеты, синхронизация, осмотр |
 | StatusScreen / HUD | `client/*` | Голографический интерфейс (только клиент) |
 | Configuration | `config/SoloConfig` | Серверный баланс + клиентские настройки |
