@@ -419,7 +419,7 @@
   "solostatus.effect.agi": "Speed %s · Dodge %s",
   "solostatus.effect.per": "Crit %s · Projectiles %s",
   "solostatus.effect.vit": "Health +%s · Defense %s",
-  "solostatus.effect.int": "Magic %s · Mana %s",
+  "solostatus.effect.int": "Magic %s · Iron's mana +%s",
   "solostatus.effect.luck": "Loot %s · Quality %s",
   "solostatus.class.none": "not awakened",
   "solostatus.class.choose_title": "SYSTEM AWAKENING",
@@ -1138,5 +1138,9 @@
   "solostatus.tooltip.cmp.damage": "damage %s",
   "solostatus.tooltip.cmp.speed": "attack speed %s",
   "solostatus.tooltip.cmp.armor": "armour %s",
-  "solostatus.tooltip.cmp.toughness": "armour toughness %s"
+  "solostatus.tooltip.cmp.toughness": "armour toughness %s",
+  "solostatus.status.breakdown": "Base %s · class +%s · put in %s · title +%s = %s (%s counts)",
+  "solostatus.ui.loadout": "Skill set %s of 2",
+  "solostatus.ui.loadout_hint": "Click to switch the Z X C V slots to the other set. Out of combat only (10s without damage).",
+  "solostatus.error.loadout_combat": "The skill set can only be switched out of combat (10 seconds without damage)"
 }

@@ -83,6 +83,32 @@ public final class SkillSystem {
         }
     }
 
+    /** Seconds without taking or dealing damage before the skill set can be switched. */
+    public static final int LOADOUT_CALM_TICKS = 200;
+
+    /**
+     * Switches between the two skill sets (4 slots each): the slots in use are kept as the other set and the other set
+     * comes in. Only out of combat (10 s without damage), so it is a choice made before a fight, not a fifth slot.
+     */
+    public static void switchLoadout(ServerPlayer player) {
+        PlayerData d = Hunter.get(player);
+        long now = player.serverLevel().getGameTime();
+        if (now - Math.max(d.lastDamagedTick, d.lastCombatTick) < LOADOUT_CALM_TICKS) {
+            Notices.warn(player, "solostatus.error.loadout_combat");
+            return;
+        }
+        for (int i = 0; i < PlayerData.SKILL_SLOTS; i++) {
+            String current = d.slots[i];
+            String next = d.otherSlots[i];
+            SkillDef def = Skills.get(next);
+            d.slots[i] = def != null && def.isActive() && d.hasSkill(next) && def.availableFor(d) ? next : null; // forgotten skills drop out
+            d.otherSlots[i] = current;
+        }
+        d.loadout = 1 - d.loadout;
+        d.markDirty();
+        SkillFx.sound(player.serverLevel(), player.position(), SoundEvents.BOOK_PAGE_TURN, 1f, 1.2f);
+    }
+
     public static void equip(ServerPlayer player, int slot, String id) {
         PlayerData d = Hunter.get(player);
         if (slot < 0 || slot >= PlayerData.SKILL_SLOTS) return;
@@ -189,6 +215,7 @@ public final class SkillSystem {
             });
             d.skills.replaceAll((k, v) -> 1);
             for (int i = 0; i < d.slots.length; i++) if (d.slots[i] != null && !d.hasSkill(d.slots[i])) d.slots[i] = null;
+            for (int i = 0; i < d.otherSlots.length; i++) if (d.otherSlots[i] != null && !d.hasSkill(d.otherSlots[i])) d.otherSlots[i] = null;
             d.skillPoints += refund;
             d.cooldowns.clear();
             d.skillMods.clear(); // ranks start over, so do the modifications

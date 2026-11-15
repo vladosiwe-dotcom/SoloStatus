@@ -419,7 +419,7 @@
   "solostatus.effect.agi": "Скорость %s · Уклонение %s",
   "solostatus.effect.per": "Крит %s · Снаряды %s",
   "solostatus.effect.vit": "Здоровье +%s · Защита %s",
-  "solostatus.effect.int": "Магия %s · Мана %s",
+  "solostatus.effect.int": "Магия %s · Мана Iron's +%s",
   "solostatus.effect.luck": "Добыча %s · Качество %s",
   "solostatus.class.none": "не пробуждён",
   "solostatus.class.choose_title": "ПРОБУЖДЕНИЕ СИСТЕМЫ",
@@ -1138,5 +1138,9 @@
   "solostatus.tooltip.cmp.damage": "урон %s",
   "solostatus.tooltip.cmp.speed": "скорость атаки %s",
   "solostatus.tooltip.cmp.armor": "броня %s",
-  "solostatus.tooltip.cmp.toughness": "прочность брони %s"
+  "solostatus.tooltip.cmp.toughness": "прочность брони %s",
+  "solostatus.status.breakdown": "База %s · класс +%s · вложено %s · титул +%s = %s (в силу идёт %s)",
+  "solostatus.ui.loadout": "Набор навыков %s из 2",
+  "solostatus.ui.loadout_hint": "Нажмите, чтобы переключить слоты Z X C V на другой набор. Только вне боя (10 с без урона).",
+  "solostatus.error.loadout_combat": "Набор навыков меняется только вне боя (10 секунд без урона)"
 }

@@ -399,7 +399,7 @@ public class SystemScreen extends Screen {
                     play(ModSounds.STAT_UP.get(), 1f + s.ordinal() * 0.05f);
                 }, null));
             }
-            if (hov && !ph) tooltip = List.of(s.fullName().copy().withColor(s.color), s.description(), statEffect(d, s),
+            if (hov && !ph) tooltip = List.of(s.fullName().copy().withColor(s.color), s.description(), statBreakdown(d, s), statEffect(d, s),
                     Component.translatable("solostatus.status.soft_cap", softCap()));
         }
         y += 3 * 17 + 3;
@@ -498,6 +498,15 @@ public class SystemScreen extends Screen {
         if (inside(mx, my, x, y, w, h)) tooltip = lines;
     }
 
+    /** Where the value comes from: base, class, points put in, title; and how much of it counts after the soft cap. */
+    private Component statBreakdown(PlayerData d, Stat s) {
+        int classBonus = d.hunterClass == null ? 0 : d.hunterClass.primary == s ? 3 : d.hunterClass.secondary == s ? 2 : 0;
+        int invested = d.stat(s) - Stat.BASE_VALUE - classBonus;
+        int title = d.titleIs("rank_national") ? 3 : 0;
+        return Component.translatable("solostatus.status.breakdown", Stat.BASE_VALUE, classBonus, invested, title,
+                d.stat(s) + title, Math.round(StatFormulas.eff(d, s) * 10) / 10.0).withStyle(net.minecraft.ChatFormatting.GRAY);
+    }
+
     private Component statEffect(PlayerData d, Stat s) {
         return switch (s) {
             case STR -> Component.translatable("solostatus.effect.str", pct(StatFormulas.physicalDamage(d)));
@@ -505,7 +514,7 @@ public class SystemScreen extends Screen {
             case PER -> Component.translatable("solostatus.effect.per", pct(StatFormulas.critChance(d)), pct(StatFormulas.projectileDamage(d)));
             case VIT -> Component.translatable("solostatus.effect.vit", Math.round(StatFormulas.bonusHealth(d) * 10) / 10.0, pct(StatFormulas.damageReduction(d)));
             case INT -> StatFormulas.usesMana(d)
-                    ? Component.translatable("solostatus.effect.int", pct(StatFormulas.magicPower(d)), Math.round(StatFormulas.maxEnergy(d)))
+                    ? Component.translatable("solostatus.effect.int", pct(StatFormulas.magicPower(d)), Math.round(Math.min(100, StatFormulas.eff(d, Stat.INT))))
                     : Component.translatable("solostatus.effect.int.no_mana", pct(StatFormulas.magicPower(d)));
             case LUCK -> Component.translatable("solostatus.effect.luck", pct(StatFormulas.extraDropChance(d)), pct(StatFormulas.qualityBonus(d)));
         };
@@ -726,6 +735,16 @@ public class SystemScreen extends Screen {
         textRight(g, font, title(String.valueOf(d.skillPoints)), cx0 + cw, y + 1, d.skillPoints > 0 ? GOLD : DIM, row(0));
         textRight(g, font, tr("solostatus.ui.skill_points"), cx0 + cw, y + 18, DIM, row(0));
         hover(mx, my, cx0, y, 4 * 24, 30, List.of(Component.translatable("solostatus.ui.slots_hint")));
+        if (d.hasClass()) { // the second skill set: switched out of combat
+            int lx = cx0 + PlayerData.SKILL_SLOTS * 24 + 2;
+            button(g, font, bold("⇄ " + (d.loadout + 1)), lx, y + 3, 26, 14, mx, my, true, row(0));
+            hover(mx, my, lx, y + 3, 26, 14, List.of(Component.translatable("solostatus.ui.loadout", d.loadout + 1),
+                    Component.translatable("solostatus.ui.loadout_hint").withStyle(net.minecraft.ChatFormatting.GRAY)));
+            hots.add(new Hot(lx, y + 3, 26, 14, () -> {
+                PacketDistributor.sendToServer(new Payloads.SwitchLoadout(0));
+                play(ModSounds.CLICK.get(), 1.1f);
+            }, null));
+        }
         y += 32;
 
         // фильтры по происхождению

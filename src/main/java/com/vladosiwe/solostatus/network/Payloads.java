@@ -165,6 +165,14 @@ public final class Payloads {
         @Override public Type<CastSkill> type() { return TYPE; }
     }
 
+    /** Переключить набор навыков. */
+    public record SwitchLoadout(int unused) implements CustomPacketPayload {
+        public static final Type<SwitchLoadout> TYPE = Payloads.typeOf("switch_loadout");
+        public static final StreamCodec<ByteBuf, SwitchLoadout> CODEC =
+                StreamCodec.composite(ByteBufCodecs.VAR_INT, SwitchLoadout::unused, SwitchLoadout::new);
+        @Override public Type<SwitchLoadout> type() { return TYPE; }
+    }
+
     /** Выбрать модификацию навыка (1 или 2). */
     public record ChooseMod(String skill, int choice) implements CustomPacketPayload {
         public static final Type<ChooseMod> TYPE = Payloads.typeOf("choose_mod");

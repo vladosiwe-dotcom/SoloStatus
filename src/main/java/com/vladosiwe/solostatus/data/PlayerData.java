@@ -60,6 +60,9 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
     /** Chosen skill modifications: skill id -> 1 or 2 (SkillMods). */
     public final Map<String, Integer> skillMods = new HashMap<>();
     public final String[] slots = new String[SKILL_SLOTS];
+    /** The other skill set (Loadouts): what goes into the slots when the hunter switches; and which set is on (0 or 1). */
+    public final String[] otherSlots = new String[SKILL_SLOTS];
+    public int loadout;
     /** id навыка -> игровое время (gameTime), когда перезарядка закончится. */
     public final Map<String, Long> cooldowns = new HashMap<>();
     public float energy = 100;
@@ -209,6 +212,10 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
         ListTag slotList = new ListTag();
         for (String s : slots) slotList.add(StringTag.valueOf(s == null ? "" : s));
         t.put("slots", slotList);
+        ListTag otherList = new ListTag();
+        for (String s : otherSlots) otherList.add(StringTag.valueOf(s == null ? "" : s));
+        t.put("slots2", otherList);
+        t.putInt("loadout", loadout);
         CompoundTag cd = new CompoundTag();
         cooldowns.forEach(cd::putLong);
         t.put("cooldowns", cd);
@@ -268,6 +275,13 @@ public final class PlayerData implements INBTSerializable<CompoundTag> {
             readIntMap(t.getCompound("paid"), paidRanks);
             readIntMap(t.getCompound("mods"), skillMods);
             if (t.contains("history")) History.read(History.readList(t), history); // a sync without it keeps the client's copy
+            Arrays.fill(otherSlots, null);
+            ListTag otherList = t.getList("slots2", Tag.TAG_STRING);
+            for (int i = 0; i < Math.min(otherList.size(), SKILL_SLOTS); i++) {
+                String s = otherList.getString(i);
+                otherSlots[i] = s.isEmpty() ? null : s;
+            }
+            loadout = Mth.clamp(t.getInt("loadout"), 0, 1);
             Arrays.fill(slots, null);
             ListTag slotList = t.getList("slots", Tag.TAG_STRING);
             for (int i = 0; i < Math.min(slotList.size(), SKILL_SLOTS); i++) {

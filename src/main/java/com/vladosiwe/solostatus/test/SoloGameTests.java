@@ -514,4 +514,29 @@ public final class SoloGameTests {
         h.assertTrue(com.vladosiwe.solostatus.registry.SetBonuses.dodge(p) == 0, "a Stalker bonus with Vanguard armour");
         h.succeed();
     }
+
+    /** Two skill sets: switching swaps the slots, only out of combat, and drops skills no longer known. */
+    @GameTest(template = "empty")
+    public static void skillLoadouts(GameTestHelper h) {
+        ServerPlayer p = TestPlayers.create(h);
+        ClassSystem.chooseClass(p, HunterClass.WARRIOR);
+        PlayerData d = Hunter.get(p);
+        long now = p.serverLevel().getGameTime();
+        d.skills.put("whirlwind", 1);
+        d.slots[0] = "power_strike";
+        d.otherSlots[0] = "whirlwind";
+        d.otherSlots[1] = "assassinate"; // not the Warrior's: must not come in
+        d.lastDamagedTick = now;
+        com.vladosiwe.solostatus.skill.SkillSystem.switchLoadout(p);
+        h.assertTrue(d.loadout == 0 && "power_strike".equals(d.slots[0]), "switched in combat");
+        d.lastDamagedTick = now - 400;
+        d.lastCombatTick = now - 400;
+        com.vladosiwe.solostatus.skill.SkillSystem.switchLoadout(p);
+        h.assertTrue(d.loadout == 1 && "whirlwind".equals(d.slots[0]) && d.slots[1] == null, "the other set did not come in: " + java.util.Arrays.toString(d.slots));
+        h.assertTrue("power_strike".equals(d.otherSlots[0]), "the first set was not kept");
+        PlayerData copy = new PlayerData();
+        copy.read(d.write());
+        h.assertTrue(copy.loadout == 1 && "power_strike".equals(copy.otherSlots[0]), "the sets were not saved");
+        h.succeed();
+    }
 }

@@ -64,6 +64,10 @@ public final class ServerPayloadHandler {
         run(ctx, p -> SkillSystem.cast(p, msg.slot()));
     }
 
+    public static void switchLoadout(Payloads.SwitchLoadout msg, IPayloadContext ctx) {
+        run(ctx, com.vladosiwe.solostatus.skill.SkillSystem::switchLoadout);
+    }
+
     public static void chooseMod(Payloads.ChooseMod msg, IPayloadContext ctx) {
         if (msg.skill().length() > 64) return;
         run(ctx, p -> com.vladosiwe.solostatus.skill.SkillMods.choose(p, msg.skill(), msg.choice()));
